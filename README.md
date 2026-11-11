@@ -41,20 +41,25 @@ powershell -ExecutionPolicy Bypass -File scripts\install_task.ps1   # tâche pla
 
 Le CLI `claude` (Claude Code) doit être installé et connecté : les agents l'appellent en mode headless.
 
-### Notifications sur le téléphone
+### Alertes par e-mail
 
-1. Installer l'application **ntfy** (Android / iOS) et s'abonner au canal indiqué dans `local.yaml`.
-2. Tester : `..\.venv\Scripts\python run_daily.py --test-notify`
+Un mail est envoyé seulement en cas de problème (run planté, agent en erreur, cours manquants,
+publication échouée) et pour le rapport final. Le suivi au quotidien se fait sur le dashboard.
 
-`local.yaml` (non versionné) surcharge `config.yaml` pour les réglages privés :
+1. Créer un mot de passe d'application iCloud : appleid.apple.com → Connexion et sécurité
+   → Mots de passe pour app.
+2. Le mettre dans `local.yaml` (non versionné), qui surcharge `config.yaml` :
 
 ```yaml
 notify:
-  ntfy_topic: pea-sim-xxxxxxxx
+  email: moi@icloud.com
+  smtp_password: xxxx-xxxx-xxxx-xxxx
   dashboard_url: https://<utilisateur>.github.io/pea-sim/
 publish:
   enabled: true
 ```
+
+3. Tester : `..\.venv\Scripts\python run_daily.py --test-notify`
 
 ## Commandes utiles
 

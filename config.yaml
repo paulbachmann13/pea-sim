@@ -78,12 +78,19 @@ simulation:
   random_seed: 2026                  # portefeuille aléatoire de contrôle
   random_picks: 4
 
-# --- Notifications (ntfy) ----------------------------------------------------
+# --- Alertes (e-mail SMTP et/ou push ntfy) -----------------------------------
+# Envoyées seulement en cas de problème (run planté, agent en erreur, données manquantes…)
+# et pour le rapport final. Adresse et mot de passe à définir dans local.yaml (non versionné).
 notify:
+  email: ""                          # adresse qui reçoit les alertes
+  smtp_host: smtp.mail.me.com        # iCloud ; Gmail : smtp.gmail.com
+  smtp_port: 587
+  smtp_user: ""                      # vide = même que email
+  smtp_password: ""                  # mot de passe d'application (pas le mot de passe du compte)
   ntfy_server: https://ntfy.sh
-  ntfy_topic: ""                     # à définir dans local.yaml (non versionné), voir README
-  daily_summary: true                # résumé chaque soir (sert aussi de signe de vie)
-  dashboard_url: ""                  # ouvert en touchant la notification
+  ntfy_topic: ""                     # optionnel : push sur l'application ntfy
+  daily_summary: false               # true = résumé chaque soir en plus des alertes
+  dashboard_url: ""                  # lien ajouté aux notifications
 
 # --- Publication du dashboard (GitHub Pages) ---------------------------------
 publish:

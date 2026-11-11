@@ -51,7 +51,7 @@ def main() -> int:
             log.warning("avertissements : %s", result.warnings)
             notify(cfg, "⚠️ " + result.title, result.message + "\n\nAvertissements :\n- " + "\n- ".join(result.warnings),
                    priority=4, tags=["warning"])
-        elif result.mode in ("trading", "final") and cfg["notify"]["daily_summary"]:
+        elif result.mode == "final" or (result.mode == "trading" and cfg["notify"]["daily_summary"]):
             notify(cfg, result.title, result.message, tags=["chart_with_upwards_trend"])
         return 0
     except Exception as e:
