@@ -1,0 +1,9 @@
+[project]
+name = "pea_sim"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["pyyaml", "pandas", "yfinance", "exchange_calendars", "requests", "feedparser", "pytest"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

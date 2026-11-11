@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PEA sim</title>
+  <meta name="description" content="Simulation d'une équipe d'agents traders sur un PEA fictif">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>PEA sim</h1>
+      <p id="subtitle" class="muted">Chargement…</p>
+    </div>
+    <button id="refresh" class="icon-btn" aria-label="Rafraîchir">↻</button>
+  </header>
+
+  <main>
+    <section id="kpis" class="kpis"></section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Performance</h2>
+        <span class="muted small">en % depuis le départ</span>
+      </div>
+      <div id="chart" class="chart"></div>
+      <div id="legend" class="legend"></div>
+    </section>
+
+    <nav class="tabs" role="tablist">
+      <button data-tab="positions" class="active">Positions</button>
+      <button data-tab="orders">Ordres</button>
+      <button data-tab="journal">Journal</button>
+      <button data-tab="lessons">Leçons</button>
+      <button data-tab="report">Rapport</button>
+    </nav>
+
+    <section id="tab-positions" class="tab active"></section>
+    <section id="tab-orders" class="tab"></section>
+    <section id="tab-journal" class="tab"></section>
+    <section id="tab-lessons" class="tab"></section>
+    <section id="tab-report" class="tab"></section>
+  </main>
+
+  <dialog id="day-dialog">
+    <div class="dialog-head">
+      <h2 id="day-title"></h2>
+      <button class="icon-btn" onclick="this.closest('dialog').close()" aria-label="Fermer">✕</button>
+    </div>
+    <div id="day-body"></div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

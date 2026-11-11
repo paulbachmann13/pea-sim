@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+*.tmp
+logs/
+local.yaml
+data/market.db
+data/universe.csv
+data/run.lock

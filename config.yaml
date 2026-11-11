@@ -1,0 +1,130 @@
+# Configuration centrale de la simulation PEA.
+# Tous les montants sont en euros.
+
+capital_initial: 1000
+
+# --- Frais de courtage -------------------------------------------------------
+# Chaque grille est une liste de paliers, parcourue dans l'ordre :
+# le premier palier dont "up_to" >= montant de l'ordre s'applique.
+# Un palier est soit "fixed" (frais fixe), soit "rate" + "min" (proportionnel avec minimum).
+# Le dernier palier doit avoir up_to: null (pas de plafond).
+# pea_cap_rate : plafond légal des frais de courtage en ligne dans un PEA (0,50 %).
+fees:
+  active: bforbank
+  grids:
+    bforbank:          # grille relevée nov. 2026 sur sites comparateurs — à vérifier sur ta grille officielle
+      tiers:
+        - {up_to: 1000, fixed: 2.50}
+        - {up_to: 3000, fixed: 6.00}
+        - {up_to: null, rate: 0.0015, min: 12.00}
+      pea_cap_rate: 0.005
+    lowcost:           # type Trade Republic : 1 € par ordre
+      tiers:
+        - {up_to: null, fixed: 1.00}
+      pea_cap_rate: 0.005
+
+# --- Exécution ---------------------------------------------------------------
+execution:
+  spread_pct: 0.20             # spread total simulé (%) ; on paie la moitié à l'achat et à la vente
+  reduce_qty_if_needed: true   # à l'exécution, réduire la quantité si cash/concentration insuffisants (sinon refus)
+
+# --- Limites -----------------------------------------------------------------
+limits:
+  max_orders_per_day: 5
+  max_position_pct: 40         # % max de la valeur du portefeuille sur un seul titre
+
+# --- Liquidité ---------------------------------------------------------------
+liquidity:
+  min_avg_daily_volume_eur: 1000000   # volume moyen quotidien minimum (€)
+  window_days: 20
+  applies_to_etf: false               # les ETF sont animés par des teneurs de marché
+
+# --- Éligibilité PEA ---------------------------------------------------------
+eligibility:
+  # Pays du siège (préfixe ISIN) : UE + EEE
+  isin_countries: [AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT,
+                   LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, IS, LI, NO]
+  # Places autorisées (suffixe yfinance) : places Euronext cotant en EUR, couvertes par le référentiel
+  # Euronext (ISIN fiable + source de prix de secours). Oslo (NOK) exclu pour une compta simple.
+  exchange_suffixes: [PA, AS, BR, LS, IR, MI]
+  currencies: [EUR]
+  # ETF : l'ISIN ne suffit pas (il faut 75 % d'actions UE ou un ETF synthétique), donc liste blanche.
+  # ticker: ISIN (l'ISIN sert à la source de prix de secours Euronext)
+  # Chaque ISIN est vérifié : clôture yfinance == clôture Euronext (11/11/2026).
+  etf_whitelist:
+    WPEA.PA: IE0002XZSHO1    # iShares MSCI World Swap PEA
+    CW8.PA: LU1681043599     # Amundi MSCI World Swap
+    PAEEM.PA: FR0013412020   # Amundi PEA Emergents
+    PUST.PA: FR0011871110    # Amundi PEA Nasdaq-100
+    ESE.PA: FR0011550185     # BNP Paribas Easy S&P 500
+    C40.PA: LU1681046931     # Amundi CAC 40
+
+# --- Données -----------------------------------------------------------------
+data:
+  market_db: data/market.db          # prix, news, anomalies (régénérable, non versionné) ; relatif à pea_sim
+  universe_path: data/universe.csv
+  universe_max_age_days: 7           # le référentiel Euronext est retéléchargé chaque semaine
+  history_days: 120                  # profondeur d'historique chargée (jours calendaires)
+  prefilter_turnover_ratio: 0.3      # pré-filtre : capitaux échangés la veille >= ratio × seuil de liquidité
+  max_daily_jump_pct: 25             # variation clôture/clôture signalée comme suspecte
+  cross_check_tolerance_pct: 0.5     # écart max toléré yfinance vs Euronext sur les titres détenus
+
+# --- Simulation --------------------------------------------------------------
+simulation:
+  duration_days: 30                  # jours calendaires à partir du dépôt initial (1er run de séance)
+  journal_dir: journal               # relatif au dossier pea_sim
+  ledger_db: data/ledger.db          # comptabilité de tous les livres (versionnée = sauvegardée)
+  compare_grid: lowcost              # livre fantôme : mêmes ordres que les agents, avec cette grille
+  random_seed: 2026                  # portefeuille aléatoire de contrôle
+  random_picks: 4
+
+# --- Notifications (ntfy) ----------------------------------------------------
+notify:
+  ntfy_server: https://ntfy.sh
+  ntfy_topic: ""                     # à définir dans local.yaml (non versionné), voir README
+  daily_summary: true                # résumé chaque soir (sert aussi de signe de vie)
+  dashboard_url: ""                  # ouvert en touchant la notification
+
+# --- Publication du dashboard (GitHub Pages) ---------------------------------
+publish:
+  enabled: false                     # true une fois le dépôt GitHub créé
+  paths: [docs, journal, data/ledger.db]
+
+# --- Agents (LLM via le CLI Claude Code, abonnement) -------------------------
+agents:
+  claude_bin: auto                   # ou chemin complet vers claude.exe
+  models:
+    chef: opus
+    market: sonnet
+    news: sonnet
+    risk: sonnet
+    postmortem: sonnet
+    report: opus
+  timeout_s: 600
+  retries: 1                         # nouvel essai si la réponse est invalide
+  journal_days: 5                    # jours de journal relus par le chef
+  postmortems: 10                    # post-mortems récents relus par le chef
+
+# --- Screener ----------------------------------------------------------------
+screener:
+  top_n: 12                          # taille de chaque liste (momentum, hausses, baisses, volumes)
+  max_rows: 45
+
+# --- Actualités --------------------------------------------------------------
+news:
+  general_feeds:
+    gnews_marche: "https://news.google.com/rss/search?q=bourse+Paris+CAC+40+when:2d&hl=fr&gl=FR&ceid=FR:fr"
+    gnews_europe: "https://news.google.com/rss/search?q=bourses+europ%C3%A9ennes+actions+when:2d&hl=fr&gl=FR&ceid=FR:fr"
+    gnews_macro: "https://news.google.com/rss/search?q=BCE+OR+inflation+OR+Fed+march%C3%A9s+when:2d&hl=fr&gl=FR&ceid=FR:fr"
+    abcbourse: "https://www.abcbourse.com/rss/displaynewsrss"
+    investing: "https://fr.investing.com/rss/news_25.rss"
+  ticker_feeds:                      # {name} = nom de la société, {ticker} = ticker yfinance
+    yahoo: "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=FR&lang=fr-FR"
+    gnews: "https://news.google.com/rss/search?q=%22{name}%22+action+when:3d&hl=fr&gl=FR&ceid=FR:fr"
+  watch_max: 12                      # titres suivis individuellement (détenus + meilleurs candidats)
+  max_items: 90                      # items transmis à l'analyste
+  lookback_hours: 72                 # fenêtre au premier run
+
+# --- Benchmark ---------------------------------------------------------------
+benchmark:
+  ticker: WPEA.PA
