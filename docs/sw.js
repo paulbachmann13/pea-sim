@@ -6,7 +6,9 @@ const CACHE = "pea-sim-" + VERSION;
 const SHELL = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" })))));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" }))))
+    // La v1.0 ne savait pas proposer de mise à jour : on la remplace d'office.
+    .then(() => caches.has("pea-sim-v1")).then((legacy) => legacy && self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
