@@ -11,6 +11,7 @@ from sim import market_calendar as mc
 from sim.data import PriceStore
 from sim.models import Instrument
 from sim.money import D
+from sim.news import NewsItem
 from sim.universe import RefEntry
 from test_agents_decide import MARKET, NEWS, FakeLLM, chef_with, risk_all
 
@@ -20,7 +21,13 @@ TICKERS = {"AAA.PA": 10, "BBB.PA": 20, "CCC.PA": 15, "DDD.PA": 30, "EEE.PA": 25,
 
 REPORT = {"verdict": "v", "what_worked": ["a"], "what_failed": ["b"], "fees_impact": "f", "process": "p",
           "lessons": ["l"]}
-PM = lambda p: {"postmortems": [{"trade_id": "AAA.PA-2026-11-17", "expected": "e", "happened": "h", "lesson": "l"}]}
+PM = lambda p: {"postmortems": [{"trade_id": "AAA.PA-2026-11-17", "expected": "e", "happened": "h",
+                                 "predictable": "p", "lesson": "l",
+                                 "playbook_ops": [{"op": "add", "rule_id": "", "text": "Si rebond rapide, alors vendre",
+                                                   "scope": "chef", "origin": "x", "reason": "r"}]}]}
+REVIEW = {"review": "r", "decisions": [], "playbook_ops": [], "insights": []}
+WEEKLY = {"summary": "s", "recurring_errors": [], "biases": [], "playbook_ops": [], "insights": [],
+          "obsolete_insights": [], "notes_updates": []}
 
 
 def at(d, h=18):
@@ -50,17 +57,21 @@ def sim(tmp_path, cfg):
 
     def chef(prompt):
         if "Décision du 2026-11-16" in prompt:
-            return chef_with(("AAA.PA", "BUY", 20))
+            return chef_with(("AAA.PA", "BUY", 20), source="n2026-11-16")
         if "Décision du 2026-11-17" in prompt:
-            return chef_with(("AAA.PA", "SELL", 20))
+            return chef_with(("AAA.PA", "SELL", 20), source="n2026-11-17")
         return chef_with()
 
-    llm = FakeLLM(market=MARKET, news=NEWS, chef=chef, risk=risk_all(), postmortem=PM, report=REPORT)
+    llm = FakeLLM(market=MARKET, news=NEWS, chef=chef, risk=risk_all(), postmortem=PM, report=REPORT,
+                  review=REVIEW, weekly=WEEKLY)
     cfg["data"]["market_db"] = "market.db"
     (tmp_path / "data").mkdir()
 
     def go(d, h=18, **kw):
-        return daily.run(at(d, h), cfg, tmp_path, llm=llm, refresh=refresh, fetch=lambda c, w: ([], []), **kw)
+        news = lambda c, w: ([NewsItem(f"n{d}", "test", "AAA.PA", f"AAA : nouvelle du {d}", "",
+                                       f"{d}T10:00:00+00:00", "")], [])
+        return daily.run(at(d, h), cfg, tmp_path, llm=llm, refresh=refresh, fetch=news,
+                         fetch_hist=lambda c, n, a: [], **kw)
 
     return {"go": go, "root": tmp_path, "llm": llm, "cfg": cfg}
 
@@ -93,6 +104,9 @@ def test_full_simulation(sim):
     st = led["agents"].state()
     assert "AAA.PA" not in st.positions and st.dividends == D("10.00")   # détenu à la clôture de la veille
     assert env.journal.postmortems()[0]["trade_id"] == "AAA.PA-2026-11-17"
+    learn = env.journal.read_day("2026-11-18")["learning"]
+    assert learn["postmortems"] == ["AAA.PA-2026-11-17"] and learn["playbook_changes"][0]["rule"] == "R1"
+    assert [p["kind"] for p in env.kb.predictions()["items"]][:2] == ["ordre BUY", "ordre SELL"]
 
     r = go("2026-11-21", h=10)                                      # samedi : veille
     assert r.mode == "veille" and env.journal.day_path("2026-11-21", "veille").exists()
@@ -116,6 +130,8 @@ def test_full_simulation(sim):
     orders = json.loads((root / "docs" / "data" / "orders.json").read_text(encoding="utf-8"))
     assert orders["fills"][0]["thesis"] == "thèse AAA.PA"
     assert (root / "docs" / "data" / "report.json").exists()
+    know = json.loads((root / "docs" / "data" / "knowledge.json").read_text(encoding="utf-8"))
+    assert know["playbook"][0]["id"] == "R1" and know["calibration"]["n"] >= 2 and know["log"]
     index = json.loads((root / "docs" / "data" / "journal" / "index.json").read_text(encoding="utf-8"))
     assert index[0]["final"] and any(i["mode"] == "veille" for i in index)
 

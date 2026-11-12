@@ -8,3 +8,6 @@ data/universe.csv
 data/run.lock
 docs/data/
 data/supabase_sync.json
+journal/
+knowledge/
+data/ledger.db

@@ -105,10 +105,26 @@ def select_items(items: list[NewsItem], max_items: int) -> list[NewsItem]:
     return sorted(picked, key=lambda i: i.published, reverse=True)[:max_items]
 
 
-def format_news(items: list[NewsItem]) -> str:
+def price_reactions(items: list[NewsItem], store, as_of: str) -> dict[str, float]:
+    """Variation du cours du titre lié entre la dernière clôture AVANT publication et la clôture `as_of`."""
+    out = {}
+    for i in items:
+        if not i.ticker:
+            continue
+        before = store.bars(i.ticker, i.published[:10], lookback=2)
+        before = before[before.index < i.published[:10]] if len(before) else before
+        now = store.last_close(i.ticker, as_of)
+        if len(before) and now is not None:
+            out[i.id] = round((float(now) / float(before["close"].iloc[-1]) - 1) * 100, 2)
+    return out
+
+
+def format_news(items: list[NewsItem], reactions: dict[str, float] | None = None) -> str:
+    reactions = reactions or {}
     lines = []
     for i in items:
         tag = f" ({i.ticker})" if i.ticker else ""
         summary = f" — {i.summary}" if i.summary and i.summary not in i.title else ""
-        lines.append(f"[{i.id}] {i.published[:16]} {i.source}{tag} : {i.title}{summary}")
+        react = f" [cours depuis publication : {reactions[i.id]:+.2f} %]" if i.id in reactions else ""
+        lines.append(f"[{i.id}] {i.published[:16]} {i.source}{tag} : {i.title}{summary}{react}")
     return "\n".join(lines) or "(aucune actualité)"

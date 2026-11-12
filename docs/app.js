@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "1.2.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "1.3.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -71,6 +71,7 @@ async function load() {
     ]);
     Object.assign(state, { summary, orders, index, pms, loadedAt: new Date() });
     state.report = await getJSON("report.json").catch(() => null);
+    state.knowledge = await getJSON("knowledge.json").catch(() => null);
     render();
   } catch (e) {
     $("#subtitle").textContent = "Données indisponibles (" + e.message + ")";
@@ -93,7 +94,7 @@ function render() {
   $("#subtitle").textContent = h
     ? `Séance ${h.session_no}/${s.total_sessions} · au ${fmtDate(s.as_of)} · fin le ${fmtDate(h.end)}`
     : "La simulation n'a pas encore démarré";
-  renderHero(); renderKpis(); renderChart(); renderDaily(); renderPositions(); renderOrders(); renderJournal(); renderLessons(); renderReport();
+  renderHero(); renderKpis(); renderChart(); renderDaily(); renderPositions(); renderOrders(); renderJournal(); renderLearning(); renderLessons(); renderReport();
 }
 
 // Valeur actuelle du portefeuille de l'équipe, en grand en haut de page
@@ -240,7 +241,7 @@ function renderJournal() {
   $("#tab-journal").innerHTML = `<div class="card"><h2>Journal</h2>${items.length ? items.map((e) => `
     <div class="item"><button class="link" data-file="${esc(e.file)}">
       <div class="item-head"><b>${fmtDate(e.date)}${e.mode === "veille" ? " · veille" : ""}${e.final ? " · fin" : ""}</b>
-      <span class="small muted">${e.mode === "trading" ? `${e.n_exec} exéc. · ${e.n_orders} ordres` : ""}${e.n_errors ? ` · <span class="neg">${e.n_errors} erreur(s)</span>` : ""}</span></div>
+      <span class="small muted">${e.mode === "trading" ? `${e.n_exec} exéc. · ${e.n_orders} ordres` : ""}${e.n_rule_changes ? ` · ${e.n_rule_changes} règle(s)` : ""}${e.n_errors ? ` · <span class="neg">${e.n_errors} erreur(s)</span>` : ""}</span></div>
       <div class="muted small">${esc(e.view)}…</div></button></div>`).join("") : `<p class="empty">Journal vide.</p>`}</div>`;
   document.querySelectorAll("#tab-journal [data-file]").forEach((b) => b.addEventListener("click", () => openDay(b.dataset.file)));
 }
@@ -254,8 +255,25 @@ async function openDay(file) {
   if (e.executions?.length) parts.push(`<h3>Exécutions à l'ouverture</h3>${e.executions.map((x) =>
     `<p class="small">${sideChip(x.side)} ${esc(x.ticker)} : ${x.filled ? `${x.qty} à ${eur(x.price, 4)} (frais ${eur(x.fees)})` : `<span class="neg">non exécuté : ${esc(x.reason)}</span>`}${x.filled && x.reason ? ` <span class="muted">(${esc(x.reason)})</span>` : ""}</p>`).join("")}`);
   if (e.chef) parts.push(`<h3>Vue du chef</h3><p>${esc(e.chef.market_view)}</p>${e.chef.no_trade_reason ? `<p class="muted">Pas d'ordre : ${esc(e.chef.no_trade_reason)}</p>` : ""}`);
+  const L = e.learning;
+  if (L) {
+    const lp = [];
+    if (e.daily_review?.review) lp.push(`<p class="small"><b>Revue de la veille</b> : ${esc(e.daily_review.review)}</p>`);
+    if (e.weekly_review?.summary) lp.push(`<p class="small"><b>Revue hebdomadaire</b> : ${esc(e.weekly_review.summary)}</p>
+      ${e.weekly_review.biases?.length ? `<p class="small muted">Biais : ${esc(e.weekly_review.biases.join(" ; "))}</p>` : ""}`);
+    if (L.playbook_changes?.length) lp.push(`<p class="small"><b>Règles</b></p>${L.playbook_changes.map((c) => `<p class="small">• <b>${esc(c.rule || "–")}</b> ${esc(c.op)}${c.confidence ? " " + confChip(c.confidence) : ""} : ${esc(c.text)} <span class="muted">(${esc(c.by)})</span></p>`).join("")}`);
+    if (L.predictions_resolved?.length) lp.push(`<p class="small"><b>Prédictions évaluées</b></p>${L.predictions_resolved.map((p) => `<p class="small">• ${esc(p.id)} ${esc(p.ticker)} : <b class="${p.hit ? "pos" : "neg"}">${p.hit ? "réussie" : "ratée"}</b> (${pct(p.return_pct)})</p>`).join("")}`);
+    if (L.predictions_added?.length) lp.push(`<p class="small"><b>Nouvelles prédictions</b> : ${L.predictions_added.map((p) => `${esc(p.ticker)} ${dirTxt(p)}`).join(" · ")}</p>`);
+    const misc = [L.dossiers_built?.length && `dossiers 6 mois : ${L.dossiers_built.join(", ")}`, L.notes_updated?.length && `notes mises à jour : ${L.notes_updated.join(", ")}`,
+      L.insights_added && `${L.insights_added} connaissance(s) ajoutée(s)`, L.agenda_added && `${L.agenda_added} événement(s) à l'agenda`].filter(Boolean);
+    if (misc.length) lp.push(`<p class="small muted">${esc(misc.join(" · "))}</p>`);
+    if (lp.length) parts.push(`<h3>Apprentissage du jour</h3>${lp.join("")}`);
+  }
   if (e.final_orders?.length) parts.push(`<h3>Ordres retenus</h3>${e.final_orders.map((o) => `<div class="item">${sideChip(o.side)} <b>${o.qty} ${esc(o.ticker)}</b>
-    <p class="small">${esc(o.thesis)}</p><p class="small muted">Sortie : ${esc(o.exit_plan)}${o.sources?.length ? ` · sources ${esc(o.sources.join(", "))}` : ""}</p></div>`).join("")}`);
+    <p class="small">${esc(o.thesis)}</p>
+    ${(o.catalysts || []).map((c) => `<p class="small">📰 <b>${esc(c.title)}</b> <span class="muted">(${esc(c.date)}, ${esc(c.source_id)})</span> → ${esc(c.link)}</p>`).join("")}
+    ${o.prediction ? `<p class="small">Prédiction : ${dirTxt(o.prediction)}${o.rules_applied?.length ? ` · règles ${esc(o.rules_applied.join(", "))}` : ""}</p>` : ""}
+    <p class="small muted">Sortie : ${esc(o.exit_plan)}</p></div>`).join("")}`);
   if (e.refused?.length) parts.push(`<h3>Refusés</h3>${e.refused.map((o) => `<p class="small">${sideChip(o.side)} ${esc(o.ticker)} — <span class="chip warn">${esc(o.by)}</span>${esc(o.reason)}</p>`).join("")}`);
   if (e.risk?.comment) parts.push(`<h3>Gestionnaire de risque</h3><p class="small">${esc(e.risk.comment)}</p>`);
   const m = e.market_analysis;
@@ -266,6 +284,71 @@ async function openDay(file) {
   if (e.llm_calls?.length) parts.push(`<p class="muted small">Appels LLM : ${e.llm_calls.map((c) => `${esc(c.role)} (${esc(c.model)}, ${c.duration_s}s)`).join(", ")}</p>`);
   $("#day-body").innerHTML = parts.join("") || `<p class="empty">Rien à afficher.</p>`;
   $("#day-dialog").showModal();
+}
+
+// --- Apprentissage : playbook, calibration, agenda, connaissances ---------------
+const CONF_CLS = { "confirmée": "pos", "probable": "", "hypothèse": "muted", "contestée": "neg" };
+const confChip = (c) => `<span class="chip ${CONF_CLS[c] || ""}">${esc(c)}</span>`;
+const dirTxt = (p) => `${p.direction === "up" ? "hausse" : "baisse"} ≥ ${p.move_pct} % en ${p.horizon_sessions} séance(s), proba ${Math.round(p.probability * 100)} %`;
+
+function renderLearning() {
+  const k = state.knowledge;
+  if (!k) { $("#tab-learning").innerHTML = `<div class="card"><p class="empty">La base de connaissances apparaîtra après le premier run.</p></div>`; return; }
+  const cards = [];
+
+  const c = k.calibration;
+  cards.push(`<div class="card"><h2>Calibration des prédictions</h2>${c.n ? `
+    <p>${c.n} prédictions évaluées · probabilité annoncée <b>${c.announced} %</b> · réussite réelle
+    <b class="${c.observed >= c.announced - 10 ? "pos" : "neg"}">${c.observed} %</b> · Brier ${c.brier} <span class="muted small">(0 = parfait, 0,25 = hasard)</span></p>
+    <div class="table-wrap"><table><tr><th>Confiance</th><th class="num">Nb</th><th class="num">Annoncé</th><th class="num">Observé</th></tr>
+    ${c.buckets.map((b) => `<tr><td>${esc(b.range)}</td><td class="num">${b.n}</td><td class="num">${b.announced} %</td><td class="num">${b.observed} %</td></tr>`).join("")}</table></div>`
+    : `<p class="empty">Aucune prédiction arrivée à échéance pour l'instant.</p>`}</div>`);
+
+  const active = k.playbook.filter((r) => r.status === "active");
+  const order = { "confirmée": 0, "probable": 1, "hypothèse": 2, "contestée": 3 };
+  const ruleHtml = (r) => {
+    const s = r.evidence.filter((e) => e.kind === "support").length, x = r.evidence.length - s;
+    const eff = r.effect ? ` · appliquée ${r.effect.n}× : ${r.effect.hits}/${r.effect.n} réussies, ${pct(r.effect.avg_return)} en moyenne` : "";
+    return `<div class="item"><div class="item-head"><div><b>${esc(r.id)}</b> ${confChip(r.confidence)}</div>
+      <span class="muted small">${s} pour / ${x} contre · depuis ${fmtDate(r.created)}</span></div>
+      <p class="small">${esc(r.text)}</p><div class="muted small">portée ${esc(r.scope)}${eff}</div>
+      <details><summary>Historique et cas</summary>${r.history.map((h) => `<p class="small">${fmtDate(h.date)} · ${esc(h.by)} : ${esc(h.change)}${h.reason ? ` — <span class="muted">${esc(h.reason)}</span>` : ""}</p>`).join("")}
+      ${r.evidence.map((e) => `<p class="small muted">${e.kind === "support" ? "✓" : "✗"} ${fmtDate(e.date)} ${esc(e.origin)} ${esc(e.note)}</p>`).join("")}</details></div>`;
+  };
+  const retired = k.playbook.filter((r) => r.status !== "active");
+  cards.push(`<div class="card"><div class="card-head"><h2>Playbook (règles apprises)</h2><span class="muted small">${active.length} active(s)</span></div>
+    ${active.length ? active.sort((a, b) => order[a.confidence] - order[b.confidence]).map(ruleHtml).join("") : `<p class="empty">Aucune règle pour l'instant.</p>`}
+    ${retired.length ? `<details><summary>${retired.length} règle(s) retirée(s)</summary>${retired.map(ruleHtml).join("")}</details>` : ""}</div>`);
+
+  const log = k.log.slice().reverse().slice(0, 40);
+  cards.push(`<div class="card"><h2>Évolution des règles</h2>${log.length ? log.map((l) => `<div class="item small">
+    <div class="item-head"><span><b>${esc(l.rule || "–")}</b> ${esc(l.op)}${l.confidence ? " " + confChip(l.confidence) : ""}</span><span class="muted">${fmtDate(l.date)} · ${esc(l.by)}</span></div>
+    <div>${esc(l.text)}</div>${l.reason ? `<div class="muted">${esc(l.reason)}</div>` : ""}</div>`).join("") : `<p class="empty">Aucun changement pour l'instant.</p>`}</div>`);
+
+  const preds = k.predictions.slice().reverse();
+  const open = preds.filter((p) => p.status === "open"), done = preds.filter((p) => p.status === "resolved").slice(0, 20);
+  const predHtml = (p) => `<div class="item small"><div class="item-head"><span><b>${esc(p.id)} ${esc(p.ticker)}</b> <span class="muted">${esc(p.kind)}</span></span>
+    <span>${p.status === "resolved" ? `<b class="${p.hit ? "pos" : "neg"}">${p.hit ? "✓ réussie" : "✗ ratée"}</b> ${pct(p.return_pct)}` : `échéance ${fmtDate(p.target_date)}`}</span></div>
+    <div>${dirTxt(p)}${p.rules?.length ? ` · règles ${esc(p.rules.join(", "))}` : ""}</div><div class="muted">${esc(p.thesis).slice(0, 220)}</div></div>`;
+  cards.push(`<div class="card"><h2>Registre des prédictions</h2>
+    <h3>En cours (${open.length})</h3>${open.map(predHtml).join("") || `<p class="empty">Aucune.</p>`}
+    <h3>Évaluées</h3>${done.map(predHtml).join("") || `<p class="empty">Aucune.</p>`}</div>`);
+
+  cards.push(`<div class="card"><h2>Agenda et scénarios</h2>${k.agenda.length ? k.agenda.slice(0, 30).map((e) => `<div class="item small">
+    <div class="item-head"><b>${e.date ? fmtDate(e.date) : "date à préciser"}</b><span class="muted">${esc((e.tickers || []).join(", "))}</span></div>
+    <div>${esc(e.event)}</div>${e.impact ? `<div class="muted">${esc(e.impact)}</div>` : ""}
+    ${(e.scenarios || []).map((s) => `<div>→ si ${esc(s.if)} : ${esc(s.then)}</div>`).join("")}</div>`).join("") : `<p class="empty">Agenda vide.</p>`}</div>`);
+
+  const ins = k.insights.filter((i) => i.status === "active").reverse();
+  cards.push(`<div class="card"><h2>Connaissances accumulées</h2>${ins.length ? ins.map((i) => `<p class="small"><span class="chip">${esc(i.kind)}</span><b>${esc(i.subject)}</b> : ${esc(i.text)} <span class="muted">(${fmtDate(i.date)}, ${esc(i.by)})</span></p>`).join("") : `<p class="empty">Aucune pour l'instant.</p>`}</div>`);
+
+  const notes = Object.entries(k.notes).sort((a, b) => (b[1].updated || "").localeCompare(a[1].updated || ""));
+  cards.push(`<div class="card"><h2>Dossiers et notes</h2>${notes.length ? notes.map(([key, n]) => `<details><summary>${esc(key)}${n.sector ? ` · ${esc(n.sector)}` : ""} <span class="muted">(${n.updated ? fmtDate(n.updated) : "–"})</span></summary>
+    ${n.history_6m ? `<p class="small"><b>Historique 6 mois</b><br>${esc(n.history_6m).replace(/\n/g, "<br>")}</p>` : ""}
+    ${n.outlook ? `<p class="small"><b>Perspectives</b> : ${esc(n.outlook)}</p>` : ""}
+    ${n.text ? `<p class="small"><b>Note courante</b> : ${esc(n.text)}</p>` : ""}</details>`).join("") : `<p class="empty">Aucun dossier pour l'instant.</p>`}</div>`);
+
+  $("#tab-learning").innerHTML = cards.join("");
 }
 
 function renderLessons() {

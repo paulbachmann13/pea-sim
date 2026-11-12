@@ -5,6 +5,7 @@ from pathlib import Path
 from . import market_calendar as mc
 from .decide import horizon
 from .journal import Journal, read_json, write_json
+from .knowledge import Knowledge
 from .ledger import Ledger
 
 LABELS = {"agents": "Équipe d'agents", "agents_lowcost": "Agents, grille low-cost",
@@ -22,6 +23,21 @@ def _thesis_lookup(journal: Journal) -> dict:
         for o in (journal.read_day(d) or {}).get("final_orders", []):
             out[(d, o["ticker"], o["side"])] = o
     return out
+
+
+def export_knowledge(cfg: dict, root: Path, out: Path, as_of: str) -> None:
+    """Playbook (avec effet mesuré des règles), journal des changements, prédictions, calibration, notes, agenda."""
+    kb = Knowledge(root / cfg["knowledge"]["dir"])
+    pb = kb.playbook()
+    effects = kb.rule_effects()
+    for r in pb["rules"]:
+        r["effect"] = effects.get(r["id"])
+    agenda = [e for e in kb.agenda() if not e["date"] or e["date"] >= as_of]
+    write_json(out / "knowledge.json", {
+        "playbook": pb["rules"], "log": read_json(kb.root / "playbook_log.json", [])[-200:],
+        "calibration": kb.calibration(), "predictions": kb.predictions()["items"][-150:],
+        "insights": kb.insights(), "notes": kb.notes(), "agenda": sorted(agenda, key=lambda e: e["date"] or "9999"),
+    })
 
 
 def export_dashboard(cfg: dict, root: Path, ledgers: dict[str, Ledger], journal: Journal, store, as_of: str,
@@ -79,10 +95,12 @@ def export_dashboard(cfg: dict, root: Path, ledgers: dict[str, Ledger], journal:
                       "n_orders": len(e.get("final_orders", [])), "n_refused": len(e.get("refused", [])),
                       "n_exec": sum(1 for x in e.get("executions", []) if x.get("filled")),
                       "n_errors": len(e.get("errors", [])),
+                      "n_rule_changes": len((e.get("learning") or {}).get("playbook_changes", [])),
                       "view": ((e.get("chef") or {}).get("market_view") or
                                (e.get("news_analysis") or {}).get("summary") or "")[:160]})
     write_json(out / "journal" / "index.json", sorted(index, key=lambda x: x["file"], reverse=True))
     write_json(out / "postmortems.json", journal.postmortems())
+    export_knowledge(cfg, root, out, as_of)
     report = journal.root / "rapport-final.json"
     if report.exists():
         shutil.copyfile(report, out / "report.json")

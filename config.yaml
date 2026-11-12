@@ -114,6 +114,9 @@ agents:
     risk: sonnet
     postmortem: sonnet
     report: opus
+    dossier: sonnet                  # historique 6 mois des entreprises
+    review: sonnet                   # revue quotidienne
+    weekly: opus                     # revue hebdomadaire
   timeout_s: 600
   retries: 1                         # nouvel essai si la réponse est invalide
   journal_days: 5                    # jours de journal relus par le chef
@@ -135,9 +138,21 @@ news:
   ticker_feeds:                      # {name} = nom de la société, {ticker} = ticker yfinance
     yahoo: "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=FR&lang=fr-FR"
     gnews: "https://news.google.com/rss/search?q=%22{name}%22+action+when:3d&hl=fr&gl=FR&ceid=FR:fr"
+  history_feed: "https://news.google.com/rss/search?q=%22{name}%22+after:{start}+before:{end}&hl=fr&gl=FR&ceid=FR:fr"
   watch_max: 12                      # titres suivis individuellement (détenus + meilleurs candidats)
   max_items: 90                      # items transmis à l'analyste
   lookback_hours: 72                 # fenêtre au premier run
+
+# --- Connaissances et apprentissage -----------------------------------------
+knowledge:
+  dir: knowledge                     # relatif au dossier pea_sim
+  dossier_months: 6                  # profondeur de l'historique d'actualité par entreprise
+  dossier_windows: 3                 # nombre de requêtes par période (≈ 2 mois chacune)
+  dossier_items_per_ticker: 90
+  dossier_max_new_per_run: 6         # dossiers construits par run (les autres aux runs suivants)
+  max_new_rules_per_day: 3           # anti-sur-apprentissage
+  max_active_rules: 40
+  weekly_review_days: 6              # revue hebdomadaire si la dernière date d'au moins N jours
 
 # --- Benchmark ---------------------------------------------------------------
 benchmark:

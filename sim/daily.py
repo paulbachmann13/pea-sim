@@ -31,6 +31,8 @@ from .broker import buy_max, execute_orders
 from .config import ROOT, fee_grid
 from .data import PriceStore
 from .decide import horizon, run_decision, run_postmortems, run_veille
+from .dossier import fetch_history
+from .knowledge import Knowledge
 from .export import export_dashboard
 from .journal import Journal
 from .ledger import Ledger
@@ -63,6 +65,7 @@ class Env:
     root: Path
     journal: Journal
     ledgers: dict[str, Ledger]
+    kb: Knowledge
 
     @property
     def agents(self) -> Ledger:
@@ -72,7 +75,8 @@ class Env:
 def open_env(cfg: dict, root: Path) -> Env:
     db = root / cfg["simulation"]["ledger_db"]
     db.parent.mkdir(parents=True, exist_ok=True)
-    return Env(cfg, root, Journal(root / cfg["simulation"]["journal_dir"]), {b: Ledger(db, b) for b in BOOKS})
+    return Env(cfg, root, Journal(root / cfg["simulation"]["journal_dir"]), {b: Ledger(db, b) for b in BOOKS},
+               Knowledge(root / cfg["knowledge"]["dir"]))
 
 
 @contextmanager
@@ -97,7 +101,7 @@ def final_session(env: Env, today: str) -> str | None:
 
 
 def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm=claude_cli,
-        refresh=refresh_market_data, fetch=fetch_news) -> RunResult:
+        refresh=refresh_market_data, fetch=fetch_news, fetch_hist=fetch_history) -> RunResult:
     today = now.date().isoformat()
     env = open_env(cfg, root)
     last = final_session(env, today)
@@ -107,7 +111,7 @@ def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm
         today = last           # run du dernier jour manqué : on clôture à la dernière séance
     with run_lock(root / "data" / "run.lock"):
         if mc.is_trading_day(today):
-            result = trading_run(env, now, today, force, llm, refresh, fetch)
+            result = trading_run(env, now, today, force, llm, refresh, fetch, fetch_hist)
         else:
             result = veille_run(env, now, today, force, llm, fetch)
         if result.mode != "skip":
@@ -120,7 +124,7 @@ def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm
 
 # --- Jour de séance ---------------------------------------------------------------
 
-def trading_run(env: Env, now, today, force, llm, refresh, fetch) -> RunResult:
+def trading_run(env: Env, now, today, force, llm, refresh, fetch, fetch_hist=fetch_history) -> RunResult:
     cfg, j = env.cfg, env.journal
     if j.read_day(today) and not force:
         return RunResult("skip", "PEA sim", f"Run du {today} déjà effectué.")
@@ -144,8 +148,10 @@ def trading_run(env: Env, now, today, force, llm, refresh, fetch) -> RunResult:
     snaps = {b: led.snapshot(today, store.marks(list(led.state().positions), today))
              for b, led in env.ledgers.items()}
 
+    pms, pm_changes = [], []
     try:
-        run_postmortems(as_of=today, cfg=cfg, ledger=env.agents, store=store, journal=j, llm=llm)
+        pms, pm_changes = run_postmortems(as_of=today, cfg=cfg, ledger=env.agents, store=store, journal=j,
+                                          kb=env.kb, llm=llm)
     except Exception as e:
         warnings.append(f"post-mortems : {e}")
 
@@ -153,7 +159,10 @@ def trading_run(env: Env, now, today, force, llm, refresh, fetch) -> RunResult:
     if today >= final_session(env, today):
         entry = {"date": today, "mode": "trading", "final": True, "run_at": now.isoformat(), "horizon": h,
                  "executions": executions, "errors": [], "final_orders": [], "refused": [],
-                 "portfolio": {k: str(v) for k, v in snaps["agents"].items()}}
+                 "portfolio": {k: str(v) for k, v in snaps["agents"].items()},
+                 "learning": {"playbook_changes": pm_changes, "postmortems": [p["trade_id"] for p in pms],
+                              "predictions_resolved": env.kb.resolve_predictions(store, today,
+                                                                                 cfg["benchmark"]["ticker"])}}
         j.write_day(entry)
         j.clear_pending()
         try:
@@ -162,10 +171,15 @@ def trading_run(env: Env, now, today, force, llm, refresh, fetch) -> RunResult:
             warnings.append(f"rapport final : {e}")
         mode = "final"
     else:
-        news_items = collect_news(env, store, universe, instruments, now, today, fetch, warnings)
+        news_items, watch = collect_news(env, store, universe, instruments, now, today, fetch, warnings)
         entry = run_decision(as_of=today, run_at=now, cfg=cfg, store=store, instruments=instruments,
-                             ledger=env.agents, journal=j, news_items=news_items,
-                             bench_summary=snaps["benchmark"], executions=executions, llm=llm)
+                             ledger=env.agents, journal=j, news_items=news_items, kb=env.kb, watch=watch,
+                             bench_summary=snaps["benchmark"], executions=executions, llm=llm,
+                             fetch_hist=fetch_hist)
+        if pms or pm_changes:
+            entry["learning"]["postmortems"] = [p["trade_id"] for p in pms]
+            entry["learning"]["playbook_changes"] = pm_changes + entry["learning"]["playbook_changes"]
+            j.write_day(entry)
         warnings += entry["errors"]
         mode = "trading"
 
@@ -268,7 +282,7 @@ def collect_news(env: Env, store, universe, instruments, now, today, fetch, warn
     names = {t: universe[t].name for t in [*held, *(r["ticker"] for r in table if r["kind"] == "equity")]
              if t in universe}
     watch = dict(list(names.items())[:cfg["news"]["watch_max"]])
-    return _news_window(env, now, fetch, watch, warnings)
+    return _news_window(env, now, fetch, watch, warnings), watch
 
 
 def _news_window(env: Env, now, fetch, watch, warnings) -> list:
@@ -316,10 +330,11 @@ def veille_run(env: Env, now, today, force, llm, fetch) -> RunResult:
     upath = env.root / cfg["data"]["universe_path"]
     universe = load_universe(upath) if upath.exists() else {}
     held = sorted(env.agents.state().positions)
-    watch = {t: universe[t].name for t in held if t in universe}
+    last = j.recent("9999", 1)
+    watch = {**((last[0].get("watch") or {}) if last else {}), **{t: universe[t].name for t in held if t in universe}}
     news_items = _news_window(env, now, fetch, watch, warnings)
     entry = run_veille(today=today, run_at=now, cfg=cfg, ledger=env.agents, store=store, journal=j,
-                       news_items=news_items, llm=llm)
+                       news_items=news_items, kb=env.kb, watch=watch, llm=llm)
     warnings += entry["errors"]
     if env.agents.last_snapshot_date():
         export_dashboard(cfg, env.root, env.ledgers, j, store, env.agents.last_snapshot_date(), universe)

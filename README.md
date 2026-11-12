@@ -11,13 +11,33 @@ Chaque jour à 18h00 (planificateur Windows), `run_daily.py` :
 2. crédite les dividendes, puis exécute les ordres de la veille au **cours d'ouverture** (spread + frais) ;
 3. valorise les 4 portefeuilles à la clôture ;
 4. écrit les post-mortems des positions soldées ;
-5. fait tourner l'équipe : **analyste marché** → **analyste actualité** → **chef** → contrôles automatiques
+5. évalue les prédictions arrivées à échéance, puis fait la **revue de la veille** (décisions vs réalité → règles) ;
+6. constitue le **dossier 6 mois** des titres suivis qui n'en ont pas (Google News, avant la date de décision) ;
+7. fait tourner l'équipe : **analyste marché** → **analyste actualité** (notes, agenda, « déjà dans le prix ») →
+   **chef** (sources obligatoires, prédiction chiffrée, scénarios) → contrôles automatiques
    → **gestionnaire de risque** (peut bloquer) → ordres pour demain ;
 6. exporte les données du dashboard et les synchronise vers **Supabase** (table `pea_docs`) ;
    la PWA, hébergée sur GitHub Pages, les y lit directement. Un mail n'est envoyé qu'en cas de problème.
 
-Le week-end et les jours fériés : veille uniquement (actualités et notes de contexte, aucun ordre).
+Le week-end et les jours fériés : veille (actualités, notes, agenda, aucun ordre) et **revue hebdomadaire**.
 Le dernier jour : rapport final.
+
+## Apprentissage
+
+Tous les agents relisent à chaque run la base de connaissances (`knowledge/`) :
+
+| Fichier | Contenu |
+|---|---|
+| `playbook.json` | règles « si X, alors Y », datées, avec cas pour/contre, effet mesuré et historique |
+| `playbook_log.json`, `playbook/AAAA-MM-JJ.json` | chaque modification, et une version datée du playbook |
+| `predictions.json` | chaque thèse avec horizon et probabilité, évaluée à l'échéance → calibration |
+| `notes.json` | dossiers 6 mois des entreprises, notes par secteur et par thème |
+| `insights.json` | ce qui a fait (ou non) bouger les cours, biais constatés |
+| `agenda.json` | événements à venir et scénarios préparés |
+
+Anti-sur-apprentissage, appliqué par le code : une nouvelle règle naît « hypothèse » ; elle ne devient
+« probable » (2 cas) puis « confirmée » (4 cas) qu'avec des cas distincts ; contredite autant que confirmée,
+elle devient « contestée » ; 2 cas contre de plus que de cas pour, elle est retirée. 3 nouvelles règles par jour au plus.
 
 | Portefeuille | Rôle |
 |---|---|
