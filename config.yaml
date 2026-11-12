@@ -83,6 +83,7 @@ simulation:
 # et pour le rapport final. Adresse et mot de passe à définir dans local.yaml (non versionné).
 notify:
   email: ""                          # adresse qui reçoit les alertes
+  via_claude_gmail: true             # envoi depuis ton Gmail via le connecteur Gmail de ton compte Claude
   smtp_host: smtp.mail.me.com        # iCloud ; Gmail : smtp.gmail.com
   smtp_port: 587
   smtp_user: ""                      # vide = même que email
