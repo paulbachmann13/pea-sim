@@ -42,6 +42,7 @@ from .publish import publish
 from .refresh import refresh_market_data
 from .report import build_report
 from .screener import screen, select
+from .supabase_sync import sync_docs
 from .universe import load_universe
 
 log = logging.getLogger(__name__)
@@ -169,7 +170,15 @@ def trading_run(env: Env, now, today, force, llm, refresh, fetch) -> RunResult:
         mode = "trading"
 
     export_dashboard(cfg, env.root, env.ledgers, j, store, today, universe)
+    sync_dashboard(env, warnings)
     return RunResult(mode, *daily_message(env, h, snaps, executions, entry, mode), warnings)
+
+
+def sync_dashboard(env: Env, warnings: list[str]) -> None:
+    try:
+        sync_docs(env.cfg, env.root / "docs" / "data", env.root / "data" / "supabase_sync.json")
+    except Exception as e:
+        warnings.append(f"synchro Supabase : {e}")
 
 
 def process_sessions(env: Env, store, instruments, pending, today, warnings) -> list[dict]:
@@ -314,5 +323,6 @@ def veille_run(env: Env, now, today, force, llm, fetch) -> RunResult:
     warnings += entry["errors"]
     if env.agents.last_snapshot_date():
         export_dashboard(cfg, env.root, env.ledgers, j, store, env.agents.last_snapshot_date(), universe)
+        sync_dashboard(env, warnings)
     summary = (entry.get("news_analysis") or {}).get("summary", "")
     return RunResult("veille", f"PEA sim : veille du {today}", summary[:500], warnings)

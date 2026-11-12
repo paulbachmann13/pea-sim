@@ -13,7 +13,8 @@ Chaque jour à 18h00 (planificateur Windows), `run_daily.py` :
 4. écrit les post-mortems des positions soldées ;
 5. fait tourner l'équipe : **analyste marché** → **analyste actualité** → **chef** → contrôles automatiques
    → **gestionnaire de risque** (peut bloquer) → ordres pour demain ;
-6. publie le dashboard et envoie un résumé sur le téléphone.
+6. exporte les données du dashboard et les synchronise vers **Supabase** (table `pea_docs`) ;
+   la PWA, hébergée sur GitHub Pages, les y lit directement. Un mail n'est envoyé qu'en cas de problème.
 
 Le week-end et les jours fériés : veille uniquement (actualités et notes de contexte, aucun ordre).
 Le dernier jour : rapport final.
@@ -80,7 +81,8 @@ publish:
 | `journal/rapport-final.md` | rapport de fin de simulation |
 | `data/ledger.db` | comptabilité (SQLite, événements rejouables) |
 | `data/market.db` | cours, dividendes, actualités, anomalies de données (régénérable) |
-| `docs/` | dashboard (PWA statique servie par GitHub Pages) |
+| `docs/` | dashboard (PWA statique servie par GitHub Pages ; version dans `app.js` et `sw.js`) |
+| `docs/data/` | export JSON du jour (non versionné), synchronisé vers Supabase |
 | `logs/` | un log par jour |
 | `sim/` | le code ; `sim/prompts/` les consignes des agents |
 

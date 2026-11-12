@@ -6,3 +6,5 @@ local.yaml
 data/market.db
 data/universe.csv
 data/run.lock
+docs/data/
+data/supabase_sync.json

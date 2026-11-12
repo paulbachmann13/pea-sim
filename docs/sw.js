@@ -1,9 +1,12 @@
-// Service worker : coquille de l'app en cache, données toujours prises sur le réseau (cache en secours hors ligne).
-const CACHE = "pea-sim-v1";
+// Service worker : met en cache la coquille de l'app (hors ligne). Les données viennent de Supabase,
+// non interceptées ici. Changer VERSION (= APP_VERSION dans app.js) à chaque déploiement de l'app :
+// le nouveau worker s'installe et la page propose « Mettre à jour ».
+const VERSION = "1.1.0";
+const CACHE = "pea-sim-" + VERSION;
 const SHELL = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" })))));
 });
 
 self.addEventListener("activate", (e) => {
@@ -11,17 +14,12 @@ self.addEventListener("activate", (e) => {
     .then(() => self.clients.claim()));
 });
 
+self.addEventListener("message", (e) => {
+  if (e.data === "skipWaiting") self.skipWaiting();
+});
+
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
-  if (url.pathname.includes("/data/")) {
-    const key = url.origin + url.pathname;   // sans le ?t= anti-cache
-    e.respondWith(fetch(e.request).then((r) => {
-      const copy = r.clone();
-      caches.open(CACHE).then((c) => c.put(key, copy));
-      return r;
-    }).catch(() => caches.match(key)));
-  } else {
-    e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request)));
-  }
+  e.respondWith(caches.match(e.request, { ignoreSearch: true }).then((r) => r || fetch(e.request)));
 });

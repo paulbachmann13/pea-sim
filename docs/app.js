@@ -1,5 +1,10 @@
 "use strict";
 
+const APP_VERSION = "1.1.0";        // à garder identique à VERSION dans sw.js
+const SUPABASE = {
+  url: "https://gwsomltfixhoikwkpqmd.supabase.co",
+  key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
+};
 const ORDER = ["agents", "benchmark", "random", "agents_lowcost"];
 const SHORT = { agents: "Équipe", agents_lowcost: "Équipe low-cost", benchmark: "ETF Monde", random: "Aléatoire" };
 const state = {};
@@ -15,25 +20,63 @@ const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v
 const ret = (b) => { const s = b.series; return s.length ? (s[s.length - 1].total / b.deposits - 1) * 100 : 0; };
 const last = (b) => (b.series.length ? b.series[b.series.length - 1].total : b.deposits);
 
+// Données : table pea_docs de Supabase (une ligne par fichier JSON exporté par le run quotidien).
+// Copie locale en secours hors connexion.
+class NotFound extends Error {}
+
+const cacheGet = (k) => { try { return JSON.parse(localStorage.getItem("pea:" + k)); } catch { return null; } };
+const cacheSet = (k, v) => { try { localStorage.setItem("pea:" + k, JSON.stringify(v)); } catch {} };
+
 async function getJSON(path) {
-  const r = await fetch(`data/${path}?t=${Date.now()}`);
-  if (!r.ok) throw new Error(`${path} : ${r.status}`);
-  return r.json();
+  try {
+    const r = await fetch(`${SUPABASE.url}/rest/v1/pea_docs?select=data,updated_at&key=eq.${encodeURIComponent(path)}`,
+      { headers: { apikey: SUPABASE.key }, cache: "no-store" });
+    if (!r.ok) throw new Error(`Supabase ${r.status}`);
+    const rows = await r.json();
+    if (!rows.length) throw new NotFound(path);
+    cacheSet(path, rows[0]);
+    noteSync(rows[0].updated_at, false);
+    return rows[0].data;
+  } catch (e) {
+    if (e instanceof NotFound) throw e;
+    const cached = cacheGet(path);
+    if (!cached) throw e;
+    noteSync(cached.updated_at, true);
+    return cached.data;
+  }
+}
+
+function noteSync(updatedAt, offline) {
+  if (!state.syncedAt || updatedAt > state.syncedAt) state.syncedAt = updatedAt;
+  state.offline = state.offline || offline;
 }
 
 // --- Chargement --------------------------------------------------------------
 async function load() {
-  $("#subtitle").textContent = "Chargement…";
+  const btn = $("#refresh");
+  btn.classList.add("spin");
+  state.syncedAt = null; state.offline = false;
   try {
     const [summary, orders, index, pms] = await Promise.all([
       getJSON("summary.json"), getJSON("orders.json"), getJSON("journal/index.json"), getJSON("postmortems.json"),
     ]);
-    Object.assign(state, { summary, orders, index, pms });
+    Object.assign(state, { summary, orders, index, pms, loadedAt: new Date() });
     state.report = await getJSON("report.json").catch(() => null);
     render();
   } catch (e) {
-    $("#subtitle").textContent = "Pas encore de données (" + e.message + ")";
+    $("#subtitle").textContent = "Données indisponibles (" + e.message + ")";
+  } finally {
+    btn.classList.remove("spin");
+    renderFooter();
   }
+}
+
+function renderFooter() {
+  const t = (d) => new Date(d).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const parts = [`PEA sim v${APP_VERSION}`];
+  if (state.syncedAt) parts.push(`données du ${t(state.syncedAt)}`);
+  if (state.loadedAt) parts.push(`vérifié à ${state.loadedAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`);
+  $("#footer").innerHTML = esc(parts.join(" · ")) + (state.offline ? ` · <span class="neg">hors ligne (copie locale)</span>` : "");
 }
 
 function render() {
@@ -208,9 +251,36 @@ document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("cli
   b.classList.add("active");
   $("#tab-" + b.dataset.tab).classList.add("active");
 }));
-$("#refresh").addEventListener("click", load);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => state.summary && renderChart());
 let resizeTimer;
 addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => state.summary && renderChart(), 150); });
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+// Données rafraîchies quand l'app revient au premier plan (après 2 min)
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && (!state.loadedAt || Date.now() - state.loadedAt > 120000)) load();
+});
+
+// --- Mises à jour de l'app (service worker) -----------------------------------
+let swReg;
+$("#refresh").addEventListener("click", () => { swReg?.update().catch(() => {}); load(); });
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").then((reg) => {
+    swReg = reg;
+    if (reg.waiting && navigator.serviceWorker.controller) offerUpdate(reg.waiting);
+    reg.addEventListener("updatefound", () => {
+      const w = reg.installing;
+      w?.addEventListener("statechange", () => {
+        if (w.state === "installed" && navigator.serviceWorker.controller) offerUpdate(w);
+      });
+    });
+  }).catch(() => {});
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (!reloading) { reloading = true; location.reload(); } });
+}
+
+function offerUpdate(worker) {
+  const bar = $("#update");
+  bar.hidden = false;
+  bar.querySelector("button").onclick = () => worker.postMessage("skipWaiting");
+}
+
 load();

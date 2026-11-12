@@ -10,7 +10,9 @@ from sim.money import D
 
 @pytest.fixture
 def cfg():
-    return copy.deepcopy(load_config(local=None))
+    cfg = copy.deepcopy(load_config(local=None))
+    cfg["supabase"]["enabled"] = False
+    return cfg
 
 
 @pytest.fixture

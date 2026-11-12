@@ -92,10 +92,17 @@ notify:
   daily_summary: false               # true = résumé chaque soir en plus des alertes
   dashboard_url: ""                  # lien ajouté aux notifications
 
-# --- Publication du dashboard (GitHub Pages) ---------------------------------
+# --- Données du dashboard (Supabase, lues par la PWA) ------------------------
+supabase:
+  enabled: true
+  url: https://gwsomltfixhoikwkpqmd.supabase.co
+  publishable_key: sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh   # clé publique, lecture seule
+  sync_token: ""                     # jeton d'écriture, dans local.yaml (non versionné)
+
+# --- Publication sur GitHub (optionnelle : sauvegarde du journal et de la compta) --
 publish:
-  enabled: false                     # true une fois le dépôt GitHub créé
-  paths: [docs, journal, data/ledger.db]
+  enabled: false
+  paths: [journal, data/ledger.db]
 
 # --- Agents (LLM via le CLI Claude Code, abonnement) -------------------------
 agents:
