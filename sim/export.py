@@ -52,7 +52,7 @@ def export_dashboard(cfg: dict, root: Path, ledgers: dict[str, Ledger], journal:
 
     h = horizon(agents, as_of, cfg) if agents.start_date() else None
     write_json(out / "summary.json", {
-        "as_of": as_of, "horizon": h,
+        "as_of": as_of, "horizon": h, "capital": cfg["capital_initial"],
         "total_sessions": len(mc.sessions_between(h["start"], h["end"])) if h else None,
         "fee_grid": cfg["fees"]["active"], "compare_grid": cfg["simulation"]["compare_grid"],
         "books": books, "positions": positions, "pending": journal.load_pending(),

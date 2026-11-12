@@ -1,6 +1,6 @@
-"use strict";
+﻿"use strict";
 
-const APP_VERSION = "1.1.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "1.2.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -27,7 +27,16 @@ class NotFound extends Error {}
 const cacheGet = (k) => { try { return JSON.parse(localStorage.getItem("pea:" + k)); } catch { return null; } };
 const cacheSet = (k, v) => { try { localStorage.setItem("pea:" + k, JSON.stringify(v)); } catch {} };
 
+// Mode démo, en local uniquement (http://localhost:…/?demo) : lit les fichiers JSON de docs/data/
+const DEMO = location.hostname === "localhost" && new URLSearchParams(location.search).has("demo");
+
 async function getJSON(path) {
+  if (DEMO) {
+    const r = await fetch(`data/${path}?t=${Date.now()}`);
+    if (!r.ok) throw new NotFound(path);
+    noteSync(new Date().toISOString(), false);
+    return r.json();
+  }
   try {
     const r = await fetch(`${SUPABASE.url}/rest/v1/pea_docs?select=data,updated_at&key=eq.${encodeURIComponent(path)}`,
       { headers: { apikey: SUPABASE.key }, cache: "no-store" });
@@ -84,14 +93,55 @@ function render() {
   $("#subtitle").textContent = h
     ? `Séance ${h.session_no}/${s.total_sessions} · au ${fmtDate(s.as_of)} · fin le ${fmtDate(h.end)}`
     : "La simulation n'a pas encore démarré";
-  renderKpis(); renderChart(); renderPositions(); renderOrders(); renderJournal(); renderLessons(); renderReport();
+  renderHero(); renderKpis(); renderChart(); renderDaily(); renderPositions(); renderOrders(); renderJournal(); renderLessons(); renderReport();
+}
+
+// Valeur actuelle du portefeuille de l'équipe, en grand en haut de page
+function renderHero() {
+  const s = state.summary, a = s.books.agents, capital = a.deposits || s.capital || 1000;
+  const pts = a.series;
+  if (!pts.length) {
+    $("#hero").innerHTML = `<div class="hero-label">Mon argent aujourd'hui</div>
+      <div class="hero-value">${eur(capital)}</div>
+      <div class="hero-sub muted">Capital de départ · la simulation démarre au premier run de 18h</div>`;
+    return;
+  }
+  const now = pts.at(-1).total, prev = pts.length > 1 ? pts.at(-2).total : capital;
+  const gain = now - capital, day = now - prev;
+  const invested = now - a.cash;
+  const signed = (x) => (x > 0 ? "+" : x < 0 ? "−" : "") + eur(Math.abs(x));
+  $("#hero").innerHTML = `<div class="hero-label">Mon argent au ${fmtDate(pts.at(-1).date)}</div>
+    <div class="hero-value">${eur(now)}</div>
+    <div class="hero-gain ${cls(gain)}">${signed(gain)} (${pct(gain / capital * 100)}) depuis le départ</div>
+    <div class="hero-row">
+      <span>Aujourd'hui <b class="${cls(day)}">${signed(day)} (${pct(day / prev * 100)})</b></span>
+      <span>Cash <b>${eur(a.cash)}</b></span>
+      <span>Investi <b>${eur(invested)}</b></span>
+    </div>`;
+}
+
+// Valeur à chaque clôture, la plus récente en premier
+function renderDaily() {
+  const a = state.summary.books.agents, capital = a.deposits || state.summary.capital || 1000;
+  const pts = a.series;
+  if (!pts.length) { $("#daily").innerHTML = `<h2>Jour par jour</h2><p class="empty">Première valeur ce soir après le run.</p>`; return; }
+  const rows = pts.map((p, i) => {
+    const prev = i ? pts[i - 1].total : capital, d = p.total - prev;
+    return `<tr><td class="nowrap">${fmtDate(p.date)}</td><td class="num"><b>${eur(p.total)}</b></td>
+      <td class="num ${cls(d)}">${d > 0 ? "+" : ""}${eur(d)}</td><td class="num ${cls(d)}">${pct(d / prev * 100)}</td>
+      <td class="num ${cls(p.total - capital)}">${pct((p.total / capital - 1) * 100)}</td></tr>`;
+  }).reverse();
+  const head = `<tr><th>Clôture</th><th class="num">Valeur</th><th class="num">Jour</th><th class="num">Jour %</th><th class="num">Total %</th></tr>`;
+  const table = (r) => `<div class="table-wrap"><table>${head}${r.join("")}</table></div>`;
+  $("#daily").innerHTML = `<div class="card-head"><h2>Jour par jour</h2><span class="muted small">départ ${eur(capital)}</span></div>
+    ${table(rows.slice(0, 7))}${rows.length > 7 ? `<details><summary>Voir les ${rows.length - 7} jours précédents</summary>${table(rows.slice(7))}</details>` : ""}`;
 }
 
 function renderKpis() {
-  const b = state.summary.books, a = b.agents;
+  const s = state.summary, b = s.books, a = b.agents, h = s.horizon;
   const gap = (k) => ret(a) - ret(b[k]);
   const cards = [
-    ["Équipe d'agents", eur(last(a)), `<span class="${cls(ret(a))}">${pct(ret(a))}</span>`],
+    ["Séance", h ? `${h.session_no} / ${s.total_sessions}` : "–", h ? `fin le ${fmtDate(h.end)}` : "départ ce soir"],
     ["vs ETF Monde", `<span class="${cls(gap("benchmark"))}">${pct(gap("benchmark"))}</span>`, `ETF ${pct(ret(b.benchmark))}`],
     ["vs Aléatoire", `<span class="${cls(gap("random"))}">${pct(gap("random"))}</span>`, `Aléatoire ${pct(ret(b.random))}`],
     ["Frais payés", eur(a.fees), `low-cost : ${eur(b.agents_lowcost.fees)}`],
