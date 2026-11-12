@@ -20,6 +20,7 @@ Ta tâche :
 3. no_trade_reason : si aucun ordre, pourquoi.
 4. watch_predictions : 0 à 3 prédictions sur des titres que tu n'achètes pas (pour apprendre sans payer de frais).
 5. scenarios : pour les événements importants à venir, ton plan : « si X arrive, alors je fais Y ».
+   Reprends l'événement de l'agenda tel quel et sa date ; date vide si elle n'y figure pas (n'en invente pas).
 
 Points d'attention :
 - Dimensionne avec la colonne qmax du screener (quantité max achetable maintenant, frais et limite de 40 % inclus).

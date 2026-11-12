@@ -16,7 +16,8 @@ Ta tâche :
    Mets en priorité tout ce qui touche une position détenue (et répète-le dans held_alerts).
 3. upcoming_events : les événements à venir que tu repères (publications de résultats, décisions de banques
    centrales ou de régulateurs, lancements, échéances réglementaires, salons technologiques…), avec la date si elle
-   est connue et quelles entreprises éligibles PEA en profitent ou en pâtissent.
+   est connue et quelles entreprises éligibles PEA en profitent ou en pâtissent. N'invente JAMAIS une date : si
+   les actualités ou l'agenda ne la donnent pas, laisse date vide. Ne répète pas un événement déjà à l'agenda.
 4. notes_updates : mets à jour les notes concernées par les nouvelles du jour — entreprise:TICKER, secteur:Nom,
    thème:Nom (ex. thème:IA, secteur:Défense). Réécris la note entière (200 mots max) en gardant l'utile et en retirant
    le périmé. Une note d'entreprise doit dire où en est l'entreprise, ce qui a changé, et ce qu'on attend.

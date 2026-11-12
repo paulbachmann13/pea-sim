@@ -328,11 +328,20 @@ class Knowledge:
         cur = self.agenda()
         idx = {(_norm(e["event"]), e.get("date") or ""): e for e in cur}
         added = 0
+        def similar(a: dict, ev: dict) -> bool:
+            """Même événement reformulé : même date (ou l'une inconnue) et mots en commun."""
+            if a["date"] and ev.get("date") and a["date"] != ev["date"]:
+                return False
+            wa = {w for w in _norm(a["event"]).split() if len(w) > 2}
+            wb = {w for w in _norm(ev["event"]).split() if len(w) > 2}
+            common = len(wa & wb)
+            return common >= 2 and common / min(len(wa), len(wb)) >= 0.6
+
         for ev in events:
             if not ev.get("event"):
                 continue
             key = (_norm(ev["event"]), ev.get("date") or "")
-            e = idx.get(key)
+            e = idx.get(key) or next((a for a in cur if similar(a, ev)), None)
             if e is None:
                 e = {"date": ev.get("date") or "", "event": ev["event"], "tickers": ev.get("tickers", []),
                      "impact": ev.get("impact", ""), "scenarios": [], "added": day, "by": by}

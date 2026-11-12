@@ -133,6 +133,16 @@ def test_insights_dedup_and_obsolete(kb):
     assert kb.render_insights() == "(aucune pour l'instant)"
 
 
+def test_agenda_merges_reworded_events(kb):
+    kb.update_agenda([{"date": "2026-12-01", "event": "Réunion Fed de décembre (date exacte non fournie)",
+                       "tickers": [], "impact": "taux"}], DAY, "news")
+    kb.update_agenda([{"date": "2026-12-01", "event": "Réunion de la Fed en décembre (date à vérifier)",
+                       "tickers": [], "impact": ""},
+                      {"date": "", "event": "Réunion de la Fed en décembre", "tickers": [], "impact": ""},
+                      {"date": "2026-11-20", "event": "Résultats AAA", "tickers": [], "impact": ""}], DAY, "chef")
+    assert [e["event"] for e in kb.agenda()] == ["Réunion Fed de décembre (date exacte non fournie)", "Résultats AAA"]
+
+
 def test_agenda_hides_past_and_keeps_scenarios(kb):
     kb.update_agenda([{"date": "2026-11-20", "event": "Résultats AAA", "tickers": ["AAA.PA"], "impact": "fort"},
                       {"date": "2026-11-01", "event": "Passé", "tickers": [], "impact": ""}], DAY, "news")

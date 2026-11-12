@@ -1,4 +1,4 @@
-__pycache__/
+﻿__pycache__/
 .pytest_cache/
 *.tmp
 logs/
@@ -10,4 +10,3 @@ docs/data/
 data/supabase_sync.json
 journal/
 knowledge/
-data/ledger.db
