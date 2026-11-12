@@ -10,3 +10,4 @@ docs/data/
 data/supabase_sync.json
 journal/
 knowledge/
+data/ledger.db
