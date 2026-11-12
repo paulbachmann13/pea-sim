@@ -34,7 +34,7 @@ from .decide import horizon, run_decision, run_postmortems, run_veille
 from .dossier import fetch_history
 from .knowledge import Knowledge
 from .export import export_dashboard
-from .journal import Journal
+from .journal import Journal, write_json
 from .ledger import Ledger
 from .llm import claude_cli
 from .models import BUY, Order
@@ -119,7 +119,23 @@ def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm
                 publish(cfg, root, f"run {today} ({result.mode})")
             except Exception as e:
                 result.warnings.append(f"publication du dashboard : {e}")
+            record_status(cfg, root, now, result.mode, result.title, result.warnings)
         return result
+
+
+def record_status(cfg: dict, root: Path, now: datetime, mode: str, title: str, warnings: list[str],
+                  error: str | None = None) -> None:
+    """État du dernier run, envoyé au dashboard (bandeau rouge si problème). Indépendant de Claude :
+    il reste lisible quand l'alerte par mail ne peut pas partir (ex. quota Claude épuisé)."""
+    out = root / "docs" / "data"
+    out.mkdir(parents=True, exist_ok=True)
+    write_json(out / "status.json", {"run_at": now.isoformat(), "mode": mode, "title": title,
+                                     "ok": not warnings and not error, "error": error,
+                                     "warnings": [w[:300] for w in warnings]})
+    try:
+        sync_docs(cfg, out, root / "data" / "supabase_sync.json")
+    except Exception:
+        log.exception("état du run non synchronisé vers Supabase")
 
 
 # --- Jour de séance ---------------------------------------------------------------

@@ -16,7 +16,7 @@ from zoneinfo import ZoneInfo
 import yaml
 
 from sim.config import ROOT, load_config, merge
-from sim.daily import run
+from sim.daily import record_status, run
 from sim.notify import notify
 
 PARIS = ZoneInfo("Europe/Paris")
@@ -60,6 +60,10 @@ def main() -> int:
         if cfg:
             tb = "".join(traceback.format_exception(e))[-1500:]
             notify(cfg, "❌ PEA sim : le run a échoué", f"{type(e).__name__} : {e}\n\n{tb}", priority=5, tags=["x"])
+            try:
+                record_status(cfg, ROOT, now, "error", "Le run a échoué", [], error=f"{type(e).__name__} : {e}"[:300])
+            except Exception:
+                log.exception("état du run non enregistré")
         return 1
 
 

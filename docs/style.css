@@ -91,6 +91,11 @@ pre.md { white-space: pre-wrap; font: inherit; margin: 0; }
 .icon-btn.spin { animation: spin .8s linear infinite; pointer-events: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .footer { text-align: center; padding: 24px 0 8px; }
+.alert-bar { border: 1px solid var(--neg); border-left-width: 5px; border-radius: 12px; padding: 10px 12px; margin: 4px 0 12px;
+  background: var(--card); color: var(--text); }
+.alert-bar[hidden] { display: none; }
+.alert-bar b { color: var(--neg); }
+.alert-bar .small { margin-top: 4px; color: var(--muted); word-break: break-word; }
 .update {
   position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 20;
   max-width: 560px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px;

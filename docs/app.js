@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "1.3.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "1.4.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -77,8 +77,20 @@ async function load() {
     $("#subtitle").textContent = "Données indisponibles (" + e.message + ")";
   } finally {
     btn.classList.remove("spin");
+    state.status = await getJSON("status.json").catch(() => null);
+    renderAlert();
     renderFooter();
   }
+}
+
+// Bandeau rouge si le dernier run a eu un problème (indépendant de l'alerte par mail)
+function renderAlert() {
+  const s = state.status, el = $("#alert");
+  if (!s || s.ok) { el.hidden = true; return; }
+  const t = new Date(s.run_at).toLocaleString("fr-FR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const items = s.error ? [s.error] : s.warnings;
+  el.innerHTML = `<b>⚠️ Dernier run (${esc(t)}) : ${s.error ? "échec" : "problème"}</b>${items.map((w) => `<div class="small">${esc(w)}</div>`).join("")}`;
+  el.hidden = false;
 }
 
 function renderFooter() {
