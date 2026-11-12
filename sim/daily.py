@@ -126,7 +126,7 @@ def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm
 
 def trading_run(env: Env, now, today, force, llm, refresh, fetch, fetch_hist=fetch_history) -> RunResult:
     cfg, j = env.cfg, env.journal
-    if j.read_day(today) and not force:
+    if j.is_complete(today) and not force:
         return RunResult("skip", "PEA sim", f"Run du {today} déjà effectué.")
     warnings: list[str] = []
 

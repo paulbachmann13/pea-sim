@@ -9,6 +9,7 @@ import pytest
 from sim import daily
 from sim import market_calendar as mc
 from sim.data import PriceStore
+from sim.llm import LLMError, ask
 from sim.models import Instrument
 from sim.money import D
 from sim.news import NewsItem
@@ -134,6 +135,39 @@ def test_full_simulation(sim):
     assert know["playbook"][0]["id"] == "R1" and know["calibration"]["n"] >= 2 and know["log"]
     index = json.loads((root / "docs" / "data" / "journal" / "index.json").read_text(encoding="utf-8"))
     assert index[0]["final"] and any(i["mode"] == "veille" for i in index)
+
+
+def test_failed_llm_day_is_redone_by_the_catch_up_run(sim):
+    """Quota Claude atteint au run de 18h : le rattrapage du même jour refait la décision."""
+    go, llm, root = sim["go"], sim["llm"], sim["root"]
+    env = daily.open_env(sim["cfg"], root)
+    answers = dict(llm.answers)
+    llm.answers = {**answers, "market": LLMError("quota"), "news": LLMError("quota"), "chef": LLMError("quota")}
+
+    r = go("2026-11-16")
+    assert r.mode == "trading" and r.warnings and env.journal.load_pending()["orders"] == []
+    assert env.journal.last_run_at() is None                       # un run en erreur ne compte pas
+    assert not env.journal.is_complete("2026-11-16")
+
+    llm.answers = answers                                          # le quota est revenu
+    r = go("2026-11-16")                                           # même jour, sans --force
+    assert r.mode == "trading" and "BUY 20 AAA.PA" in r.message and not r.warnings
+    assert all(l.state().deposits == D(1000) for l in env.ledgers.values())    # pas de second dépôt
+    assert env.agents.daily_values() == [("2026-11-16", D(1000))]
+    assert env.journal.load_pending()["orders"][0]["qty"] == 20
+    assert go("2026-11-16").mode == "skip"                         # maintenant terminé
+
+
+def test_quota_error_is_not_retried(cfg):
+    from sim.llm import QuotaError
+    calls = []
+
+    def llm(*a):
+        calls.append(1)
+        raise QuotaError("quota")
+    with pytest.raises(LLMError, match="chef : quota"):
+        ask("chef", "P", "S", {}, cfg, llm=llm)
+    assert len(calls) == 1
 
 
 def test_lock_prevents_concurrent_runs(sim):

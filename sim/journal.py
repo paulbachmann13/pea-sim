@@ -56,8 +56,15 @@ class Journal:
         return [self.read_day(d) for d in days]
 
     def last_run_at(self) -> str | None:
-        runs = [read_json(p).get("run_at") for p in self.root.glob("????-??-??*.json")]
-        return max((r for r in runs if r), default=None)
+        """Dernier run réussi : un run en erreur ne doit pas raccourcir la fenêtre d'actualités du suivant."""
+        entries = (read_json(p) for p in self.root.glob("????-??-??*.json"))
+        return max((e["run_at"] for e in entries if e.get("run_at") and not e.get("errors")), default=None)
+
+    def is_complete(self, d: str, mode: str = "trading") -> bool:
+        """Un jour de séance est terminé s'il a une décision du chef (ou est le dernier jour) ;
+        sinon (panne LLM) le run suivant le refait."""
+        e = self.read_day(d, mode)
+        return bool(e) and (mode != "trading" or bool(e.get("final") or e.get("chef")))
 
     # --- Notes de contexte ---
     def context_notes(self) -> str:
