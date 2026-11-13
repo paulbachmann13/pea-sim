@@ -69,6 +69,8 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line
 th { font-weight: 600; color: var(--muted); font-size: .78rem; }
 td.num, th.num { text-align: right; white-space: nowrap; }
 td.nowrap { white-space: nowrap; }
+td.dots { white-space: nowrap; }
+td.dots i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; border: 1px solid var(--line); }
 .table-wrap { overflow-x: auto; }
 .item { border-bottom: 1px solid var(--line); padding: 10px 0; }
 .item:last-child { border-bottom: 0; }

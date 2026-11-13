@@ -25,6 +25,68 @@ def _thesis_lookup(journal: Journal) -> dict:
     return out
 
 
+# Les agents de l'équipe : clé d'appel LLM, nom, préfixes des messages d'erreur, rôle
+LLM_AGENTS = [
+    ("market", "Analyste marché", ("analyste marché",), "Lit le screener (cours, volumes, RSI) et repère des opportunités"),
+    ("news", "Analyste actualité", ("analyste actualité",), "Lit la presse, tient les notes et l'agenda, juge si c'est « déjà dans le prix »"),
+    ("chef", "Chef", ("chef",), "Décide les ordres, cite ses sources, chiffre ses prédictions"),
+    ("risk", "Gestionnaire de risque", ("gestionnaire de risque",), "Peut bloquer un ordre déraisonnable (seulement s'il y a des ordres)"),
+    ("review", "Revue quotidienne", ("revue quotidienne",), "Compare les décisions de la veille à la réalité, propose des règles"),
+    ("dossier", "Dossiers entreprises", ("dossiers", "historique"), "Constitue l'historique 6 mois des titres suivis (une fois par titre)"),
+    ("postmortem", "Post-mortems", ("post-mortems",), "Analyse chaque position clôturée (quand il y en a)"),
+    ("weekly", "Revue hebdomadaire", ("revue hebdomadaire",), "Fait le ménage du playbook, une fois par semaine (week-end)"),
+    ("report", "Rapport final", ("rapport final",), "Rédige l'analyse de fin de simulation (dernier jour)"),
+]
+CODE_AGENTS = [
+    ("ledger", "Comptabilité", "Positions, frais, P&L, valorisation, benchmark (code, pas de LLM)"),
+    ("screener", "Screener", "Indicateurs sur les titres liquides (code, pas de LLM)"),
+    ("validator", "Validation des ordres", "PEA, liquidité, cash, 40 %, 5 ordres/jour (code, pas de LLM)"),
+]
+
+
+def agent_states(e: dict, warnings=()) -> dict[str, dict]:
+    """État de chaque agent pour un run : ok / error / skipped (non requis ce jour-là)."""
+    calls, msgs = e.get("llm_calls", []), [*e.get("errors", []), *warnings]
+    out = {}
+    for key, _, labels, _ in LLM_AGENTS:
+        mine = [c for c in calls if c["role"] == key]
+        errs = [m for m in msgs if m.startswith(labels)]
+        status = "error" if errs else "ok" if mine else "skipped"
+        if status == "skipped" and key == "postmortem" and (e.get("learning") or {}).get("postmortems"):
+            status = "ok"                                   # appel LLM non journalisé, mais post-mortem écrit
+        if status == "skipped" and key == "report" and e.get("final"):
+            status = "ok"
+        out[key] = {"status": status, "calls": len(mine), "seconds": round(sum(c["duration_s"] for c in mine)),
+                    "tokens_in": sum(c["input_tokens"] for c in mine), "tokens_out": sum(c["output_tokens"] for c in mine),
+                    "model": mine[0]["model"] if mine else None, "error": errs[0][:200] if errs else None}
+    trading = e.get("mode") == "trading"
+    for key, ran in (("ledger", trading and "portfolio" in e), ("screener", trading and "screener" in e),
+                     ("validator", trading and "screener" in e)):
+        out[key] = {"status": "ok" if ran else "skipped"}
+    return out
+
+
+def export_agents(cfg: dict, root: Path, warnings=()) -> None:
+    """Tableau des agents du dashboard : dernier run et 7 derniers runs. `warnings` = ceux du run en cours."""
+    jdir = root / cfg["simulation"]["journal_dir"]
+    entries = sorted((read_json(p) for p in jdir.glob("????-??-??*.json")), key=lambda e: e.get("run_at", ""))
+    if not entries:
+        return
+    last, recent = entries[-1], entries[-7:]
+    states = agent_states(last, warnings)
+    history = [{"date": e["date"], "mode": e["mode"], "states": {k: v["status"] for k, v in
+                (agent_states(e, warnings if e is last else ()).items())}} for e in recent]
+    agents = []
+    for key, name, _, desc in LLM_AGENTS:
+        agents.append({"key": key, "name": name, "kind": "llm", "desc": desc, **states[key],
+                       "model": states[key]["model"] or cfg["agents"]["models"].get(key)})
+    for key, name, desc in CODE_AGENTS:
+        agents.append({"key": key, "name": name, "kind": "code", "desc": desc, **states[key], "model": None})
+    write_json(root / "docs" / "data" / "agents.json",
+               {"last_run": {"date": last["date"], "mode": last["mode"], "run_at": last.get("run_at")},
+                "agents": agents, "history": history})
+
+
 def export_knowledge(cfg: dict, root: Path, out: Path, as_of: str) -> None:
     """Playbook (avec effet mesuré des règles), journal des changements, prédictions, calibration, notes, agenda."""
     kb = Knowledge(root / cfg["knowledge"]["dir"])

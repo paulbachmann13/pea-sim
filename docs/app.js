@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "1.4.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "1.5.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -72,6 +72,7 @@ async function load() {
     Object.assign(state, { summary, orders, index, pms, loadedAt: new Date() });
     state.report = await getJSON("report.json").catch(() => null);
     state.knowledge = await getJSON("knowledge.json").catch(() => null);
+    state.agents = await getJSON("agents.json").catch(() => null);
     render();
   } catch (e) {
     $("#subtitle").textContent = "Données indisponibles (" + e.message + ")";
@@ -106,7 +107,7 @@ function render() {
   $("#subtitle").textContent = h
     ? `Séance ${h.session_no}/${s.total_sessions} · au ${fmtDate(s.as_of)} · fin le ${fmtDate(h.end)}`
     : "La simulation n'a pas encore démarré";
-  renderHero(); renderKpis(); renderChart(); renderDaily(); renderPositions(); renderOrders(); renderJournal(); renderLearning(); renderLessons(); renderReport();
+  renderHero(); renderKpis(); renderChart(); renderDaily(); renderPositions(); renderOrders(); renderJournal(); renderAgents(); renderLearning(); renderLessons(); renderReport();
 }
 
 // Valeur actuelle du portefeuille de l'équipe, en grand en haut de page
@@ -184,8 +185,9 @@ function renderChart() {
     grid += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${css("--line")}" ${Math.abs(v) < 1e-9 ? 'stroke-width="1.5"' : ""}/>`;
     grid += `<text x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${v.toFixed(step < 1 ? 1 : 0)}%</text>`;
   }
-  const ticks = [dates[0], dates[Math.floor(dates.length / 2)], dates[dates.length - 1]];
-  grid += ticks.map((d, i) => `<text x="${x(d)}" y="${H - 6}" text-anchor="${["start", "middle", "end"][i]}">${fmtDate(d)}</text>`).join("");
+  const ticks = [...new Set([dates[0], dates[Math.floor(dates.length / 2)], dates[dates.length - 1]])];
+  const anchor = (d) => (d === dates[0] ? "start" : d === dates[dates.length - 1] ? "end" : "middle");
+  grid += ticks.map((d) => `<text x="${x(d)}" y="${H - 6}" text-anchor="${anchor(d)}">${fmtDate(d)}</text>`).join("");
   const lines = series.slice().reverse().map((s) => {
     const path = s.pts.map((p, i) => `${i ? "L" : "M"}${x(p.d).toFixed(1)},${y(p.v).toFixed(1)}`).join("");
     return `<path d="${path}" fill="none" stroke="${css("--s-" + s.key)}" stroke-width="${s.key === "agents" ? 2.6 : 1.6}" stroke-linejoin="round" stroke-linecap="round"/>`;
@@ -296,6 +298,39 @@ async function openDay(file) {
   if (e.llm_calls?.length) parts.push(`<p class="muted small">Appels LLM : ${e.llm_calls.map((c) => `${esc(c.role)} (${esc(c.model)}, ${c.duration_s}s)`).join(", ")}</p>`);
   $("#day-body").innerHTML = parts.join("") || `<p class="empty">Rien à afficher.</p>`;
   $("#day-dialog").showModal();
+}
+
+// --- Agents : qui a tourné au dernier run, et sur les 7 derniers ---------------
+const AG_STATUS = { ok: ["✓ OK", "pos"], error: ["✗ Erreur", "neg"], skipped: ["– non requis", "muted"] };
+const AG_DOT = { ok: "var(--pos)", error: "var(--neg)", skipped: "var(--line)" };
+
+function renderAgents() {
+  const a = state.agents;
+  if (!a) { $("#tab-agents").innerHTML = `<div class="card"><p class="empty">Le tableau des agents apparaîtra après le prochain run.</p></div>`; return; }
+  const llm = a.agents.filter((x) => x.kind === "llm"), code = a.agents.filter((x) => x.kind === "code");
+  const count = (s) => a.agents.filter((x) => x.status === s).length;
+  const hist = (k) => a.history.map((h) => `<i title="${esc(fmtDate(h.date))} : ${esc(AG_STATUS[h.states[k]]?.[0] || "–")}" style="background:${AG_DOT[h.states[k]] || AG_DOT.skipped}"></i>`).join("");
+  const kt = (n) => n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
+  const row = (x) => {
+    const [label, c] = AG_STATUS[x.status];
+    const detail = x.status === "skipped" ? esc(x.desc)
+      : [x.seconds != null && x.kind === "llm" ? `${x.seconds} s` : "", x.tokens_in ? `${kt(x.tokens_in)} → ${kt(x.tokens_out)} tokens` : ""].filter(Boolean).map(esc).join(" · ");
+    return `<tr><td><b>${esc(x.name)}</b>${x.model ? ` <span class="chip">${esc(x.model)}</span>` : ""}
+      <div class="muted small">${x.status === "skipped" ? detail : esc(x.desc)}</div>
+      ${x.status !== "skipped" && detail ? `<div class="muted small">${detail}</div>` : ""}
+      ${x.error ? `<div class="neg small">${esc(x.error)}</div>` : ""}</td>
+      <td class="nowrap ${c}"><b>${label}</b></td><td class="dots">${hist(x.key)}</td></tr>`;
+  };
+  const head = `<tr><th>Agent</th><th>Dernier run</th><th>${a.history.length} derniers</th></tr>`;
+  const d = a.last_run;
+  $("#tab-agents").innerHTML = `<div class="card"><div class="card-head"><h2>L'équipe</h2>
+    <span class="muted small">${llm.length} agents IA · ${code.length} modules de code</span></div>
+    <p class="small">Dernier run : <b>${esc(fmtDate(d.date))}</b>${d.mode === "veille" ? " (veille)" : ""} —
+    <b class="pos">${count("ok")} ont tourné</b>, ${count("skipped")} non requis,
+    <b class="${count("error") ? "neg" : ""}">${count("error")} en erreur</b>.</p>
+    <h3>Agents IA (Claude)</h3><div class="table-wrap"><table>${head}${llm.map(row).join("")}</table></div>
+    <h3>Modules de code (déterministes)</h3><div class="table-wrap"><table>${head}${code.map(row).join("")}</table></div>
+    <p class="muted small">« Non requis » = l'agent n'avait rien à faire ce jour-là (ex. le gestionnaire de risque n'intervient que s'il y a des ordres ; la revue hebdomadaire a lieu le week-end). Un point par run, du plus ancien au plus récent : vert = OK, rouge = erreur, gris = non requis.</p></div>`;
 }
 
 // --- Apprentissage : playbook, calibration, agenda, connaissances ---------------

@@ -33,7 +33,7 @@ from .data import PriceStore
 from .decide import horizon, run_decision, run_postmortems, run_veille
 from .dossier import fetch_history
 from .knowledge import Knowledge
-from .export import export_dashboard
+from .export import export_agents, export_dashboard
 from .journal import Journal, write_json
 from .ledger import Ledger
 from .llm import claude_cli
@@ -132,6 +132,10 @@ def record_status(cfg: dict, root: Path, now: datetime, mode: str, title: str, w
     write_json(out / "status.json", {"run_at": now.isoformat(), "mode": mode, "title": title,
                                      "ok": not warnings and not error, "error": error,
                                      "warnings": [w[:300] for w in warnings]})
+    try:
+        export_agents(cfg, root, warnings)
+    except Exception:
+        log.exception("tableau des agents non exporté")
     try:
         sync_docs(cfg, out, root / "data" / "supabase_sync.json")
     except Exception:

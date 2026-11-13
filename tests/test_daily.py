@@ -148,6 +148,9 @@ def test_failed_llm_day_is_redone_by_the_catch_up_run(sim):
     r = go("2026-11-16")
     assert r.mode == "trading" and r.warnings and env.journal.load_pending()["orders"] == []
     assert status()["ok"] is False and "quota" in " ".join(status()["warnings"])    # bandeau rouge du dashboard
+    agents = lambda: {a["key"]: a["status"] for a in json.loads(
+        (root / "docs" / "data" / "agents.json").read_text(encoding="utf-8"))["agents"]}
+    assert agents()["chef"] == "error" and agents()["market"] == "error"
     assert env.journal.last_run_at() is None                       # un run en erreur ne compte pas
     assert not env.journal.is_complete("2026-11-16")
 
@@ -158,6 +161,7 @@ def test_failed_llm_day_is_redone_by_the_catch_up_run(sim):
     assert env.agents.daily_values() == [("2026-11-16", D(1000))]
     assert env.journal.load_pending()["orders"][0]["qty"] == 20
     assert status()["ok"] is True and status()["warnings"] == []   # le bandeau disparaît
+    assert agents()["chef"] == "ok" and agents()["risk"] == "ok" and agents()["ledger"] == "ok"
     assert go("2026-11-16").mode == "skip"                         # maintenant terminé
 
 
