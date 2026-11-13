@@ -147,8 +147,8 @@ news:
   lookback_hours: 72                 # fenêtre au premier run
 
 # --- Budget de l'abonnement Claude ---------------------------------------------
-# Unité : « équivalent $ API » (pondère les modèles : Opus pèse plus que Sonnet). Mesuré : ~0,5 $ par jour de
-# bourse. Ces plafonds limitent la part de CE projet ; ton quota réel est partagé avec tes autres projets et
+# Unité : « équivalent $ API » (pondère les modèles : Opus pèse plus que Sonnet), l'unité du CLI Claude ; la PWA
+# l'affiche en euros (taux BCE du jour). Mesuré : ~0,5 $ (≈ 0,45 €) par jour de bourse. Ces plafonds limitent la part de CE projet ; ton quota réel est partagé avec tes autres projets et
 # n'est pas lisible depuis le CLI. Baisse les valeurs (ou pause: true) pour laisser plus de place aux autres.
 budget:
   enabled: true

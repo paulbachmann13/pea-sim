@@ -5,6 +5,7 @@ from pathlib import Path
 from . import market_calendar as mc
 from .decide import horizon
 from .journal import Journal, read_json, write_json
+from .fx import usd_to_eur
 from .knowledge import Knowledge
 from .usage import Usage, summarize
 from .ledger import Ledger
@@ -96,7 +97,8 @@ def export_usage(cfg: dict, root: Path) -> None:
     """Consommation de l'abonnement (jour, semaine, 14 jours, par agent, quotas atteints) pour le dashboard."""
     b = cfg["budget"]
     usage = Usage(root / b["log"], root / b["shared_log"] if b.get("shared_log") else None)
-    write_json(root / "docs" / "data" / "usage.json", summarize(cfg, usage))
+    fx = usd_to_eur(root)
+    write_json(root / "docs" / "data" / "usage.json", {**summarize(cfg, usage), "eur": fx})
 
 
 def export_knowledge(cfg: dict, root: Path, out: Path, as_of: str) -> None:

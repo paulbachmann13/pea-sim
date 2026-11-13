@@ -31,7 +31,10 @@ Le dernier jour : rapport final.
 ## Budget et consommation de l'abonnement
 
 Chaque appel Claude est journalisé (`data/usage.jsonl` : tokens, équivalent $ API, durée, quota). L'onglet **Agents**
-du dashboard montre la consommation du jour, de la semaine, des 14 derniers jours et par agent.
+du dashboard montre la consommation du jour, de la semaine, des 14 derniers jours et par agent, **en euros** (taux BCE
+du jour, avec un taux de secours hors ligne). Le mode du budget et la pause se choisissent dans cet onglet, avec un
+code de réglage (`settings_code` dans `local.yaml`) ; le run applique le choix au passage suivant. Les chiffres de
+`config.yaml` restent en équivalent $ API.
 
 Le quota réel de l'abonnement n'est pas lisible depuis le CLI et il est partagé avec tes autres projets : ce projet
 plafonne donc sa propre part (`budget` dans `config.yaml`, en équivalent $ API, ≈ 0,5 $ par jour de bourse mesuré) :

@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "1.8.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "1.9.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -384,7 +384,9 @@ document.addEventListener("change", (ev) => {
 function renderUsage() {
   const u = state.usage;
   if (!u) return "";
-  const usd = (x) => `${Number(x).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+  // Les montants du journal de consommation sont en dollars (unité du CLI) : on les affiche en euros.
+  const rate = u.eur?.rate ?? 0.92;
+  const cost = (x) => eur(Number(x) * rate);
   const kt = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1).replace(".", ",")} M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
   const bar = (v, cap) => {
     const p = cap ? v / cap : 0, c = p >= 1 ? "var(--neg)" : p >= 0.6 ? "var(--s-benchmark)" : "var(--pos)";
@@ -398,30 +400,30 @@ function renderUsage() {
   const modes = u.presets ? `<h3>Mode du budget</h3><div class="table-wrap"><table>
       <tr><th>Mode</th><th class="num">Jour</th><th class="num">Week-end</th><th class="num">Semaine</th></tr>
       ${Object.entries(u.presets).map(([k, p]) => `<tr${k === u.mode ? ' class="cur"' : ""}><td><b>${esc(modeNames[k] || k)}</b>${k === u.mode ? ' <span class="chip">actuel</span>' : ""}</td>
-        <td class="num">${usd(p.daily_usd)}<div class="muted small">≈ ${kt(Math.round(p.daily_usd * tokPerUsd))}</div></td>
-        <td class="num">${usd(p.weekend_usd)}<div class="muted small">≈ ${kt(Math.round(p.weekend_usd * tokPerUsd))}</div></td>
-        <td class="num">${usd(p.weekly_usd)}<div class="muted small">≈ ${kt(Math.round(p.weekly_usd * tokPerUsd))}</div></td></tr>`).join("")}</table></div>
+        <td class="num">${cost(p.daily_usd)}<div class="muted small">≈ ${kt(Math.round(p.daily_usd * tokPerUsd))}</div></td>
+        <td class="num">${cost(p.weekend_usd)}<div class="muted small">≈ ${kt(Math.round(p.weekend_usd * tokPerUsd))}</div></td>
+        <td class="num">${cost(p.weekly_usd)}<div class="muted small">≈ ${kt(Math.round(p.weekly_usd * tokPerUsd))}</div></td></tr>`).join("")}</table></div>
       <p class="muted small">Sous chaque montant : l'équivalent en tokens (lus + écrits). <b>Économe</b> laisse de la place à tes autres projets ; <b>large</b> n'a pas à se priver de la recherche web.</p>
       ${settingsControls(u)}` : "";
   const typical = u.typical_day_usd
-    ? `<p class="small">📏 <b>Repère</b> : un jour de bourse typique coûte <b>${usd(u.typical_day_usd)}</b> (${tok(u.typical_day_usd)}), d'après tes ${u.days_measured} jour(s) mesuré(s). Les plafonds sont des garde-fous, pas la dépense attendue.</p>` : "";
+    ? `<p class="small">📏 <b>Repère</b> : un jour de bourse typique coûte <b>${cost(u.typical_day_usd)}</b> (${tok(u.typical_day_usd)}), d'après tes ${u.days_measured} jour(s) mesuré(s). Les plafonds sont des garde-fous, pas la dépense attendue.</p>` : "";
   const names = Object.fromEntries((state.agents?.agents || []).map((a) => [a.key, a.name]));
   const roles = Object.entries(w.by_role).sort((a, b) => b[1] - a[1]);
   const maxDay = Math.max(u.limits.weekend_usd, ...u.days.map((d) => d.usd));
-  const bars = u.days.map((d) => `<div class="b" title="${esc(fmtDate(d.date))} : ${usd(d.usd)}, ${kt(d.tokens_in)} → ${kt(d.tokens_out)} tokens">
+  const bars = u.days.map((d) => `<div class="b" title="${esc(fmtDate(d.date))} : ${cost(d.usd)}, ${kt(d.tokens_in)} → ${kt(d.tokens_out)} tokens">
       <i style="height:${Math.max(2, (d.usd / maxDay) * 100)}%;background:${d.usd >= (new Date(d.date + "T12:00:00").getDay() % 6 === 0 ? u.limits.weekend_usd : u.limits.daily_usd) ? "var(--neg)" : "var(--accent)"}"></i>
       <span>${new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "narrow" })}</span></div>`).join("");
   const hits = u.quota_hits.slice(-3).map((h) => `<p class="small neg">⚠️ Quota Claude atteint le ${esc(new Date(h.ts).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}${h.reset ? ` (reset ${esc(h.reset)})` : ""}</p>`).join("");
-  return `<div class="card"><div class="card-head"><h2>Consommation de l'abonnement</h2><span class="muted small">équivalent $ API</span></div>
+  return `<div class="card"><div class="card-head"><h2>Consommation de l'abonnement</h2><span class="muted small">en €, équivalent API</span></div>
     ${u.pause ? `<p class="neg small"><b>⏸ En pause</b> : aucun appel à Claude (budget.pause dans config.yaml).</p>` : ""}
-    <div class="usage-row"><span>Aujourd'hui</span><b>${usd(t.usd)}</b><span class="muted small">sur ${usd(t.cap)} (${tok(t.cap)}) · utilisé : ${kt(t.tokens_in)} lus → ${kt(t.tokens_out)} écrits · ${t.calls} appels${t.failed ? `, ${t.failed} échoué(s)` : ""}</span></div>${bar(t.usd, t.cap)}
-    <div class="usage-row"><span>Cette semaine</span><b>${usd(w.usd)}</b><span class="muted small">sur ${usd(w.cap)} (${tok(w.cap)}) · utilisé : ${kt(w.tokens_in)} lus → ${kt(w.tokens_out)} écrits</span></div>${bar(w.usd, w.cap)}
+    <div class="usage-row"><span>Aujourd'hui</span><b>${cost(t.usd)}</b><span class="muted small">sur ${cost(t.cap)} (${tok(t.cap)}) · utilisé : ${kt(t.tokens_in)} lus → ${kt(t.tokens_out)} écrits · ${t.calls} appels${t.failed ? `, ${t.failed} échoué(s)` : ""}</span></div>${bar(t.usd, t.cap)}
+    <div class="usage-row"><span>Cette semaine</span><b>${cost(w.usd)}</b><span class="muted small">sur ${cost(w.cap)} (${tok(w.cap)}) · utilisé : ${kt(w.tokens_in)} lus → ${kt(w.tokens_out)} écrits</span></div>${bar(w.usd, w.cap)}
     ${hits}${typical}${modes}
     <h3>14 derniers jours</h3><div class="bars">${bars || `<p class="empty">Pas encore de données.</p>`}</div>
-    <h3>Cette semaine, par agent</h3>${roles.length ? `<div class="table-wrap"><table>${roles.map(([k, v]) => `<tr><td>${esc(names[k] || k)}</td><td class="num">${usd(v)}</td><td class="num muted">${w.usd ? Math.round((v / w.usd) * 100) : 0} %</td></tr>`).join("")}</table></div>` : `<p class="empty">Aucun appel cette semaine.</p>`}
-    <p class="muted small">Total depuis le début : ${usd(u.total.usd)} (${kt(u.total.tokens_in)} → ${kt(u.total.tokens_out)} tokens, ${u.total.calls} appels).
-    L'équivalent $ API pondère les modèles (Opus pèse plus que Sonnet) : c'est la meilleure mesure de ce que ce projet prélève sur ton abonnement. Ton quota réel n'est pas lisible et il est partagé avec tes autres projets : ce projet s'arrête de lui-même aux plafonds (${usd(u.limits.daily_usd)} par jour de bourse, ${usd(u.limits.weekend_usd)} le week-end, ${usd(u.limits.weekly_usd)} par semaine). Les tâches optionnelles (recherche web, dossiers, revue hebdomadaire) s'arrêtent dès ${Math.round(u.limits.tier3_share * 100)} % du budget du jour ; le chef et le risque ne sont jamais coupés.
-    Les « ≈ tokens » sont calculés d'après ta consommation réelle (lus + écrits par dollar), donc ce sont des ordres de grandeur. Le choix du mode et la pause se font plus haut, avec ton code de réglage ; ils s'appliquent au prochain run.</p></div>`;
+    <h3>Cette semaine, par agent</h3>${roles.length ? `<div class="table-wrap"><table>${roles.map(([k, v]) => `<tr><td>${esc(names[k] || k)}</td><td class="num">${cost(v)}</td><td class="num muted">${w.usd ? Math.round((v / w.usd) * 100) : 0} %</td></tr>`).join("")}</table></div>` : `<p class="empty">Aucun appel cette semaine.</p>`}
+    <p class="muted small">Total depuis le début : ${cost(u.total.usd)} (${kt(u.total.tokens_in)} → ${kt(u.total.tokens_out)} tokens, ${u.total.calls} appels).
+    Les montants sont l'« équivalent API » : le prix qu'auraient ces appels au tarif API, converti en euros (${u.eur?.date ? `taux ${esc(u.eur.source)} du ${esc(fmtDate(u.eur.date))} : 1 $ = ${rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })} €` : `taux approximatif : 1 $ ≈ ${rate.toLocaleString("fr-FR")} €`}). Il pondère les modèles (Opus pèse plus que Sonnet) : c'est la meilleure mesure de ce que ce projet prélève sur ton abonnement ; tu ne paies rien de plus, c'est inclus. Ton quota réel n'est pas lisible et il est partagé avec tes autres projets : ce projet s'arrête de lui-même aux plafonds (${cost(u.limits.daily_usd)} par jour de bourse, ${cost(u.limits.weekend_usd)} le week-end, ${cost(u.limits.weekly_usd)} par semaine). Les tâches optionnelles (recherche web, dossiers, revue hebdomadaire) s'arrêtent dès ${Math.round(u.limits.tier3_share * 100)} % du budget du jour ; le chef et le risque ne sont jamais coupés.
+    Les « ≈ tokens » sont calculés d'après ta consommation réelle (lus + écrits par euro dépensé), donc ce sont des ordres de grandeur. Le choix du mode et la pause se font plus haut, avec ton code de réglage ; ils s'appliquent au prochain run.</p></div>`;
 }
 
 // --- Plan de la semaine et recherches du week-end ----------------------------------
