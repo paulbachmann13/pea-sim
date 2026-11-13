@@ -1,9 +1,9 @@
 ﻿// Service worker : met en cache la coquille de l'app (hors ligne). Les données viennent de Supabase,
 // non interceptées ici. Changer VERSION (= APP_VERSION dans app.js) à chaque déploiement de l'app :
 // le nouveau worker s'installe et la page propose « Mettre à jour ».
-const VERSION = "1.9.0";
+const VERSION = "2.0.0";
 const CACHE = "pea-sim-" + VERSION;
-const SHELL = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
+const SHELL = ["./", "index.html", "style.css", "org.js", "app.js","manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" }))))

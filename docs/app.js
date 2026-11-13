@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "1.9.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "2.0.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -445,7 +445,7 @@ function researchHtml(r) {
 
 function renderAgents() {
   const a = state.agents;
-  if (!a) { $("#tab-agents").innerHTML = renderUsage() + `<div class="card"><p class="empty">Le tableau des agents apparaîtra après le prochain run.</p></div>`; return; }
+  if (!a) { $("#tab-agents").innerHTML = renderOrg() + renderUsage() + `<div class="card"><p class="empty">Le tableau des agents apparaîtra après le prochain run.</p></div>`; return; }
   const llm = a.agents.filter((x) => x.kind === "llm"), code = a.agents.filter((x) => x.kind === "code");
   const count = (s) => a.agents.filter((x) => x.status === s).length;
   const hist = (k) => a.history.map((h) => `<i title="${esc(fmtDate(h.date))} : ${esc(AG_STATUS[h.states[k]]?.[0] || "–")}" style="background:${AG_DOT[h.states[k]] || AG_DOT.skipped}"></i>`).join("");
@@ -464,14 +464,14 @@ function renderAgents() {
   };
   const head = `<tr><th>Agent</th><th>Dernier run</th><th>${a.history.length} derniers</th></tr>`;
   const d = a.last_run;
-  $("#tab-agents").innerHTML = renderUsage() + `<div class="card"><div class="card-head"><h2>L'équipe</h2>
+  $("#tab-agents").innerHTML = renderOrg() + `<div class="card"><div class="card-head"><h2>Le détail, agent par agent</h2>
     <span class="muted small">${llm.length} agents IA · ${code.length} modules de code</span></div>
     <p class="small">Dernier run : <b>${esc(fmtDate(d.date))}</b>${d.mode === "veille" ? " (veille)" : ""} —
     <b class="pos">${count("ok")} ont tourné</b>, ${count("skipped")} non requis,
     ${count("budget") ? `${count("budget")} économisé(s) pour le budget, ` : ""}<b class="${count("error") ? "neg" : ""}">${count("error")} en erreur</b>.</p>
     <h3>Agents IA (Claude)</h3><div class="table-wrap"><table>${head}${llm.map(row).join("")}</table></div>
     <h3>Modules de code (déterministes)</h3><div class="table-wrap"><table>${head}${code.map(row).join("")}</table></div>
-    <p class="muted small">« Non requis » = l'agent n'avait rien à faire ce jour-là (ex. le gestionnaire de risque n'intervient que s'il y a des ordres ; la revue hebdomadaire, la recherche web et le plan ont lieu le week-end). « Économisé » = appel sauté pour respecter le budget (ni erreur ni oubli). Un point par run, du plus ancien au plus récent : vert = OK, rouge = erreur, gris = non requis.</p></div>`;
+    <p class="muted small">« Non requis » = l'agent n'avait rien à faire ce jour-là (ex. le gestionnaire de risque n'intervient que s'il y a des ordres ; la revue hebdomadaire, la recherche web et le plan ont lieu le week-end). « Économisé » = appel sauté pour respecter le budget (ni erreur ni oubli). Un point par run, du plus ancien au plus récent : vert = OK, rouge = erreur, gris = non requis.</p></div>` + renderUsage();
 }
 
 // --- Apprentissage : playbook, calibration, agenda, connaissances ---------------
