@@ -152,11 +152,16 @@ news:
 # n'est pas lisible depuis le CLI. Baisse les valeurs (ou pause: true) pour laisser plus de place aux autres.
 budget:
   enabled: true
+  mode: normal                       # eco | normal | large — pour changer, dans local.yaml : budget: {mode: eco}
   pause: false                       # true = AUCUN appel LLM (le run continue : compta, cours, dashboard)
-  daily_usd: 1.2                     # jours de bourse
-  weekend_usd: 3.0                   # samedi / dimanche (recherche web + plan de la semaine)
-  weekly_usd: 8.0                    # semaine ISO (lundi-dimanche)
-  tier3_share: 0.6                   # les tâches optionnelles s'arrêtent à 60 % du budget du jour (80 % de la semaine)
+  # Modes prêts à l'emploi. daily = jour de bourse, weekend = samedi/dimanche (recherche web + plan),
+  # weekly = semaine ISO. tier3_share : les tâches optionnelles (recherche web, dossiers, revue hebdomadaire)
+  # s'arrêtent à cette part du budget du jour (80 % de celui de la semaine).
+  presets:
+    eco:    {daily_usd: 0.8, weekend_usd: 2.0, weekly_usd: 5.0,  tier3_share: 0.4}    # laisse de la place à tes autres projets
+    normal: {daily_usd: 1.2, weekend_usd: 3.0, weekly_usd: 8.0,  tier3_share: 0.6}    # ~×2 de la dépense mesurée
+    large:  {daily_usd: 2.5, weekend_usd: 6.0, weekly_usd: 15.0, tier3_share: 0.75}   # recherche web et dossiers sans se priver
+  overrides: {}                      # valeurs à forcer par-dessus le mode, ex. {weekly_usd: 6}
   max_call_usd: 3.0                  # plafond d'un seul appel (--max-budget-usd)
   log: data/usage.jsonl              # journal de chaque appel (tokens, $, durée, quota)
   shared_log: ""                     # optionnel : fichier commun où d'autres projets ajoutent leurs lignes JSON

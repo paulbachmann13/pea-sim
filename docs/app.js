@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "1.6.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "1.7.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -314,12 +314,26 @@ function renderUsage() {
   const u = state.usage;
   if (!u) return "";
   const usd = (x) => `${Number(x).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
-  const kt = (n) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
+  const kt = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1).replace(".", ",")} M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
   const bar = (v, cap) => {
     const p = cap ? v / cap : 0, c = p >= 1 ? "var(--neg)" : p >= 0.6 ? "var(--s-benchmark)" : "var(--pos)";
     return `<div class="bar"><div style="width:${Math.min(100, p * 100)}%;background:${c}"></div></div>`;
   };
   const t = u.today, w = u.week;
+  const per = u.per_usd || { in: 180000, out: 23000 };
+  const tokPerUsd = per.in + per.out;
+  const tok = (d) => `≈ ${kt(Math.round(d * tokPerUsd))} tokens`;            // dollars → tokens, d'après ta consommation réelle
+  const modeNames = { eco: "Économe", normal: "Normal", large: "Large" };
+  const modes = u.presets ? `<h3>Mode du budget</h3><div class="table-wrap"><table>
+      <tr><th>Mode</th><th class="num">Jour</th><th class="num">Week-end</th><th class="num">Semaine</th></tr>
+      ${Object.entries(u.presets).map(([k, p]) => `<tr${k === u.mode ? ' class="cur"' : ""}><td><b>${esc(modeNames[k] || k)}</b>${k === u.mode ? ' <span class="chip">actuel</span>' : ""}</td>
+        <td class="num">${usd(p.daily_usd)}<div class="muted small">≈ ${kt(Math.round(p.daily_usd * tokPerUsd))}</div></td>
+        <td class="num">${usd(p.weekend_usd)}<div class="muted small">≈ ${kt(Math.round(p.weekend_usd * tokPerUsd))}</div></td>
+        <td class="num">${usd(p.weekly_usd)}<div class="muted small">≈ ${kt(Math.round(p.weekly_usd * tokPerUsd))}</div></td></tr>`).join("")}</table></div>
+      <p class="muted small">Sous chaque montant : l'équivalent en tokens (lus + écrits).</p>
+      <p class="muted small">Pour changer de mode : dans <code>local.yaml</code>, rubrique <code>budget</code>, mets <code>mode: eco</code>, <code>normal</code> ou <code>large</code>, puis enregistre (pris en compte au prochain run). <b>Économe</b> laisse de la place à tes autres projets ; <b>large</b> n'a pas à se priver de la recherche web.</p>` : "";
+  const typical = u.typical_day_usd
+    ? `<p class="small">📏 <b>Repère</b> : un jour de bourse typique coûte <b>${usd(u.typical_day_usd)}</b> (${tok(u.typical_day_usd)}), d'après tes ${u.days_measured} jour(s) mesuré(s). Les plafonds sont des garde-fous, pas la dépense attendue.</p>` : "";
   const names = Object.fromEntries((state.agents?.agents || []).map((a) => [a.key, a.name]));
   const roles = Object.entries(w.by_role).sort((a, b) => b[1] - a[1]);
   const maxDay = Math.max(u.limits.weekend_usd, ...u.days.map((d) => d.usd));
@@ -329,14 +343,14 @@ function renderUsage() {
   const hits = u.quota_hits.slice(-3).map((h) => `<p class="small neg">⚠️ Quota Claude atteint le ${esc(new Date(h.ts).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}${h.reset ? ` (reset ${esc(h.reset)})` : ""}</p>`).join("");
   return `<div class="card"><div class="card-head"><h2>Consommation de l'abonnement</h2><span class="muted small">équivalent $ API</span></div>
     ${u.pause ? `<p class="neg small"><b>⏸ En pause</b> : aucun appel à Claude (budget.pause dans config.yaml).</p>` : ""}
-    <div class="usage-row"><span>Aujourd'hui</span><b>${usd(t.usd)}</b><span class="muted small">sur ${usd(t.cap)} · ${kt(t.tokens_in)} → ${kt(t.tokens_out)} tokens · ${t.calls} appels${t.failed ? `, ${t.failed} échoué(s)` : ""}</span></div>${bar(t.usd, t.cap)}
-    <div class="usage-row"><span>Cette semaine</span><b>${usd(w.usd)}</b><span class="muted small">sur ${usd(w.cap)} · ${kt(w.tokens_in)} → ${kt(w.tokens_out)} tokens</span></div>${bar(w.usd, w.cap)}
-    ${hits}
+    <div class="usage-row"><span>Aujourd'hui</span><b>${usd(t.usd)}</b><span class="muted small">sur ${usd(t.cap)} (${tok(t.cap)}) · utilisé : ${kt(t.tokens_in)} lus → ${kt(t.tokens_out)} écrits · ${t.calls} appels${t.failed ? `, ${t.failed} échoué(s)` : ""}</span></div>${bar(t.usd, t.cap)}
+    <div class="usage-row"><span>Cette semaine</span><b>${usd(w.usd)}</b><span class="muted small">sur ${usd(w.cap)} (${tok(w.cap)}) · utilisé : ${kt(w.tokens_in)} lus → ${kt(w.tokens_out)} écrits</span></div>${bar(w.usd, w.cap)}
+    ${hits}${typical}${modes}
     <h3>14 derniers jours</h3><div class="bars">${bars || `<p class="empty">Pas encore de données.</p>`}</div>
     <h3>Cette semaine, par agent</h3>${roles.length ? `<div class="table-wrap"><table>${roles.map(([k, v]) => `<tr><td>${esc(names[k] || k)}</td><td class="num">${usd(v)}</td><td class="num muted">${w.usd ? Math.round((v / w.usd) * 100) : 0} %</td></tr>`).join("")}</table></div>` : `<p class="empty">Aucun appel cette semaine.</p>`}
     <p class="muted small">Total depuis le début : ${usd(u.total.usd)} (${kt(u.total.tokens_in)} → ${kt(u.total.tokens_out)} tokens, ${u.total.calls} appels).
     L'équivalent $ API pondère les modèles (Opus pèse plus que Sonnet) : c'est la meilleure mesure de ce que ce projet prélève sur ton abonnement. Ton quota réel n'est pas lisible et il est partagé avec tes autres projets : ce projet s'arrête de lui-même aux plafonds (${usd(u.limits.daily_usd)} par jour de bourse, ${usd(u.limits.weekend_usd)} le week-end, ${usd(u.limits.weekly_usd)} par semaine). Les tâches optionnelles (recherche web, dossiers, revue hebdomadaire) s'arrêtent dès ${Math.round(u.limits.tier3_share * 100)} % du budget du jour ; le chef et le risque ne sont jamais coupés.
-    Tu règles ces plafonds (ou la pause) dans <code>config.yaml</code>, rubrique <code>budget</code>.</p></div>`;
+    Les « ≈ tokens » sont calculés d'après ta consommation réelle (lus + écrits par dollar), donc ce sont des ordres de grandeur. Pour mettre le projet en pause : <code>pause: true</code> dans <code>local.yaml</code>.</p></div>`;
 }
 
 // --- Plan de la semaine et recherches du week-end ----------------------------------

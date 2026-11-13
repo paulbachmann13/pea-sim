@@ -69,6 +69,7 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line
 th { font-weight: 600; color: var(--muted); font-size: .78rem; }
 td.num, th.num { text-align: right; white-space: nowrap; }
 td.nowrap { white-space: nowrap; }
+tr.cur td { background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
 .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 4px 0 12px; }
 .bar > div { height: 100%; border-radius: 4px; }
 .usage-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }

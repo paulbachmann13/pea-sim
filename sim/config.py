@@ -25,8 +25,18 @@ def load_config(path=None, local=LOCAL_PATH) -> dict:
     if local and Path(local).exists():
         with open(local, encoding="utf-8") as f:
             cfg = merge(cfg, yaml.safe_load(f) or {})
+    apply_budget_mode(cfg)
     check_config(cfg)
     return cfg
+
+
+def apply_budget_mode(cfg: dict) -> None:
+    """Applique le mode du budget (eco / normal / large), puis les éventuels `overrides`."""
+    b = cfg["budget"]
+    if b["mode"] not in b["presets"]:
+        raise ConfigError(f"budget.mode inconnu : {b['mode']} (choix : {', '.join(b['presets'])})")
+    b.update(b["presets"][b["mode"]])
+    b.update(b.get("overrides") or {})
 
 
 def fee_grid(cfg: dict, name: str | None = None) -> dict:

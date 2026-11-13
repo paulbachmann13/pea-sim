@@ -38,8 +38,9 @@ plafonne donc sa propre part (`budget` dans `config.yaml`, en équivalent $ API,
 
 | Réglage | Effet |
 |---|---|
-| `daily_usd` / `weekend_usd` / `weekly_usd` | plafonds du jour de bourse, du week-end, de la semaine |
-| `tier3_share` | les tâches optionnelles (recherche web, dossiers, revue hebdo) s'arrêtent à cette part du budget |
+| `mode` | `eco` (0,8 $/jour, 5 $/semaine), `normal` (1,2 $ / 8 $), `large` (2,5 $ / 15 $). Dans `local.yaml` : `budget: {mode: eco}` |
+| `overrides` | valeurs à forcer par-dessus le mode, ex. `{weekly_usd: 6}` |
+| `tier3_share` (dans chaque mode) | les tâches optionnelles (recherche web, dossiers, revue hebdo) s'arrêtent à cette part du budget |
 | `pause: true` | aucun appel à Claude (cours, compta et dashboard continuent) |
 | `max_call_usd` | plafond d'un seul appel |
 | `shared_log` + `global_daily_usd` | fichier commun où d'autres projets ajoutent leurs lignes JSON, pour un plafond global |

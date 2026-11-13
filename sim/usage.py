@@ -110,13 +110,26 @@ def summarize(cfg: dict, usage: Usage, days: int = 14) -> dict:
                 "tokens_out": sum(r.get("tokens_out") or 0 for r in rs), "calls": sum(1 for r in rs if r.get("ok")),
                 "failed": sum(1 for r in rs if not r.get("ok")), "by_role": {k: round(v, 3) for k, v in by.items()}}
 
+    total = agg(rows)
+    per_usd = ({"in": round(total["tokens_in"] / total["usd"]), "out": round(total["tokens_out"] / total["usd"])}
+               if total["usd"] > 0 else {"in": 180000, "out": 23000})          # repli : valeurs mesurées au départ
+    by_day = {}
+    for r in rows:
+        by_day.setdefault(r["date"], []).append(r)
+    full_days = sorted(sum(x.get("usd") or 0 for x in rs) for d, rs in by_day.items()
+                       if date.fromisoformat(d).weekday() < 5 and sum(1 for x in rs if x.get("ok")) >= 3)
+    typical = round(full_days[len(full_days) // 2], 3) if full_days else None    # médiane d'un jour de bourse
     dates = sorted({r["date"] for r in rows})[-days:]
     per_day = [{"date": d, **agg([r for r in rows if r["date"] == d])} for d in dates]
     y, w = date.fromisoformat(today).isocalendar()[:2]
     week_rows = [r for r in rows if date.fromisoformat(r["date"]).isocalendar()[:2] == (y, w)]
     cap = day_cap(cfg, today)
-    return {"enabled": b["enabled"], "pause": bool(b.get("pause")), "today": {"date": today, "cap": cap, **agg([r for r in rows if r["date"] == today])},
-            "week": {"cap": b["weekly_usd"], **agg(week_rows)}, "days": per_day, "total": agg(rows),
+    presets = {k: {x: v[x] for x in ("daily_usd", "weekend_usd", "weekly_usd", "tier3_share")}
+               for k, v in b["presets"].items()}
+    return {"enabled": b["enabled"], "pause": bool(b.get("pause")), "mode": b["mode"], "presets": presets,
+            "per_usd": per_usd, "typical_day_usd": typical, "days_measured": len(full_days),
+            "today": {"date": today, "cap": cap, **agg([r for r in rows if r["date"] == today])},
+            "week": {"cap": b["weekly_usd"], **agg(week_rows)}, "days": per_day, "total": total,
             "limits": {"daily_usd": b["daily_usd"], "weekend_usd": b["weekend_usd"], "weekly_usd": b["weekly_usd"],
                        "tier3_share": b["tier3_share"]},
             "quota_hits": [{"ts": r["ts"], "reset": r.get("reset")} for r in usage.quota_hits()],
