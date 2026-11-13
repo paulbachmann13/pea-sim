@@ -19,8 +19,35 @@ Chaque jour à 18h00 (planificateur Windows), `run_daily.py` :
 6. exporte les données du dashboard et les synchronise vers **Supabase** (table `pea_docs`) ;
    la PWA, hébergée sur GitHub Pages, les y lit directement. Un mail n'est envoyé qu'en cas de problème.
 
-Le week-end et les jours fériés : veille (actualités, notes, agenda, aucun ordre) et **revue hebdomadaire**.
+Le week-end et les jours fériés : veille, sans ordre.
+- **Samedi** : dossiers 6 mois de tous les titres suivis (30 au lieu de 12), puis **recherche web** (un agent avec
+  WebSearch/WebFetch, sources obligatoires), puis la revue hebdomadaire.
+- **Dimanche** : le chef (Opus) rédige le **plan de la semaine** (événements, scénarios « si X alors Y », titres à
+  surveiller). Chaque run de séance le relit.
+- Jour férié en semaine : veille légère (actualités, notes, agenda).
+
 Le dernier jour : rapport final.
+
+## Budget et consommation de l'abonnement
+
+Chaque appel Claude est journalisé (`data/usage.jsonl` : tokens, équivalent $ API, durée, quota). L'onglet **Agents**
+du dashboard montre la consommation du jour, de la semaine, des 14 derniers jours et par agent.
+
+Le quota réel de l'abonnement n'est pas lisible depuis le CLI et il est partagé avec tes autres projets : ce projet
+plafonne donc sa propre part (`budget` dans `config.yaml`, en équivalent $ API, ≈ 0,5 $ par jour de bourse mesuré) :
+
+| Réglage | Effet |
+|---|---|
+| `daily_usd` / `weekend_usd` / `weekly_usd` | plafonds du jour de bourse, du week-end, de la semaine |
+| `tier3_share` | les tâches optionnelles (recherche web, dossiers, revue hebdo) s'arrêtent à cette part du budget |
+| `pause: true` | aucun appel à Claude (cours, compta et dashboard continuent) |
+| `max_call_usd` | plafond d'un seul appel |
+| `shared_log` + `global_daily_usd` | fichier commun où d'autres projets ajoutent leurs lignes JSON, pour un plafond global |
+
+Priorités : le chef, le gestionnaire de risque et le rapport final ne sont jamais coupés (sauf pause) ; les analystes,
+la revue quotidienne, les post-mortems et le plan s'arrêtent au plafond ; le reste dès 60 % du budget du jour.
+Un appel sauté pour le budget est noté « économisé » dans le journal : ce n'est pas une erreur. Un quota épuisé
+est noté avec son heure de reset dans `usage.jsonl` et sur le dashboard.
 
 ## Apprentissage
 

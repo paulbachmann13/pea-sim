@@ -26,6 +26,14 @@ PM = lambda p: {"postmortems": [{"trade_id": "AAA.PA-2026-11-17", "expected": "e
                                  "predictable": "p", "lesson": "l",
                                  "playbook_ops": [{"op": "add", "rule_id": "", "text": "Si rebond rapide, alors vendre",
                                                    "scope": "chef", "origin": "x", "reason": "r"}]}]}
+RESEARCH = {"summary": "s", "not_found": [], "notes_updates": [{"key": "secteur:Énergie", "text": "n"}],
+            "upcoming_events": [{"date": "2026-11-25", "event": "Résultats AAA", "tickers": ["AAA.PA"], "impact": "fort"}],
+            "findings": [{"topic": "AAA", "tickers": ["AAA.PA"], "summary": "x", "impact": "positif", "horizon": "1 sem",
+                          "confidence": "moyenne", "sources": [{"title": "a", "url": "https://a.example/x", "date": "2026-11-20"}]}]}
+PLAN = {"outlook": "semaine porteuse", "monday_plan": "attendre les résultats", "risks": ["taux"], "cash_policy": "25 %",
+        "key_events": [{"date": "2026-11-25", "event": "Résultats AAA", "tickers": ["AAA.PA"], "impact": "fort"}],
+        "scenarios": [{"event": "Résultats AAA", "date": "2026-11-25", "if": "résultats > attentes", "then": "acheter AAA"}],
+        "watchlist": [{"ticker": "AAA.PA", "why": "contrat", "entry_condition": "repli de 3 %"}]}
 REVIEW = {"review": "r", "decisions": [], "playbook_ops": [], "insights": []}
 WEEKLY = {"summary": "s", "recurring_errors": [], "biases": [], "playbook_ops": [], "insights": [],
           "obsolete_insights": [], "notes_updates": []}
@@ -64,7 +72,7 @@ def sim(tmp_path, cfg):
         return chef_with()
 
     llm = FakeLLM(market=MARKET, news=NEWS, chef=chef, risk=risk_all(), postmortem=PM, report=REPORT,
-                  review=REVIEW, weekly=WEEKLY)
+                  review=REVIEW, weekly=WEEKLY, research=RESEARCH, plan=PLAN)
     cfg["data"]["market_db"] = "market.db"
     (tmp_path / "data").mkdir()
 
@@ -109,10 +117,28 @@ def test_full_simulation(sim):
     assert learn["postmortems"] == ["AAA.PA-2026-11-17"] and learn["playbook_changes"][0]["rule"] == "R1"
     assert [p["kind"] for p in env.kb.predictions()["items"]][:2] == ["ordre BUY", "ordre SELL"]
 
-    r = go("2026-11-21", h=10)                                      # samedi : veille
-    assert r.mode == "veille" and env.journal.day_path("2026-11-21", "veille").exists()
+    r = go("2026-11-21", h=10)                                      # samedi : recherche approfondie
+    sat = env.journal.read_day("2026-11-21", "veille")
+    assert r.mode == "veille" and sat["kind"] == "research" and sat["errors"] == [] and not r.warnings
+    assert sat["research"]["findings"][0]["sources"][0]["url"].startswith("https://")
+    assert sim["llm"].tools["research"] == "WebSearch,WebFetch"      # seul agent avec accès au web
+    assert all(t is None for role, t in sim["llm"].tools.items() if role != "research")
+    assert any("Calendrier de la semaine du 2026-11-23" in t for t in sat["research_topics"])
+    assert env.kb.research()["date"] == "2026-11-21" and "secteur:Énergie" in env.kb.notes()
+    assert env.journal.is_complete("2026-11-21", "veille")
+
+    r = go("2026-11-22", h=10)                                      # dimanche : plan de la semaine
+    sun = env.journal.read_day("2026-11-22", "veille")
+    assert sun["kind"] == "plan" and sun["errors"] == [] and sun["week_plan"]["monday_plan"] == "attendre les résultats"
+    assert "recherche web" not in " ".join(sun["errors"]) and "research" not in [c["role"] for c in sun["llm_calls"]]
+    assert env.kb.weekplan()["date"] == "2026-11-22"
+    assert "si résultats > attentes → acheter AAA" in env.kb.render_agenda("2026-11-22")     # scénario à l'agenda
+    plan_prompt = [p for r_, p in sim["llm"].calls if r_ == "plan"][0]
+    assert "Recherche web du week-end" in plan_prompt and "secteur:Énergie" in plan_prompt
 
     go("2026-11-25")                                                # runs manqués du 19 au 24 : rattrapés
+    chef_prompt = [p for r_, p in sim["llm"].calls if r_ == "chef"][-1]
+    assert "Plan établi le 2026-11-22" in chef_prompt and "à surveiller AAA.PA" in chef_prompt   # le chef relit le plan
     vals = [d for d, _ in led["agents"].daily_values()]
     assert vals == ["2026-11-16", "2026-11-17", "2026-11-18", "2026-11-25"]
 

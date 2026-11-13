@@ -25,7 +25,7 @@ from .dossier import build_dossiers, fetch_history
 from .journal import Journal, digest, read_json, write_json
 from .knowledge import Knowledge
 from .ledger import Ledger, apply_fill, round_trips, summary
-from .llm import LLMError, claude_cli
+from .llm import BudgetSkip, LLMError, claude_cli
 from .models import Order, PortfolioState
 from .money import D, cents
 from .news import NewsItem, format_news, price_reactions
@@ -81,14 +81,31 @@ def lessons_text(journal: Journal, n: int) -> str:
                      for p in pms) or "(aucun pour l'instant)"
 
 
+def _skip(entry: dict, e: BudgetSkip) -> None:
+    """Appel économisé pour respecter le budget : noté dans le journal, sans compter comme une erreur."""
+    entry.setdefault("budget_skips", []).append({"role": e.role, "reason": e.reason})
+
+
 def _call(entry: dict, role: str, fn):
     try:
         obj, metas = fn()
         entry["llm_calls"] += metas
         return obj
+    except BudgetSkip as e:
+        _skip(entry, e)
+        return None
     except LLMError as e:
         entry["errors"].append(f"{role} : {e}")
         return None
+
+
+def _perf_from(ledger: Ledger, store, as_of: str) -> str:
+    st = ledger.state()
+    return performance_text(summary(st, store.marks(list(st.positions), as_of)), None)
+
+
+def _last_weekly(kb: Knowledge) -> str | None:
+    return (read_json(kb.root / "meta.json", {}) or {}).get("last_weekly")
 
 
 def _jsonable(d: dict) -> dict:
@@ -187,6 +204,8 @@ def run_decision(*, as_of: str, run_at, cfg: dict, store, instruments: dict, led
         built, metas, errs = build_dossiers(cfg, kb, {t: watch[t] for t in watch}, as_of, llm=llm, fetch=fetch_hist)
         learn["dossiers_built"], entry["llm_calls"] = built, entry["llm_calls"] + metas
         entry["errors"] += errs
+    except BudgetSkip as e:
+        _skip(entry, e)
     except LLMError as e:
         entry["errors"].append(f"dossiers : {e}")
 
@@ -223,6 +242,7 @@ def run_decision(*, as_of: str, run_at, cfg: dict, store, instruments: dict, led
         journal="\n\n".join(digest(e) for e in recent) or "(premier jour)", lessons=txt["lessons"],
         playbook=kb.render_playbook(), calibration=txt["calibration"], open_predictions=kb.open_predictions_text(),
         agenda=kb.render_agenda(as_of), insights=kb.render_insights(), known_sources=known, rule_ids=rule_ids,
+        weekplan=kb.render_weekplan(as_of, cfg["weekend"]["plan_max_age_days"]),
         llm=llm))
     entry["chef"] = chef
 
@@ -364,19 +384,58 @@ def run_weekly_review(entry, *, today, cfg, journal: Journal, kb: Knowledge, llm
     return review
 
 
+def research_topics(cfg: dict, state: PortfolioState, journal: Journal, kb: Knowledge, today: str,
+                    watch: dict[str, str]) -> list[str]:
+    """Sujets de la recherche web du samedi : le calendrier de la semaine, ce qui est détenu, puis les candidats
+    que l'analyste actualité jugeait importants vendredi (impact non neutre), dans la limite configurée."""
+    week = f"la semaine du {mc.next_session(today)}"
+    topics = [f"Calendrier de {week} : résultats d'entreprises européennes éligibles PEA, décisions de banques "
+              "centrales, indicateurs macro, décisions de régulateurs",
+              f"Perspectives des marchés actions pour {week} (Europe, Wall Street) et thèmes porteurs ou menacés"]
+    topics += [f"Position détenue {t} : actualité et perspectives de l'indice ou de l'entreprise" for t in state.positions]
+    last = journal.recent("9999", 1)
+    seen = set()
+    for c in ((last[0].get("news_analysis") or {}).get("by_company", []) if last else []):
+        t = c.get("ticker") or ""
+        if t and t in watch and t not in state.positions and c["impact"] != "neutre" and t not in seen:
+            seen.add(t)
+            topics.append(f"{watch[t]} ({t}) : {c['why'][:200]}")
+    for e in kb.agenda():
+        if e["date"] and today <= e["date"] <= str(date.fromisoformat(today) + timedelta(days=14)) and e["tickers"]:
+            topics.append(f"Événement à venir {e['date']} : {e['event'][:150]}")
+    return list(dict.fromkeys(topics))[:cfg["weekend"]["research_topics"]]
+
+
 def run_veille(*, today: str, run_at, cfg: dict, ledger: Ledger, store, journal: Journal,
                news_items: list[NewsItem], kb: Knowledge, watch: dict[str, str] | None = None,
-               llm=claude_cli) -> dict:
+               kind: str = "light", llm=claude_cli, fetch_hist=fetch_history) -> dict:
+    """kind : light (jour férié) | research (samedi : dossiers + recherche web) | plan (dimanche : plan de la semaine)."""
     state = ledger.state()
     last = mc.previous_session(today) if not mc.is_trading_day(today) else today
     marks = store.marks(list(state.positions), last)
-    entry = {"date": today, "mode": "veille", "run_at": run_at.isoformat(), "errors": [], "llm_calls": [],
-             "news": [i.__dict__ for i in news_items]}
+    watch = watch or {}
+    entry = {"date": today, "mode": "veille", "kind": kind, "run_at": run_at.isoformat(), "errors": [],
+             "llm_calls": [], "watch": watch, "news": [i.__dict__ for i in news_items]}
     learn = _learning(entry)
-    focus = list(dict.fromkeys([*state.positions, *(watch or {})]))
+    focus = list(dict.fromkeys([*state.positions, *watch]))
+    h = horizon(ledger, last, cfg) if ledger.start_date() else None
+    portfolio = portfolio_text(state, marks)
+
+    if kind == "research":                                  # dossiers 6 mois de tous les titres suivis
+        try:
+            w = cfg["weekend"]
+            built, metas, errs = build_dossiers(cfg, kb, watch, today, llm=llm, fetch=fetch_hist,
+                                                max_new=w["dossier_max_new"], max_age_days=w["dossier_max_age_days"])
+            learn["dossiers_built"], entry["llm_calls"] = built, entry["llm_calls"] + metas
+            entry["errors"] += errs
+        except BudgetSkip as e:
+            _skip(entry, e)
+        except LLMError as e:
+            entry["errors"].append(f"dossiers : {e}")
+
     news = _call(entry, "analyste actualité", lambda: agents.news_analyst(
         cfg, horizon=f"Jour sans cotation ({today}) : veille uniquement, aucun ordre. Prépare la semaine.",
-        portfolio=portfolio_text(state, marks), playbook=kb.render_playbook(), notes=kb.render_notes(focus),
+        portfolio=portfolio, playbook=kb.render_playbook(), notes=kb.render_notes(focus),
         macro_notes=journal.context_notes(), agenda=kb.render_agenda(today), insights=kb.render_insights(),
         news=format_news(news_items, price_reactions(news_items, store, last)), llm=llm))
     entry["news_analysis"] = news
@@ -384,8 +443,39 @@ def run_veille(*, today: str, run_at, cfg: dict, ledger: Ledger, store, journal:
         journal.set_context_notes(news["context_notes"])
         learn["notes_updated"] = kb.update_notes(news["notes_updates"], today, "analyste actualité (veille)")
         learn["agenda_added"] += kb.update_agenda(news["upcoming_events"], today, "analyste actualité (veille)")
+
+    if kind == "research":                                  # recherche web approfondie, avec sources
+        topics = research_topics(cfg, state, journal, kb, today, watch)
+        entry["research_topics"] = topics
+        research = _call(entry, "recherche web", lambda: agents.researcher(
+            cfg, today=today, horizon=horizon_text(h, last) if h else today, portfolio=portfolio,
+            topics="\n".join(f"{i + 1}. {t}" for i, t in enumerate(topics)), agenda=kb.render_agenda(today),
+            notes=kb.render_notes(focus), playbook=kb.render_playbook(), llm=llm))
+        entry["research"] = research
+        if research:
+            kb.save_research(research, today)
+            learn["notes_updated"] += kb.update_notes(research["notes_updates"], today, "recherche web")
+            learn["agenda_added"] += kb.update_agenda(research["upcoming_events"], today, "recherche web")
+
     if weekly_due(kb, today, cfg):
         entry["weekly_review"] = run_weekly_review(entry, today=today, cfg=cfg, journal=journal, kb=kb, llm=llm)
+
+    if kind == "plan" and h:                                # plan de la semaine, par le chef (Opus)
+        r = kb.research()
+        res_txt = _json_text(r) if r else "(pas de recherche récente)"
+        plan = _call(entry, "plan de la semaine", lambda: agents.week_planner(
+            cfg, horizon=horizon_text(h, last), portfolio=portfolio, performance=_perf_from(ledger, store, last),
+            calibration=kb.render_calibration(), playbook=kb.render_playbook(), notes=kb.render_notes(focus),
+            agenda=kb.render_agenda(today), research=res_txt,
+            weekly=_json_text(read_json(kb.root / f"weekly/{_last_weekly(kb)}.json")) if _last_weekly(kb) else "(aucune)",
+            lessons=lessons_text(journal, cfg["agents"]["postmortems"]), llm=llm))
+        entry["week_plan"] = plan
+        if plan:
+            kb.save_weekplan(plan, today)
+            learn["agenda_added"] += kb.update_agenda(plan["scenarios"], today, "plan de la semaine")
+            learn["agenda_added"] += kb.update_agenda(
+                [{"event": e["event"], "date": e["date"], "tickers": e["tickers"], "impact": e["impact"]}
+                 for e in plan["key_events"]], today, "plan de la semaine")
     journal.write_day(entry)
     return entry
 

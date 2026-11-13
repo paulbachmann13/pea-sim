@@ -42,7 +42,7 @@ def test_export_agents_last_run_and_history(tmp_path, cfg):
     out = read()
     assert out["last_run"]["mode"] == "veille" and len(out["history"]) == 7
     by_key = {a["key"]: a for a in out["agents"]}
-    assert len(out["agents"]) == 12 and sum(a["kind"] == "llm" for a in out["agents"]) == 9
+    assert len(out["agents"]) == 14 and sum(a["kind"] == "llm" for a in out["agents"]) == 11
     assert by_key["news"]["status"] == "ok" and by_key["chef"]["status"] == "skipped"
     assert by_key["market"]["model"] == cfg["agents"]["models"]["market"]       # modèle configuré si pas d'appel
     export_agents(cfg, tmp_path, ["revue hebdomadaire : quota"])                # avertissement du run en cours

@@ -69,6 +69,14 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line
 th { font-weight: 600; color: var(--muted); font-size: .78rem; }
 td.num, th.num { text-align: right; white-space: nowrap; }
 td.nowrap { white-space: nowrap; }
+.bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 4px 0 12px; }
+.bar > div { height: 100%; border-radius: 4px; }
+.usage-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.usage-row b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.bars { display: flex; align-items: flex-end; gap: 4px; height: 90px; margin: 6px 0 4px; }
+.bars .b { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; min-width: 0; }
+.bars .b i { display: block; width: 100%; max-width: 22px; border-radius: 3px 3px 0 0; }
+.bars .b span { font-size: .68rem; color: var(--muted); margin-top: 2px; }
 td.dots { white-space: nowrap; }
 td.dots i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; border: 1px solid var(--line); }
 .table-wrap { overflow-x: auto; }

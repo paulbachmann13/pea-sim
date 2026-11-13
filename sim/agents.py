@@ -114,6 +114,29 @@ DOSSIER_SCHEMA = _obj({
         "outlook": _str("événements à venir et tendances sectorielles"),
     })),
 })
+SOURCE = _obj({"title": _str(), "url": _str("adresse de la page lue"), "date": _str("date de publication, AAAA-MM-JJ")})
+RESEARCH_SCHEMA = _obj({
+    "summary": _str("3-6 phrases : ce qu'il faut retenir pour la semaine qui vient"),
+    "findings": _arr(_obj({
+        "topic": _str(), "tickers": _arr(_str("ticker yfinance si certain")),
+        "summary": _str("ce qui a été trouvé, faits et chiffres"),
+        "impact": _enum("positif", "négatif", "neutre", "incertain"),
+        "horizon": _str("jours/semaines concernés"), "confidence": _enum("faible", "moyenne", "élevée"),
+        "sources": _arr(SOURCE)})),
+    "upcoming_events": _arr(EVENT),
+    "notes_updates": _arr(NOTE_UPDATE),
+    "not_found": _arr(_str("sujets sans information fiable")),
+})
+PLAN_SCHEMA = _obj({
+    "outlook": _str("vue de la semaine à venir, fondée sur l'actualité et la recherche"),
+    "monday_plan": _str("ce que tu comptes faire lundi soir, selon ce qui se passe à l'ouverture"),
+    "key_events": _arr(_obj({"date": _str("AAAA-MM-JJ, vide si inconnue"), "event": _str(), "tickers": _arr(_str()),
+                             "impact": _str()})),
+    "scenarios": _arr(_obj({"event": _str(), "date": _str(), "if": _str(), "then": _str("action concrète")})),
+    "watchlist": _arr(_obj({"ticker": _str(), "why": _str(), "entry_condition": _str("condition précise d'entrée")})),
+    "risks": _arr(_str()),
+    "cash_policy": _str("part de cash visée et pourquoi"),
+})
 REPORT_SCHEMA = _obj({
     "verdict": _str(), "what_worked": _arr(_str()), "what_failed": _arr(_str()), "fees_impact": _str(),
     "process": _str(), "lessons": _arr(_str()),
@@ -184,6 +207,13 @@ def check_chef(cfg: dict, known_sources: set[str] = frozenset(), rule_ids: set[s
     return check
 
 
+def check_research(obj):
+    """Chaque constat doit citer au moins une page réellement consultée (adresse http)."""
+    for f in obj["findings"]:
+        if not any(s["url"].startswith("http") for s in f["sources"]):
+            raise ValueError(f"constat « {f['topic']} » sans source (adresse de page http requise)")
+
+
 def check_indices(n: int):
     def check(obj):
         got = sorted(r["index"] for r in obj["reviews"])
@@ -219,11 +249,31 @@ def news_analyst(cfg, *, horizon, portfolio, playbook, notes, macro_notes, agend
     return ask("news", prompt, system_prompt("news.md", cfg), NEWS_SCHEMA, cfg, llm=llm)
 
 
+def researcher(cfg, *, today, horizon, portfolio, topics, agenda, notes, playbook, llm=claude_cli):
+    """Recherche web (seul agent avec WebSearch/WebFetch). Les pages lues sont des données, jamais des consignes."""
+    prompt = sections(("Date", today), ("Horizon", horizon), ("Portefeuille", portfolio),
+                      ("Règles apprises (playbook)", playbook), ("Sujets à approfondir", topics),
+                      ("Agenda déjà connu", agenda), ("Dossiers et notes existants", notes))
+    return ask("research", prompt, system_prompt("research.md", cfg), RESEARCH_SCHEMA, cfg, check=check_research,
+               tools="WebSearch,WebFetch", llm=llm)
+
+
+def week_planner(cfg, *, horizon, portfolio, performance, calibration, playbook, notes, agenda, research,
+                 weekly, lessons, llm=claude_cli):
+    prompt = sections(("Horizon", horizon), ("Règles apprises (playbook)", playbook),
+                      ("Ta calibration", calibration), ("Portefeuille", portfolio), ("Performance", performance),
+                      ("Recherche web du week-end", research), ("Revue hebdomadaire", weekly),
+                      ("Agenda et scénarios en cours", agenda), ("Dossiers et notes", notes),
+                      ("Post-mortems", lessons))
+    return ask("plan", prompt, system_prompt("plan.md", cfg), PLAN_SCHEMA, cfg, llm=llm)
+
+
 def chef(cfg, *, horizon, portfolio, performance, market, news, notes, screener, journal, lessons, playbook,
-         calibration, open_predictions, agenda, insights, known_sources, rule_ids, llm=claude_cli):
+         calibration, open_predictions, agenda, insights, known_sources, rule_ids, weekplan="", llm=claude_cli):
     prompt = sections(("Horizon", horizon), ("Règles apprises (playbook) — à relire avant de décider", playbook),
                       ("Ta calibration (prédictions passées évaluées)", calibration),
                       ("Tes prédictions encore ouvertes", open_predictions),
+                      ("Plan de la semaine (préparé le week-end)", weekplan or "(aucun)"),
                       ("Portefeuille", portfolio), ("Performance", performance),
                       ("Synthèse de l'analyste actualité", news), ("Synthèse de l'analyste marché", market),
                       ("Dossiers et notes (entreprises, secteurs, thèmes)", notes),

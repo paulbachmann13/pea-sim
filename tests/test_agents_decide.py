@@ -25,14 +25,16 @@ class FakeLLM:
     ROLE = {id(agents.MARKET_SCHEMA): "market", id(agents.NEWS_SCHEMA): "news", id(agents.CHEF_SCHEMA): "chef",
             id(agents.RISK_SCHEMA): "risk", id(agents.POSTMORTEM_SCHEMA): "postmortem",
             id(agents.REPORT_SCHEMA): "report", id(agents.DAILY_REVIEW_SCHEMA): "review",
-            id(agents.WEEKLY_REVIEW_SCHEMA): "weekly", id(agents.DOSSIER_SCHEMA): "dossier"}
+            id(agents.WEEKLY_REVIEW_SCHEMA): "weekly", id(agents.DOSSIER_SCHEMA): "dossier",
+            id(agents.RESEARCH_SCHEMA): "research", id(agents.PLAN_SCHEMA): "plan"}
 
     def __init__(self, **answers):
-        self.answers, self.calls = answers, []
+        self.answers, self.calls, self.tools = answers, [], {}
 
-    def __call__(self, prompt, system, model, schema, cfg):
+    def __call__(self, prompt, system, model, schema, cfg, tools=None):
         role = self.ROLE[id(schema)]
         self.calls.append((role, prompt))
+        self.tools[role] = tools
         a = self.answers[role]
         a = a(prompt) if callable(a) else a
         if isinstance(a, Exception):

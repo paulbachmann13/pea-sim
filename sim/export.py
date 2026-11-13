@@ -6,6 +6,7 @@ from . import market_calendar as mc
 from .decide import horizon
 from .journal import Journal, read_json, write_json
 from .knowledge import Knowledge
+from .usage import Usage, summarize
 from .ledger import Ledger
 
 LABELS = {"agents": "Équipe d'agents", "agents_lowcost": "Agents, grille low-cost",
@@ -35,6 +36,8 @@ LLM_AGENTS = [
     ("dossier", "Dossiers entreprises", ("dossiers", "historique"), "Constitue l'historique 6 mois des titres suivis (une fois par titre)"),
     ("postmortem", "Post-mortems", ("post-mortems",), "Analyse chaque position clôturée (quand il y en a)"),
     ("weekly", "Revue hebdomadaire", ("revue hebdomadaire",), "Fait le ménage du playbook, une fois par semaine (week-end)"),
+    ("research", "Recherche web", ("recherche web",), "Samedi : lit de vraies pages (calendrier, résultats, thèmes) avec sources"),
+    ("plan", "Plan de la semaine", ("plan de la semaine",), "Dimanche : le chef prépare des scénarios « si X alors Y » pour lundi"),
     ("report", "Rapport final", ("rapport final",), "Rédige l'analyse de fin de simulation (dernier jour)"),
 ]
 CODE_AGENTS = [
@@ -47,18 +50,20 @@ CODE_AGENTS = [
 def agent_states(e: dict, warnings=()) -> dict[str, dict]:
     """État de chaque agent pour un run : ok / error / skipped (non requis ce jour-là)."""
     calls, msgs = e.get("llm_calls", []), [*e.get("errors", []), *warnings]
+    saved = {s["role"]: s["reason"] for s in e.get("budget_skips", [])}      # appels économisés (budget)
     out = {}
     for key, _, labels, _ in LLM_AGENTS:
         mine = [c for c in calls if c["role"] == key]
         errs = [m for m in msgs if m.startswith(labels)]
-        status = "error" if errs else "ok" if mine else "skipped"
+        status = "error" if errs else "ok" if mine else "budget" if key in saved else "skipped"
         if status == "skipped" and key == "postmortem" and (e.get("learning") or {}).get("postmortems"):
             status = "ok"                                   # appel LLM non journalisé, mais post-mortem écrit
         if status == "skipped" and key == "report" and e.get("final"):
             status = "ok"
         out[key] = {"status": status, "calls": len(mine), "seconds": round(sum(c["duration_s"] for c in mine)),
                     "tokens_in": sum(c["input_tokens"] for c in mine), "tokens_out": sum(c["output_tokens"] for c in mine),
-                    "model": mine[0]["model"] if mine else None, "error": errs[0][:200] if errs else None}
+                    "model": mine[0]["model"] if mine else None,
+                    "error": errs[0][:200] if errs else None, "note": saved.get(key)}
     trading = e.get("mode") == "trading"
     for key, ran in (("ledger", trading and "portfolio" in e), ("screener", trading and "screener" in e),
                      ("validator", trading and "screener" in e)):
@@ -87,6 +92,13 @@ def export_agents(cfg: dict, root: Path, warnings=()) -> None:
                 "agents": agents, "history": history})
 
 
+def export_usage(cfg: dict, root: Path) -> None:
+    """Consommation de l'abonnement (jour, semaine, 14 jours, par agent, quotas atteints) pour le dashboard."""
+    b = cfg["budget"]
+    usage = Usage(root / b["log"], root / b["shared_log"] if b.get("shared_log") else None)
+    write_json(root / "docs" / "data" / "usage.json", summarize(cfg, usage))
+
+
 def export_knowledge(cfg: dict, root: Path, out: Path, as_of: str) -> None:
     """Playbook (avec effet mesuré des règles), journal des changements, prédictions, calibration, notes, agenda."""
     kb = Knowledge(root / cfg["knowledge"]["dir"])
@@ -99,6 +111,7 @@ def export_knowledge(cfg: dict, root: Path, out: Path, as_of: str) -> None:
         "playbook": pb["rules"], "log": read_json(kb.root / "playbook_log.json", [])[-200:],
         "calibration": kb.calibration(), "predictions": kb.predictions()["items"][-150:],
         "insights": kb.insights(), "notes": kb.notes(), "agenda": sorted(agenda, key=lambda e: e["date"] or "9999"),
+        "weekplan": kb.weekplan(), "research": kb.research(),
     })
 
 
@@ -163,6 +176,7 @@ def export_dashboard(cfg: dict, root: Path, ledgers: dict[str, Ledger], journal:
     write_json(out / "journal" / "index.json", sorted(index, key=lambda x: x["file"], reverse=True))
     write_json(out / "postmortems.json", journal.postmortems())
     export_knowledge(cfg, root, out, as_of)
+    export_usage(cfg, root)
     report = journal.root / "rapport-final.json"
     if report.exists():
         shutil.copyfile(report, out / "report.json")

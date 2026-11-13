@@ -23,7 +23,7 @@ import random
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from . import market_calendar as mc
@@ -33,10 +33,10 @@ from .data import PriceStore
 from .decide import horizon, run_decision, run_postmortems, run_veille
 from .dossier import fetch_history
 from .knowledge import Knowledge
-from .export import export_agents, export_dashboard
+from .export import export_agents, export_dashboard, export_usage
 from .journal import Journal, write_json
 from .ledger import Ledger
-from .llm import claude_cli
+from .llm import BudgetSkip, claude_cli
 from .models import BUY, Order
 from .money import D, cents
 from .news import NewsStore, fetch_news, select_items
@@ -45,7 +45,7 @@ from .refresh import refresh_market_data
 from .report import build_report
 from .screener import screen, select
 from .supabase_sync import sync_docs
-from .universe import load_universe
+from .universe import build_instruments, load_universe, prefilter
 
 log = logging.getLogger(__name__)
 BOOKS = ["agents", "agents_lowcost", "benchmark", "random"]
@@ -113,7 +113,7 @@ def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm
         if mc.is_trading_day(today):
             result = trading_run(env, now, today, force, llm, refresh, fetch, fetch_hist)
         else:
-            result = veille_run(env, now, today, force, llm, fetch)
+            result = veille_run(env, now, today, force, llm, fetch, fetch_hist)
         if result.mode != "skip":
             try:
                 publish(cfg, root, f"run {today} ({result.mode})")
@@ -134,8 +134,9 @@ def record_status(cfg: dict, root: Path, now: datetime, mode: str, title: str, w
                                      "warnings": [w[:300] for w in warnings]})
     try:
         export_agents(cfg, root, warnings)
+        export_usage(cfg, root)
     except Exception:
-        log.exception("tableau des agents non exporté")
+        log.exception("tableau des agents / consommation non exportés")
     try:
         sync_docs(cfg, out, root / "data" / "supabase_sync.json")
     except Exception:
@@ -172,6 +173,8 @@ def trading_run(env: Env, now, today, force, llm, refresh, fetch, fetch_hist=fet
     try:
         pms, pm_changes = run_postmortems(as_of=today, cfg=cfg, ledger=env.agents, store=store, journal=j,
                                           kb=env.kb, llm=llm)
+    except BudgetSkip as e:
+        log.info("post-mortems reportés (budget) : %s", e.reason)     # retentés au prochain run
     except Exception as e:
         warnings.append(f"post-mortems : {e}")
 
@@ -341,20 +344,44 @@ def daily_message(env: Env, h, snaps, executions, entry, mode) -> tuple[str, str
 
 # --- Veille --------------------------------------------------------------------
 
-def veille_run(env: Env, now, today, force, llm, fetch) -> RunResult:
+def weekend_watch(env: Env, store, universe, last_session: str, held) -> dict[str, str]:
+    """Titres suivis le week-end : les positions et les meilleurs candidats du screener de la dernière séance."""
+    cfg = env.cfg
+    tickers = sorted(set(prefilter(universe, cfg)) | set(held))
+    instruments = build_instruments(universe, store, last_session, cfg, tickers)
+    state = env.agents.state()
+    rows = screen(store, instruments, last_session, cfg, held)
+    table = select(rows, cfg, held, state, store.marks(held, last_session), fee_grid(cfg))
+    names = {t: universe[t].name for t in [*held, *(r["ticker"] for r in table if r["kind"] == "equity")]
+             if t in universe}
+    return dict(list(names.items())[:cfg["weekend"]["watch_max"]])
+
+
+def veille_kind(today: str) -> str:
+    """Samedi : recherche approfondie ; dimanche : plan de la semaine ; autre jour sans cotation (férié) : léger."""
+    return {5: "research", 6: "plan"}.get(date.fromisoformat(today).weekday(), "light")
+
+
+def veille_run(env: Env, now, today, force, llm, fetch, fetch_hist=fetch_history) -> RunResult:
     cfg, j = env.cfg, env.journal
-    if j.read_day(today, "veille") and not force:
+    if j.is_complete(today, "veille") and not force:
         return RunResult("skip", "PEA sim", f"Veille du {today} déjà effectuée.")
     warnings: list[str] = []
     store = PriceStore(env.root / cfg["data"]["market_db"])
     upath = env.root / cfg["data"]["universe_path"]
     universe = load_universe(upath) if upath.exists() else {}
     held = sorted(env.agents.state().positions)
+    kind = veille_kind(today)
     last = j.recent("9999", 1)
     watch = {**((last[0].get("watch") or {}) if last else {}), **{t: universe[t].name for t in held if t in universe}}
+    if kind != "light" and env.agents.last_snapshot_date():
+        try:
+            watch = {**watch, **weekend_watch(env, store, universe, env.agents.last_snapshot_date(), held)}
+        except Exception as e:                      # la veille continue avec la liste habituelle
+            warnings.append(f"liste de titres du week-end : {e}")
     news_items = _news_window(env, now, fetch, watch, warnings)
     entry = run_veille(today=today, run_at=now, cfg=cfg, ledger=env.agents, store=store, journal=j,
-                       news_items=news_items, kb=env.kb, watch=watch, llm=llm)
+                       news_items=news_items, kb=env.kb, watch=watch, kind=kind, llm=llm, fetch_hist=fetch_hist)
     warnings += entry["errors"]
     if env.agents.last_snapshot_date():
         export_dashboard(cfg, env.root, env.ledgers, j, store, env.agents.last_snapshot_date(), universe)

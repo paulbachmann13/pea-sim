@@ -16,6 +16,7 @@ Garde-fous contre le sur-apprentissage, appliqués par le code (le LLM ne choisi
 - nombre de nouvelles règles par jour et de règles actives plafonné.
 """
 import re
+from datetime import date
 from pathlib import Path
 
 from .journal import read_json, write_json
@@ -244,8 +245,42 @@ class Knowledge:
     def notes(self) -> dict:
         return self._load("notes.json", {})
 
-    def has_dossier(self, ticker: str) -> bool:
-        return bool(self.notes().get(f"entreprise:{ticker}", {}).get("history_6m"))
+    def has_dossier(self, ticker: str, day: str | None = None, max_age_days: int | None = None) -> bool:
+        """Dossier présent (et, si demandé, construit il y a moins de `max_age_days` jours)."""
+        n = self.notes().get(f"entreprise:{ticker}", {})
+        if not n.get("history_6m"):
+            return False
+        built = n.get("dossier_built")
+        if day and max_age_days and built:
+            return (date.fromisoformat(day) - date.fromisoformat(built)).days <= max_age_days
+        return True
+
+    # --- Recherche du week-end et plan de la semaine ------------------------------------
+    def save_research(self, research: dict, day: str) -> None:
+        self._save(f"research/{day}.json", {"date": day, **research})
+        self._save("research.json", {"date": day, **research})
+
+    def research(self) -> dict | None:
+        return self._load("research.json", None)
+
+    def save_weekplan(self, plan: dict, day: str) -> None:
+        self._save(f"weekplan/{day}.json", {"date": day, **plan})
+        self._save("weekplan.json", {"date": day, **plan})
+
+    def weekplan(self) -> dict | None:
+        return self._load("weekplan.json", None)
+
+    def render_weekplan(self, day: str, max_age_days: int) -> str:
+        p = self.weekplan()
+        if not p or (date.fromisoformat(day) - date.fromisoformat(p["date"])).days > max_age_days:
+            return "(pas de plan de la semaine récent)"
+        lines = [f"Plan établi le {p['date']}.", f"Perspectives : {p['outlook']}", f"Lundi : {p['monday_plan']}",
+                 f"Cash : {p['cash_policy']}"]
+        lines += [f"- événement {e['date'] or 'date à préciser'} : {e['event']} — {e['impact']}" for e in p["key_events"]]
+        lines += [f"- scénario ({s['event']}) : si {s['if']} → {s['then']}" for s in p["scenarios"]]
+        lines += [f"- à surveiller {w['ticker']} : {w['why']} (entrée si {w['entry_condition']})" for w in p["watchlist"]]
+        lines += [f"- risque : {r}" for r in p["risks"]]
+        return "\n".join(lines)
 
     def set_dossier(self, ticker: str, name: str, d: dict, day: str) -> None:
         notes = self.notes()

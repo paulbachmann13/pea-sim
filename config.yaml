@@ -118,6 +118,8 @@ agents:
     dossier: sonnet                  # historique 6 mois des entreprises
     review: sonnet                   # revue quotidienne
     weekly: opus                     # revue hebdomadaire
+    research: sonnet                 # recherche web du samedi
+    plan: opus                       # plan de la semaine (dimanche)
   timeout_s: 600
   retries: 1                         # nouvel essai si la réponse est invalide
   journal_days: 5                    # jours de journal relus par le chef
@@ -143,6 +145,30 @@ news:
   watch_max: 12                      # titres suivis individuellement (détenus + meilleurs candidats)
   max_items: 90                      # items transmis à l'analyste
   lookback_hours: 72                 # fenêtre au premier run
+
+# --- Budget de l'abonnement Claude ---------------------------------------------
+# Unité : « équivalent $ API » (pondère les modèles : Opus pèse plus que Sonnet). Mesuré : ~0,5 $ par jour de
+# bourse. Ces plafonds limitent la part de CE projet ; ton quota réel est partagé avec tes autres projets et
+# n'est pas lisible depuis le CLI. Baisse les valeurs (ou pause: true) pour laisser plus de place aux autres.
+budget:
+  enabled: true
+  pause: false                       # true = AUCUN appel LLM (le run continue : compta, cours, dashboard)
+  daily_usd: 1.2                     # jours de bourse
+  weekend_usd: 3.0                   # samedi / dimanche (recherche web + plan de la semaine)
+  weekly_usd: 8.0                    # semaine ISO (lundi-dimanche)
+  tier3_share: 0.6                   # les tâches optionnelles s'arrêtent à 60 % du budget du jour (80 % de la semaine)
+  max_call_usd: 3.0                  # plafond d'un seul appel (--max-budget-usd)
+  log: data/usage.jsonl              # journal de chaque appel (tokens, $, durée, quota)
+  shared_log: ""                     # optionnel : fichier commun où d'autres projets ajoutent leurs lignes JSON
+  global_daily_usd: 0                # optionnel : plafond global du jour (avec shared_log), 0 = aucun
+
+# --- Week-end : recherche approfondie et plan de la semaine ---------------------
+weekend:
+  watch_max: 30                      # titres suivis le week-end (12 en semaine)
+  dossier_max_new: 12                # dossiers 6 mois construits par run de week-end
+  dossier_max_age_days: 14           # un dossier plus ancien est reconstruit
+  research_topics: 6                 # sujets approfondis par recherche web (samedi)
+  plan_max_age_days: 8               # le chef relit le plan de la semaine tant qu'il a moins de N jours
 
 # --- Connaissances et apprentissage -----------------------------------------
 knowledge:

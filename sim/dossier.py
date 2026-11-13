@@ -37,9 +37,12 @@ def fetch_history(cfg: dict, name: str, as_of: str) -> list[NewsItem]:
 
 
 def build_dossiers(cfg: dict, kb: Knowledge, watch: dict[str, str], as_of: str, llm=claude_cli,
-                   fetch=fetch_history) -> tuple[list[str], list[dict], list[str]]:
-    """Construit les dossiers manquants (plafonné par run). Renvoie (tickers construits, appels LLM, erreurs)."""
-    missing = [t for t in watch if not kb.has_dossier(t)][:cfg["knowledge"]["dossier_max_new_per_run"]]
+                   fetch=fetch_history, max_new: int | None = None,
+                   max_age_days: int | None = None) -> tuple[list[str], list[dict], list[str]]:
+    """Construit les dossiers manquants (ou trop anciens si `max_age_days`), plafonné par run.
+    Renvoie (tickers construits, appels LLM, erreurs)."""
+    cap = max_new or cfg["knowledge"]["dossier_max_new_per_run"]
+    missing = [t for t in watch if not kb.has_dossier(t, as_of, max_age_days)][:cap]
     if not missing:
         return [], [], []
     blocks, errors, todo = [], [], []

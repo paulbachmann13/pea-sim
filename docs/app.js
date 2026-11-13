@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "1.5.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "1.6.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -73,6 +73,7 @@ async function load() {
     state.report = await getJSON("report.json").catch(() => null);
     state.knowledge = await getJSON("knowledge.json").catch(() => null);
     state.agents = await getJSON("agents.json").catch(() => null);
+    state.usage = await getJSON("usage.json").catch(() => null);
     render();
   } catch (e) {
     $("#subtitle").textContent = "Données indisponibles (" + e.message + ")";
@@ -269,6 +270,9 @@ async function openDay(file) {
   if (e.executions?.length) parts.push(`<h3>Exécutions à l'ouverture</h3>${e.executions.map((x) =>
     `<p class="small">${sideChip(x.side)} ${esc(x.ticker)} : ${x.filled ? `${x.qty} à ${eur(x.price, 4)} (frais ${eur(x.fees)})` : `<span class="neg">non exécuté : ${esc(x.reason)}</span>`}${x.filled && x.reason ? ` <span class="muted">(${esc(x.reason)})</span>` : ""}</p>`).join("")}`);
   if (e.chef) parts.push(`<h3>Vue du chef</h3><p>${esc(e.chef.market_view)}</p>${e.chef.no_trade_reason ? `<p class="muted">Pas d'ordre : ${esc(e.chef.no_trade_reason)}</p>` : ""}`);
+  if (e.research) parts.push(`<h3>Recherche web</h3>${researchHtml(e.research)}`);
+  if (e.week_plan) parts.push(`<h3>Plan de la semaine</h3>${planHtml(e.week_plan)}`);
+  if (e.budget_skips?.length) parts.push(`<p class="small muted">⏸ Économisé (budget) : ${esc(e.budget_skips.map((s) => `${s.role} (${s.reason})`).join(" ; "))}</p>`);
   const L = e.learning;
   if (L) {
     const lp = [];
@@ -294,43 +298,93 @@ async function openDay(file) {
   if (m) parts.push(`<h3>Analyste marché</h3><p class="small">${esc(m.summary)}</p>${m.opportunities.map((o) => `<p class="small">• <b>${esc(o.ticker)}</b> : ${esc(o.thesis)} <span class="muted">(risques : ${esc(o.risks)})</span></p>`).join("")}`);
   const n = e.news_analysis;
   if (n) parts.push(`<h3>Analyste actualité</h3><p class="small">${esc(n.summary)}</p>${n.by_company.map((c) => `<p class="small">• <b>${esc(c.ticker || c.company)}</b> <span class="chip">${esc(c.impact)}</span>${esc(c.why)}</p>`).join("")}`);
-  if (e.news?.length) parts.push(`<details><summary>${e.news.length} actualités lues</summary>${e.news.map((i) => `<p class="small">[${esc(i.id)}] <a href="${esc(i.link)}" target="_blank" rel="noopener">${esc(i.title)}</a> <span class="muted">${esc(i.source)}</span></p>`).join("")}</details>`);
+  if (e.news?.length) parts.push(`<details><summary>${e.news.length} actualités lues</summary>${e.news.map((i) => `<p class="small">[${esc(i.id)}] <a href="${esc(safeUrl(i.link))}" target="_blank" rel="noopener">${esc(i.title)}</a> <span class="muted">${esc(i.source)}</span></p>`).join("")}</details>`);
   if (e.llm_calls?.length) parts.push(`<p class="muted small">Appels LLM : ${e.llm_calls.map((c) => `${esc(c.role)} (${esc(c.model)}, ${c.duration_s}s)`).join(", ")}</p>`);
   $("#day-body").innerHTML = parts.join("") || `<p class="empty">Rien à afficher.</p>`;
   $("#day-dialog").showModal();
 }
 
 // --- Agents : qui a tourné au dernier run, et sur les 7 derniers ---------------
-const AG_STATUS = { ok: ["✓ OK", "pos"], error: ["✗ Erreur", "neg"], skipped: ["– non requis", "muted"] };
-const AG_DOT = { ok: "var(--pos)", error: "var(--neg)", skipped: "var(--line)" };
+const AG_STATUS = { ok: ["✓ OK", "pos"], error: ["✗ Erreur", "neg"], skipped: ["– non requis", "muted"], budget: ["⏸ économisé", "muted"] };
+const AG_DOT = { ok: "var(--pos)", error: "var(--neg)", skipped: "var(--line)", budget: "var(--s-benchmark)" };
+const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : "#");
+
+// --- Consommation de l'abonnement ------------------------------------------------
+function renderUsage() {
+  const u = state.usage;
+  if (!u) return "";
+  const usd = (x) => `${Number(x).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+  const kt = (n) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
+  const bar = (v, cap) => {
+    const p = cap ? v / cap : 0, c = p >= 1 ? "var(--neg)" : p >= 0.6 ? "var(--s-benchmark)" : "var(--pos)";
+    return `<div class="bar"><div style="width:${Math.min(100, p * 100)}%;background:${c}"></div></div>`;
+  };
+  const t = u.today, w = u.week;
+  const names = Object.fromEntries((state.agents?.agents || []).map((a) => [a.key, a.name]));
+  const roles = Object.entries(w.by_role).sort((a, b) => b[1] - a[1]);
+  const maxDay = Math.max(u.limits.weekend_usd, ...u.days.map((d) => d.usd));
+  const bars = u.days.map((d) => `<div class="b" title="${esc(fmtDate(d.date))} : ${usd(d.usd)}, ${kt(d.tokens_in)} → ${kt(d.tokens_out)} tokens">
+      <i style="height:${Math.max(2, (d.usd / maxDay) * 100)}%;background:${d.usd >= (new Date(d.date + "T12:00:00").getDay() % 6 === 0 ? u.limits.weekend_usd : u.limits.daily_usd) ? "var(--neg)" : "var(--accent)"}"></i>
+      <span>${new Date(d.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "narrow" })}</span></div>`).join("");
+  const hits = u.quota_hits.slice(-3).map((h) => `<p class="small neg">⚠️ Quota Claude atteint le ${esc(new Date(h.ts).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}${h.reset ? ` (reset ${esc(h.reset)})` : ""}</p>`).join("");
+  return `<div class="card"><div class="card-head"><h2>Consommation de l'abonnement</h2><span class="muted small">équivalent $ API</span></div>
+    ${u.pause ? `<p class="neg small"><b>⏸ En pause</b> : aucun appel à Claude (budget.pause dans config.yaml).</p>` : ""}
+    <div class="usage-row"><span>Aujourd'hui</span><b>${usd(t.usd)}</b><span class="muted small">sur ${usd(t.cap)} · ${kt(t.tokens_in)} → ${kt(t.tokens_out)} tokens · ${t.calls} appels${t.failed ? `, ${t.failed} échoué(s)` : ""}</span></div>${bar(t.usd, t.cap)}
+    <div class="usage-row"><span>Cette semaine</span><b>${usd(w.usd)}</b><span class="muted small">sur ${usd(w.cap)} · ${kt(w.tokens_in)} → ${kt(w.tokens_out)} tokens</span></div>${bar(w.usd, w.cap)}
+    ${hits}
+    <h3>14 derniers jours</h3><div class="bars">${bars || `<p class="empty">Pas encore de données.</p>`}</div>
+    <h3>Cette semaine, par agent</h3>${roles.length ? `<div class="table-wrap"><table>${roles.map(([k, v]) => `<tr><td>${esc(names[k] || k)}</td><td class="num">${usd(v)}</td><td class="num muted">${w.usd ? Math.round((v / w.usd) * 100) : 0} %</td></tr>`).join("")}</table></div>` : `<p class="empty">Aucun appel cette semaine.</p>`}
+    <p class="muted small">Total depuis le début : ${usd(u.total.usd)} (${kt(u.total.tokens_in)} → ${kt(u.total.tokens_out)} tokens, ${u.total.calls} appels).
+    L'équivalent $ API pondère les modèles (Opus pèse plus que Sonnet) : c'est la meilleure mesure de ce que ce projet prélève sur ton abonnement. Ton quota réel n'est pas lisible et il est partagé avec tes autres projets : ce projet s'arrête de lui-même aux plafonds (${usd(u.limits.daily_usd)} par jour de bourse, ${usd(u.limits.weekend_usd)} le week-end, ${usd(u.limits.weekly_usd)} par semaine). Les tâches optionnelles (recherche web, dossiers, revue hebdomadaire) s'arrêtent dès ${Math.round(u.limits.tier3_share * 100)} % du budget du jour ; le chef et le risque ne sont jamais coupés.
+    Tu règles ces plafonds (ou la pause) dans <code>config.yaml</code>, rubrique <code>budget</code>.</p></div>`;
+}
+
+// --- Plan de la semaine et recherches du week-end ----------------------------------
+function planHtml(p) {
+  const ev = p.key_events.map((e) => `<p class="small">📅 <b>${e.date ? esc(fmtDate(e.date)) : "date à préciser"}</b> · ${esc(e.event)}${e.tickers?.length ? ` <span class="muted">(${esc(e.tickers.join(", "))})</span>` : ""}<br><span class="muted">${esc(e.impact)}</span></p>`).join("");
+  return `<p class="small">${esc(p.outlook)}</p><p class="small"><b>Lundi</b> : ${esc(p.monday_plan)}</p><p class="small"><b>Cash</b> : ${esc(p.cash_policy)}</p>
+    ${ev}${p.scenarios.map((s) => `<p class="small">→ <b>${esc(s.event)}</b> : si ${esc(s.if)}, ${esc(s.then)}</p>`).join("")}
+    ${p.watchlist.map((x) => `<p class="small">👁 <b>${esc(x.ticker)}</b> : ${esc(x.why)} <span class="muted">(entrée si ${esc(x.entry_condition)})</span></p>`).join("")}
+    ${p.risks.length ? `<p class="small muted">Risques : ${esc(p.risks.join(" ; "))}</p>` : ""}`;
+}
+
+function researchHtml(r) {
+  return `<p class="small">${esc(r.summary)}</p>${r.findings.map((f) => `<div class="item small"><div class="item-head"><b>${esc(f.topic)}</b>
+    <span class="chip">${esc(f.impact)}</span></div><div>${esc(f.summary)}</div>
+    <div class="muted">${esc(f.horizon)} · confiance ${esc(f.confidence)}${f.tickers?.length ? ` · ${esc(f.tickers.join(", "))}` : ""}</div>
+    ${f.sources.map((s) => `<div>🔗 <a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener">${esc(s.title || s.url)}</a> <span class="muted">${esc(s.date || "")}</span></div>`).join("")}</div>`).join("")}
+    ${r.not_found?.length ? `<p class="small muted">Rien de fiable trouvé sur : ${esc(r.not_found.join(" ; "))}</p>` : ""}`;
+}
 
 function renderAgents() {
   const a = state.agents;
-  if (!a) { $("#tab-agents").innerHTML = `<div class="card"><p class="empty">Le tableau des agents apparaîtra après le prochain run.</p></div>`; return; }
+  if (!a) { $("#tab-agents").innerHTML = renderUsage() + `<div class="card"><p class="empty">Le tableau des agents apparaîtra après le prochain run.</p></div>`; return; }
   const llm = a.agents.filter((x) => x.kind === "llm"), code = a.agents.filter((x) => x.kind === "code");
   const count = (s) => a.agents.filter((x) => x.status === s).length;
   const hist = (k) => a.history.map((h) => `<i title="${esc(fmtDate(h.date))} : ${esc(AG_STATUS[h.states[k]]?.[0] || "–")}" style="background:${AG_DOT[h.states[k]] || AG_DOT.skipped}"></i>`).join("");
   const kt = (n) => n >= 1000 ? `${Math.round(n / 1000)}k` : String(n);
   const row = (x) => {
     const [label, c] = AG_STATUS[x.status];
-    const detail = x.status === "skipped" ? esc(x.desc)
+    const idle = x.status === "skipped" || x.status === "budget";
+    const detail = idle ? esc(x.desc)
       : [x.seconds != null && x.kind === "llm" ? `${x.seconds} s` : "", x.tokens_in ? `${kt(x.tokens_in)} → ${kt(x.tokens_out)} tokens` : ""].filter(Boolean).map(esc).join(" · ");
     return `<tr><td><b>${esc(x.name)}</b>${x.model ? ` <span class="chip">${esc(x.model)}</span>` : ""}
-      <div class="muted small">${x.status === "skipped" ? detail : esc(x.desc)}</div>
-      ${x.status !== "skipped" && detail ? `<div class="muted small">${detail}</div>` : ""}
+      <div class="muted small">${idle ? detail : esc(x.desc)}</div>
+      ${!idle && detail ? `<div class="muted small">${detail}</div>` : ""}
+      ${x.note ? `<div class="small muted">⏸ ${esc(x.note)}</div>` : ""}
       ${x.error ? `<div class="neg small">${esc(x.error)}</div>` : ""}</td>
       <td class="nowrap ${c}"><b>${label}</b></td><td class="dots">${hist(x.key)}</td></tr>`;
   };
   const head = `<tr><th>Agent</th><th>Dernier run</th><th>${a.history.length} derniers</th></tr>`;
   const d = a.last_run;
-  $("#tab-agents").innerHTML = `<div class="card"><div class="card-head"><h2>L'équipe</h2>
+  $("#tab-agents").innerHTML = renderUsage() + `<div class="card"><div class="card-head"><h2>L'équipe</h2>
     <span class="muted small">${llm.length} agents IA · ${code.length} modules de code</span></div>
     <p class="small">Dernier run : <b>${esc(fmtDate(d.date))}</b>${d.mode === "veille" ? " (veille)" : ""} —
     <b class="pos">${count("ok")} ont tourné</b>, ${count("skipped")} non requis,
-    <b class="${count("error") ? "neg" : ""}">${count("error")} en erreur</b>.</p>
+    ${count("budget") ? `${count("budget")} économisé(s) pour le budget, ` : ""}<b class="${count("error") ? "neg" : ""}">${count("error")} en erreur</b>.</p>
     <h3>Agents IA (Claude)</h3><div class="table-wrap"><table>${head}${llm.map(row).join("")}</table></div>
     <h3>Modules de code (déterministes)</h3><div class="table-wrap"><table>${head}${code.map(row).join("")}</table></div>
-    <p class="muted small">« Non requis » = l'agent n'avait rien à faire ce jour-là (ex. le gestionnaire de risque n'intervient que s'il y a des ordres ; la revue hebdomadaire a lieu le week-end). Un point par run, du plus ancien au plus récent : vert = OK, rouge = erreur, gris = non requis.</p></div>`;
+    <p class="muted small">« Non requis » = l'agent n'avait rien à faire ce jour-là (ex. le gestionnaire de risque n'intervient que s'il y a des ordres ; la revue hebdomadaire, la recherche web et le plan ont lieu le week-end). « Économisé » = appel sauté pour respecter le budget (ni erreur ni oubli). Un point par run, du plus ancien au plus récent : vert = OK, rouge = erreur, gris = non requis.</p></div>`;
 }
 
 // --- Apprentissage : playbook, calibration, agenda, connaissances ---------------
@@ -342,6 +396,9 @@ function renderLearning() {
   const k = state.knowledge;
   if (!k) { $("#tab-learning").innerHTML = `<div class="card"><p class="empty">La base de connaissances apparaîtra après le premier run.</p></div>`; return; }
   const cards = [];
+
+  if (k.weekplan) cards.push(`<div class="card"><div class="card-head"><h2>Plan de la semaine</h2><span class="muted small">établi le ${esc(fmtDate(k.weekplan.date))}</span></div>${planHtml(k.weekplan)}</div>`);
+  if (k.research) cards.push(`<div class="card"><div class="card-head"><h2>Recherche du week-end</h2><span class="muted small">${esc(fmtDate(k.research.date))} · sources web</span></div>${researchHtml(k.research)}</div>`);
 
   const c = k.calibration;
   cards.push(`<div class="card"><h2>Calibration des prédictions</h2>${c.n ? `

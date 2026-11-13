@@ -64,7 +64,15 @@ class Journal:
         """Un jour de séance est terminé s'il a une décision du chef (ou est le dernier jour) ;
         sinon (panne LLM) le run suivant le refait."""
         e = self.read_day(d, mode)
-        return bool(e) and (mode != "trading" or bool(e.get("final") or e.get("chef")))
+        if not e:
+            return False
+        skipped = {s["role"] for s in e.get("budget_skips", [])}
+        if mode == "trading":
+            return bool(e.get("final") or e.get("chef") or "chef" in skipped)
+        # veille : l'analyste actualité a tourné, et le travail propre au jour (recherche / plan) aussi
+        wanted = {"research": ("research", "research"), "plan": ("week_plan", "plan")}.get(e.get("kind"))
+        return bool(e.get("news_analysis") or "news" in skipped) and \
+               (not wanted or bool(e.get(wanted[0]) or wanted[1] in skipped))
 
     # --- Notes de contexte ---
     def context_notes(self) -> str:

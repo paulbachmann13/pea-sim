@@ -12,6 +12,7 @@ from sim.money import D
 def cfg():
     cfg = copy.deepcopy(load_config(local=None))
     cfg["supabase"]["enabled"] = False
+    cfg["budget"]["enabled"] = False                  # les tests n'écrivent pas dans le vrai journal de consommation
     return cfg
 
 
