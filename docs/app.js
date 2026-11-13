@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "1.7.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "1.8.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -74,6 +74,7 @@ async function load() {
     state.knowledge = await getJSON("knowledge.json").catch(() => null);
     state.agents = await getJSON("agents.json").catch(() => null);
     state.usage = await getJSON("usage.json").catch(() => null);
+    state.settings = await fetchSettings();
     render();
   } catch (e) {
     $("#subtitle").textContent = "Données indisponibles (" + e.message + ")";
@@ -309,6 +310,76 @@ const AG_STATUS = { ok: ["✓ OK", "pos"], error: ["✗ Erreur", "neg"], skipped
 const AG_DOT = { ok: "var(--pos)", error: "var(--neg)", skipped: "var(--line)", budget: "var(--s-benchmark)" };
 const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : "#");
 
+// --- Réglage du budget depuis la PWA (mode, pause) --------------------------------
+// Écrit dans Supabase via une fonction protégée par un code ; le run du PC applique le choix au prochain passage.
+const CODE_KEY = "pea:settingsCode";
+const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} };
+
+async function fetchSettings() {
+  try {
+    const r = await fetch(`${SUPABASE.url}/rest/v1/pea_settings?select=data,updated_at&key=eq.budget`, { headers: { apikey: SUPABASE.key }, cache: "no-store" });
+    if (!r.ok) return null;
+    const rows = await r.json();
+    return rows[0] || null;
+  } catch { return null; }
+}
+
+async function setBudget(mode, pause) {
+  const msg = $("#set-msg");
+  const code = lsGet(CODE_KEY) || ($("#set-code")?.value || "").trim();
+  if (!code) { msg.textContent = "Entre ton code de réglage."; msg.className = "small neg"; return; }
+  msg.textContent = "Enregistrement…"; msg.className = "small muted";
+  try {
+    const r = await fetch(`${SUPABASE.url}/rest/v1/rpc/pea_set_mode`, {
+      method: "POST", headers: { apikey: SUPABASE.key, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_code: code, p_mode: mode, p_pause: pause }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (j.ok) {
+      lsSet(CODE_KEY, code);
+      state.settings = { data: { mode: j.mode, pause: j.pause }, updated_at: new Date().toISOString() };
+      renderAgents();
+      const m2 = $("#set-msg"); m2.textContent = "✓ Enregistré. Appliqué au prochain run (18h)."; m2.className = "small pos";
+    } else {
+      if (j.error === "Code invalide.") lsSet(CODE_KEY, null);
+      msg.textContent = j.error || "Échec de l'enregistrement.";
+      msg.className = "small neg";
+      if (j.error === "Code invalide.") renderAgents();
+    }
+  } catch { msg.textContent = "Pas de connexion : réessaie."; msg.className = "small neg"; }
+}
+
+function settingsControls(u) {
+  const chosen = state.settings?.data || { mode: u.mode, pause: u.pause };
+  const names = { eco: "Économe", normal: "Normal", large: "Large" };
+  const pending = chosen.mode !== u.mode || !!chosen.pause !== !!u.pause;
+  const hasCode = !!lsGet(CODE_KEY);
+  return `<h3>Choisir le mode</h3>
+    <div class="seg" role="group" aria-label="Mode du budget">${Object.keys(u.presets).map((k) =>
+      `<button data-mode="${k}" class="${k === chosen.mode ? "on" : ""}">${esc(names[k] || k)}</button>`).join("")}</div>
+    <label class="pause"><input type="checkbox" id="set-pause" ${chosen.pause ? "checked" : ""}> ⏸ Pause (aucun appel à Claude)</label>
+    ${hasCode ? "" : `<input type="password" id="set-code" class="code" placeholder="Code de réglage" autocomplete="off">`}
+    <div id="set-msg" class="small muted">${pending ? `Choix : <b>${esc(names[chosen.mode] || chosen.mode)}${chosen.pause ? " + pause" : ""}</b> — appliqué au prochain run (18h). Actuellement : ${esc(names[u.mode] || u.mode)}${u.pause ? " + pause" : ""}.` : `Mode actuel : <b>${esc(names[u.mode] || u.mode)}</b>${u.pause ? " (en pause)" : ""}.`}</div>
+    ${hasCode ? `<p class="small"><a href="#" id="forget-code">Oublier le code sur cet appareil</a></p>` : ""}`;
+}
+
+document.addEventListener("click", (ev) => {
+  const t = ev.target;
+  if (t.closest?.("[data-mode]") && state.usage) {
+    ev.preventDefault();
+    setBudget(t.closest("[data-mode]").dataset.mode, !!$("#set-pause")?.checked);
+  } else if (t.id === "forget-code") {
+    ev.preventDefault(); lsSet(CODE_KEY, null); renderAgents();
+  }
+});
+document.addEventListener("change", (ev) => {
+  if (ev.target.id === "set-pause" && state.usage) {
+    const chosen = state.settings?.data?.mode || state.usage.mode;
+    setBudget(chosen, ev.target.checked);
+  }
+});
+
 // --- Consommation de l'abonnement ------------------------------------------------
 function renderUsage() {
   const u = state.usage;
@@ -330,8 +401,8 @@ function renderUsage() {
         <td class="num">${usd(p.daily_usd)}<div class="muted small">≈ ${kt(Math.round(p.daily_usd * tokPerUsd))}</div></td>
         <td class="num">${usd(p.weekend_usd)}<div class="muted small">≈ ${kt(Math.round(p.weekend_usd * tokPerUsd))}</div></td>
         <td class="num">${usd(p.weekly_usd)}<div class="muted small">≈ ${kt(Math.round(p.weekly_usd * tokPerUsd))}</div></td></tr>`).join("")}</table></div>
-      <p class="muted small">Sous chaque montant : l'équivalent en tokens (lus + écrits).</p>
-      <p class="muted small">Pour changer de mode : dans <code>local.yaml</code>, rubrique <code>budget</code>, mets <code>mode: eco</code>, <code>normal</code> ou <code>large</code>, puis enregistre (pris en compte au prochain run). <b>Économe</b> laisse de la place à tes autres projets ; <b>large</b> n'a pas à se priver de la recherche web.</p>` : "";
+      <p class="muted small">Sous chaque montant : l'équivalent en tokens (lus + écrits). <b>Économe</b> laisse de la place à tes autres projets ; <b>large</b> n'a pas à se priver de la recherche web.</p>
+      ${settingsControls(u)}` : "";
   const typical = u.typical_day_usd
     ? `<p class="small">📏 <b>Repère</b> : un jour de bourse typique coûte <b>${usd(u.typical_day_usd)}</b> (${tok(u.typical_day_usd)}), d'après tes ${u.days_measured} jour(s) mesuré(s). Les plafonds sont des garde-fous, pas la dépense attendue.</p>` : "";
   const names = Object.fromEntries((state.agents?.agents || []).map((a) => [a.key, a.name]));
@@ -350,7 +421,7 @@ function renderUsage() {
     <h3>Cette semaine, par agent</h3>${roles.length ? `<div class="table-wrap"><table>${roles.map(([k, v]) => `<tr><td>${esc(names[k] || k)}</td><td class="num">${usd(v)}</td><td class="num muted">${w.usd ? Math.round((v / w.usd) * 100) : 0} %</td></tr>`).join("")}</table></div>` : `<p class="empty">Aucun appel cette semaine.</p>`}
     <p class="muted small">Total depuis le début : ${usd(u.total.usd)} (${kt(u.total.tokens_in)} → ${kt(u.total.tokens_out)} tokens, ${u.total.calls} appels).
     L'équivalent $ API pondère les modèles (Opus pèse plus que Sonnet) : c'est la meilleure mesure de ce que ce projet prélève sur ton abonnement. Ton quota réel n'est pas lisible et il est partagé avec tes autres projets : ce projet s'arrête de lui-même aux plafonds (${usd(u.limits.daily_usd)} par jour de bourse, ${usd(u.limits.weekend_usd)} le week-end, ${usd(u.limits.weekly_usd)} par semaine). Les tâches optionnelles (recherche web, dossiers, revue hebdomadaire) s'arrêtent dès ${Math.round(u.limits.tier3_share * 100)} % du budget du jour ; le chef et le risque ne sont jamais coupés.
-    Les « ≈ tokens » sont calculés d'après ta consommation réelle (lus + écrits par dollar), donc ce sont des ordres de grandeur. Pour mettre le projet en pause : <code>pause: true</code> dans <code>local.yaml</code>.</p></div>`;
+    Les « ≈ tokens » sont calculés d'après ta consommation réelle (lus + écrits par dollar), donc ce sont des ordres de grandeur. Le choix du mode et la pause se font plus haut, avec ton code de réglage ; ils s'appliquent au prochain run.</p></div>`;
 }
 
 // --- Plan de la semaine et recherches du week-end ----------------------------------

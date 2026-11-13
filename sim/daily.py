@@ -42,6 +42,7 @@ from .money import D, cents
 from .news import NewsStore, fetch_news, select_items
 from .publish import publish
 from .refresh import refresh_market_data
+from .remote_settings import apply_remote_settings, fetch_remote_settings
 from .report import build_report
 from .screener import screen, select
 from .supabase_sync import sync_docs
@@ -101,7 +102,11 @@ def final_session(env: Env, today: str) -> str | None:
 
 
 def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm=claude_cli,
-        refresh=refresh_market_data, fetch=fetch_news, fetch_hist=fetch_history) -> RunResult:
+        refresh=refresh_market_data, fetch=fetch_news, fetch_hist=fetch_history,
+        fetch_settings=fetch_remote_settings) -> RunResult:
+    applied = apply_remote_settings(cfg, root, fetch_settings)      # mode / pause choisis depuis la PWA
+    if applied:
+        log.info(applied)
     today = now.date().isoformat()
     env = open_env(cfg, root)
     last = final_session(env, today)

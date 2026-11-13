@@ -69,6 +69,13 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line
 th { font-weight: 600; color: var(--muted); font-size: .78rem; }
 td.num, th.num { text-align: right; white-space: nowrap; }
 td.nowrap { white-space: nowrap; }
+.seg { display: flex; gap: 6px; margin: 6px 0 8px; }
+.seg button { flex: 1; padding: 10px 6px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text);
+  font: inherit; font-weight: 600; cursor: pointer; }
+.seg button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+label.pause { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: .92rem; }
+input.code { width: 100%; padding: 10px; margin: 6px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--card);
+  color: var(--text); font: inherit; }
 tr.cur td { background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
 .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 4px 0 12px; }
 .bar > div { height: 100%; border-radius: 4px; }

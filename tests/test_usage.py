@@ -57,6 +57,12 @@ def test_pause_and_disabled(tmp_path, bcfg):
     assert check("chef", bcfg, u)[0]
 
 
+def test_pause_blocks_every_call_even_with_the_budget_disabled(cfg):
+    cfg["budget"].update(enabled=False, pause=True)
+    with pytest.raises(BudgetSkip, match="pause"):
+        ask("chef", "P", "S", {}, cfg, llm=fake_llm)
+
+
 def test_global_cap_counts_other_projects(tmp_path, bcfg):
     shared = tmp_path / "shared.jsonl"
     bcfg["budget"]["global_daily_usd"] = 2.0

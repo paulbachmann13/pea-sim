@@ -94,6 +94,8 @@ def ask(role: str, prompt: str, system: str, schema: dict, cfg: dict, check=None
     """Appelle le modèle du rôle ; `check(obj)` lève ValueError si la réponse viole une règle métier.
     En cas d'échec, réessaie en expliquant l'erreur. Renvoie (objet, métadonnées des appels).
     Lève BudgetSkip si le budget du projet interdit cet appel."""
+    if cfg["budget"].get("pause"):                      # la pause gagne toujours, même budget désactivé
+        raise BudgetSkip(role, "pause demandée")
     usage = usage if usage is not None else default_usage(cfg)
     if usage is not None:
         ok, why = budget_check(role, cfg, usage)
