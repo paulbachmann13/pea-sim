@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "2.0.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "2.1.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -17,7 +17,8 @@ const pct = (x, sign = true) => x == null ? "–" : (sign && x > 0 ? "+" : "") +
 const cls = (x) => (x > 0 ? "pos" : x < 0 ? "neg" : "");
 const fmtDate = (d) => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const ret = (b) => { const s = b.series; return s.length ? (s[s.length - 1].total / b.deposits - 1) * 100 : 0; };
+// Performance en % : pondérée par le temps (indépendante des versements) ; repli sur l'ancien calcul sans « twr ».
+const ret = (b) => { const s = b.series; return s.length ? (s.at(-1).twr ?? (s.at(-1).total / b.deposits - 1) * 100) : 0; };
 const last = (b) => (b.series.length ? b.series[b.series.length - 1].total : b.deposits);
 
 // Données : table pea_docs de Supabase (une ligne par fichier JSON exporté par le run quotidien).
@@ -122,13 +123,15 @@ function renderHero() {
       <div class="hero-sub muted">Capital de départ · la simulation démarre au premier run de 18h</div>`;
     return;
   }
-  const now = pts.at(-1).total, prev = pts.length > 1 ? pts.at(-2).total : capital;
-  const gain = now - capital, day = now - prev;
+  const lastPt = pts.at(-1), now = lastPt.total, prev = pts.length > 1 ? pts.at(-2).total : now;
+  const gain = now - capital, day = now - prev - (pts.length > 1 ? lastPt.flow || 0 : 0);   // sans le versement du jour
   const invested = now - a.cash;
   const signed = (x) => (x > 0 ? "+" : x < 0 ? "−" : "") + eur(Math.abs(x));
-  $("#hero").innerHTML = `<div class="hero-label">Mon argent au ${fmtDate(pts.at(-1).date)}</div>
+  const topups = (a.deposit_events || []).length > 1;
+  $("#hero").innerHTML = `<div class="hero-label">Mon argent au ${fmtDate(lastPt.date)}</div>
     <div class="hero-value">${eur(now)}</div>
-    <div class="hero-gain ${cls(gain)}">${signed(gain)} (${pct(gain / capital * 100)}) depuis le départ</div>
+    <div class="hero-gain ${cls(gain)}">${signed(gain)} (${pct(ret(a))}) depuis le départ</div>
+    ${topups ? `<div class="hero-sub muted small">Versé : ${eur(capital)} au total · la performance en % ne compte pas les versements</div>` : ""}
     <div class="hero-row">
       <span>Aujourd'hui <b class="${cls(day)}">${signed(day)} (${pct(day / prev * 100)})</b></span>
       <span>Cash <b>${eur(a.cash)}</b></span>
@@ -142,14 +145,15 @@ function renderDaily() {
   const pts = a.series;
   if (!pts.length) { $("#daily").innerHTML = `<h2>Jour par jour</h2><p class="empty">Première valeur ce soir après le run.</p>`; return; }
   const rows = pts.map((p, i) => {
-    const prev = i ? pts[i - 1].total : capital, d = p.total - prev;
-    return `<tr><td class="nowrap">${fmtDate(p.date)}</td><td class="num"><b>${eur(p.total)}</b></td>
-      <td class="num ${cls(d)}">${d > 0 ? "+" : ""}${eur(d)}</td><td class="num ${cls(d)}">${pct(d / prev * 100)}</td>
-      <td class="num ${cls(p.total - capital)}">${pct((p.total / capital - 1) * 100)}</td></tr>`;
+    const prev = i ? pts[i - 1].total : p.total, d = i ? p.total - prev - (p.flow || 0) : 0;   // hors versement du jour
+    const dep = i && p.flow ? `<div class="muted small">+ ${eur(p.flow, 0)} versés</div>` : "";
+    return `<tr><td class="nowrap">${fmtDate(p.date)}${dep}</td><td class="num"><b>${eur(p.total)}</b></td>
+      <td class="num ${cls(d)}">${d > 0 ? "+" : ""}${eur(d)}</td><td class="num ${cls(d)}">${pct(prev ? d / prev * 100 : 0)}</td>
+      <td class="num ${cls(p.twr ?? p.total - capital)}">${pct(p.twr ?? (p.total / capital - 1) * 100)}</td></tr>`;
   }).reverse();
   const head = `<tr><th>Clôture</th><th class="num">Valeur</th><th class="num">Jour</th><th class="num">Jour %</th><th class="num">Total %</th></tr>`;
   const table = (r) => `<div class="table-wrap"><table>${head}${r.join("")}</table></div>`;
-  $("#daily").innerHTML = `<div class="card-head"><h2>Jour par jour</h2><span class="muted small">départ ${eur(capital)}</span></div>
+  $("#daily").innerHTML = `<div class="card-head"><h2>Jour par jour</h2><span class="muted small">versé ${eur(capital, 0)}</span></div>
     ${table(rows.slice(0, 7))}${rows.length > 7 ? `<details><summary>Voir les ${rows.length - 7} jours précédents</summary>${table(rows.slice(7))}</details>` : ""}`;
 }
 
@@ -170,7 +174,7 @@ function renderKpis() {
 function renderChart() {
   const books = state.summary.books;
   const series = ORDER.filter((k) => books[k]?.series.length).map((k) => ({
-    key: k, pts: books[k].series.map((p) => ({ d: p.date, v: (p.total / books[k].deposits - 1) * 100 })),
+    key: k, pts: books[k].series.map((p) => ({ d: p.date, v: p.twr ?? (p.total / books[k].deposits - 1) * 100 })),
   }));
   const dates = [...new Set(series.flatMap((s) => s.pts.map((p) => p.d)))].sort();
   if (dates.length < 2) { $("#chart").innerHTML = `<p class="empty">Le graphique apparaîtra après la 2ᵉ séance.</p>`; $("#legend").innerHTML = ""; return; }

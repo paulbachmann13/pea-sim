@@ -74,10 +74,11 @@ def execute_orders(ledger: Ledger, orders: list[Order], opens: dict, marks: dict
     return outcomes
 
 
-def buy_max(ledger: Ledger, ticker: str, ref_price, cfg: dict, grid: dict, date: str) -> Fill | None:
-    """Achète le maximum d'actions entières possible (benchmark buy & hold, sans limite de concentration)."""
+def buy_max(ledger: Ledger, ticker: str, ref_price, cfg: dict, grid: dict, date: str, cash=None) -> Fill | None:
+    """Achète le maximum d'actions entières possible (benchmark buy & hold, sans limite de concentration).
+    `cash` limite la somme investie (par défaut tout le cash du livre)."""
     price = execution_price(ref_price, BUY, cfg["execution"]["spread_pct"])
-    qty = max_buy_qty(ledger.state().cash, price, grid)
+    qty = max_buy_qty(ledger.state().cash if cash is None else cash, price, grid)
     if qty == 0:
         return None
     fill = make_fill(date, ticker, BUY, qty, ref_price, cfg, grid)

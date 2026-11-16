@@ -63,6 +63,17 @@ def portfolio_text(state: PortfolioState, marks: dict) -> str:
     return "\n".join(lines)
 
 
+def deposits_text(ledger: Ledger) -> str:
+    """Historique des versements, pour que les agents sachent d'où vient le cash."""
+    events = ledger.deposit_events()
+    if len(events) < 2:
+        return ""
+    parts = "; ".join(f"{cents(a)} € le {d}" for d, a in events)
+    return (f"Versements : {parts} (total déposé {cents(sum((a for _, a in events), D('0')))} €). "
+            "Un versement n'oblige pas à investir : garder du cash reste un choix légitime, mais tu peux l'employer. "
+            "Les performances en % ci-dessous sont calculées indépendamment des versements.")
+
+
 def performance_text(agents_summary: dict, bench_summary: dict | None) -> str:
     s = f"Équipe : {cents(agents_summary['total'])} € ({agents_summary['return_pct']:.2f} %)"
     if bench_summary:
@@ -184,6 +195,9 @@ def run_decision(*, as_of: str, run_at, cfg: dict, store, instruments: dict, led
     table = select(rows, cfg, held, state, marks, grid)
     h = horizon(ledger, as_of, cfg)
     agents_summary = summary(state, marks)
+    twr = ledger.twr_last_pct()                       # performance indépendante des versements
+    if twr is not None:
+        agents_summary["return_pct"] = twr
     watch = watch or {}
 
     entry = {"date": as_of, "mode": "trading", "run_at": run_at.isoformat(), "exec_date": h["exec_date"],
@@ -212,7 +226,8 @@ def run_decision(*, as_of: str, run_at, cfg: dict, store, instruments: dict, led
     playbook = kb.render_playbook()
     agenda = kb.render_agenda(as_of)
     focus = list(dict.fromkeys([*held, *watch]))
-    txt = {"horizon": horizon_text(h, as_of), "portfolio": portfolio_text(state, marks),
+    txt = {"horizon": horizon_text(h, as_of),
+           "portfolio": "\n".join(x for x in (portfolio_text(state, marks), deposits_text(ledger)) if x),
            "screener": format_table(table), "lessons": lessons_text(journal, cfg["agents"]["postmortems"]),
            "calibration": kb.render_calibration()}
 

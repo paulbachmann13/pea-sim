@@ -165,7 +165,8 @@ class Ledger:
         return [Fill(d, t, s, q, D(p), D(r), D(f), D(a)) for d, t, s, q, p, r, f, a in rows]
 
     def snapshot(self, date: str, marks: dict) -> dict:
-        """Valorise le portefeuille aux cours `marks` et enregistre la valeur du jour."""
+        """Valorise le portefeuille aux cours `marks` et enregistre la valeur du jour.
+        `return_pct` est la performance pondérée par le temps (insensible aux versements)."""
         s = summary(self.state(), marks)
         self.db.execute(
             "INSERT OR REPLACE INTO daily_values (book, date, cash, positions_value, total, fees_paid)"
@@ -173,11 +174,46 @@ class Ledger:
             (self.book, date, str(s["cash"]), str(s["positions_value"]), str(s["total"]), str(s["fees_paid"])),
         )
         self.db.commit()
+        twr = self.twr_last_pct()
+        if twr is not None:
+            s["return_pct"] = twr
         return s
 
     def daily_values(self) -> list[tuple[str, Decimal]]:
         rows = self.db.execute("SELECT date, total FROM daily_values WHERE book=? ORDER BY date", (self.book,))
         return [(d, D(t)) for d, t in rows]
+
+    # --- Versements et performance indépendante des versements -----------------------------
+    def deposit_events(self) -> list[tuple[str, Decimal]]:
+        rows = self.db.execute("SELECT date, amount FROM events WHERE book=? AND type='DEPOSIT' ORDER BY id",
+                               (self.book,))
+        return [(d, D(a)) for d, a in rows]
+
+    def deposits_since(self, date: str) -> Decimal:
+        """Total des versements datés de `date` ou après (argent pas encore investissable à la séance `date`)."""
+        return sum((a for d, a in self.deposit_events() if d >= date), Decimal("0"))
+
+    def performance_series(self) -> list[dict]:
+        """Valeur du jour, versement entré depuis la veille, et performance cumulée pondérée par le temps (en %).
+
+        Un versement est supposé arriver après la clôture de sa date : le rendement d'un jour est
+        (valeur − versements) / valeur de la veille. Ainsi un versement ne crée ni gain ni perte apparents,
+        et les portefeuilles qui ont reçu les mêmes versements restent comparables."""
+        deposits, out = self.deposit_events(), []
+        idx, prev_d, prev_v = Decimal("1"), None, None
+        for d, v in self.daily_values():
+            flow = Decimal("0")
+            if prev_v is not None:
+                flow = sum((a for dd, a in deposits if prev_d < dd <= d), Decimal("0"))
+                if prev_v > 0:
+                    idx *= (v - flow) / prev_v
+            out.append({"date": d, "total": v, "flow": flow, "twr_pct": (idx - 1) * 100})
+            prev_d, prev_v = d, v
+        return out
+
+    def twr_last_pct(self) -> Decimal | None:
+        series = self.performance_series()
+        return series[-1]["twr_pct"] if series else None
 
 
 def round_trips(fills: list[Fill]) -> list[dict]:

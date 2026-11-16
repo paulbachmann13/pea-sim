@@ -24,6 +24,7 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 from . import market_calendar as mc
@@ -234,7 +235,36 @@ def process_sessions(env: Env, store, instruments, pending, today, warnings) -> 
         if pending and pending["exec_date"] == d:
             executions = execute_pending(env, store, instruments, pending, d, warnings)
             env.journal.clear_pending()
+        invest_passive_books(env, store, instruments, d, warnings)
     return executions
+
+
+def invest_passive_books(env: Env, store, instruments, d: str, warnings: list[str]) -> None:
+    """Benchmark (ETF Monde) et portefeuille aléatoire investissent l'argent disponible, y compris les versements
+    ultérieurs. Un versement daté de `d` n'est investissable qu'à la séance suivante : c'est la première ouverture
+    où les agents (qui décident le soir) peuvent aussi l'employer, donc la comparaison reste équitable."""
+    cfg = env.cfg
+    minimum = D(cfg["benchmark"].get("min_cash_to_invest", 50))        # pas d'achats de miettes de cash
+
+    def investable(led: Ledger) -> Decimal:
+        """Cash à investir : seulement s'il y a un versement NOUVEAU (daté avant `d`, au plus tôt le jour du dernier
+        achat) ; le petit reste d'un achat précédent n'est pas réinvesti tout seul."""
+        fills = led.fills()
+        last_fill = max((f.date for f in fills), default=None)
+        fresh = any(dd < d and (last_fill is None or dd >= last_fill) for dd, _ in led.deposit_events())
+        return led.state().cash - led.deposits_since(d) if fresh else Decimal("0")
+
+    bench_led, bench = env.ledgers["benchmark"], cfg["benchmark"]["ticker"]
+    avail = investable(bench_led)
+    if avail >= minimum:
+        p = store.price(bench, d, "open")
+        if p is None:
+            warnings.append(f"benchmark {bench} sans cours d'ouverture le {d}, achat reporté")
+        else:
+            buy_max(bench_led, bench, p, cfg, fee_grid(cfg), d, cash=avail)
+    avail = investable(env.ledgers["random"])
+    if avail >= minimum:
+        buy_random(env, store, instruments, mc.previous_session(d), d, cash=avail)
 
 
 def credit_dividends(env: Env, store, d: str) -> None:
@@ -267,34 +297,25 @@ def execute_pending(env: Env, store, instruments, pending, d, warnings) -> list[
     execute_orders(shadow, orders, opens, _open_marks(store, shadow, d), instruments, cfg,
                    fee_grid(cfg, cfg["simulation"]["compare_grid"]), d)
 
-    # Benchmark et portefeuille aléatoire : achetés à la première exécution de la simulation
-    bench_led, bench = env.ledgers["benchmark"], cfg["benchmark"]["ticker"]
-    if not bench_led.fills():
-        p = store.price(bench, d, "open")
-        if p is None:
-            warnings.append(f"benchmark {bench} sans cours d'ouverture le {d}, achat reporté")
-        else:
-            buy_max(bench_led, bench, p, cfg, grid, d)
-    if not env.ledgers["random"].fills():
-        buy_random(env, store, instruments, pending["decision_date"], d)
-
     return [{"ticker": o.order.ticker, "side": o.order.side, "qty_requested": o.order.qty,
              "filled": o.fill is not None, "qty": o.fill.qty if o.fill else 0,
              "price": str(o.fill.price) if o.fill else None, "fees": str(o.fill.fees) if o.fill else None,
              "reason": o.verdict.reason} for o in outcomes]
 
 
-def buy_random(env: Env, store, instruments, decision_date: str, d: str) -> None:
-    """Tire au sort des actions liquides (connues à la date de décision) et répartit le capital à parts égales."""
+def buy_random(env: Env, store, instruments, decision_date: str, d: str, cash=None) -> None:
+    """Tire au sort des actions liquides (connues à la date de décision) et répartit `cash` à parts égales.
+    Chaque lot (premier achat, puis chaque versement) a son propre tirage, reproductible."""
     cfg, led = env.cfg, env.ledgers["random"]
     n = cfg["simulation"]["random_picks"]
-    budget = led.state().cash / n
+    batch = len({f.date for f in led.fills()})
+    budget = (led.state().cash if cash is None else D(cash)) / n
     threshold = D(cfg["liquidity"]["min_avg_daily_volume_eur"])
     candidates = sorted(t for t, i in instruments.items()
                         if i.kind == "equity" and (i.avg_daily_volume_eur or 0) >= threshold
                         and (c := store.price(t, decision_date)) is not None and c < budget * D("0.9")
                         and store.price(t, d, "open") is not None)
-    picks = random.Random(cfg["simulation"]["random_seed"]).sample(candidates, min(n, len(candidates)))
+    picks = random.Random(cfg["simulation"]["random_seed"] + batch).sample(candidates, min(n, len(candidates)))
     orders = [Order(t, BUY, int((budget - 3) / store.price(t, decision_date))) for t in picks]
     orders = [o for o in orders if o.qty > 0]
     opens = {o.ticker: store.price(o.ticker, d, "open") for o in orders}

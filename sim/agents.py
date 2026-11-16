@@ -153,7 +153,8 @@ def rules_text(cfg: dict) -> str:
 
     cap = f", plafonnés à {grid['pea_cap_rate'] * 100:.2f} % du montant (plafond PEA)" if grid.get("pea_cap_rate") else ""
     return "\n".join([
-        f"- Capital initial : {cfg['capital_initial']} €. Long uniquement : pas de vente à découvert, "
+        f"- Capital de départ : {cfg['capital_initial']} €, complété par les versements indiqués dans « Portefeuille ». "
+        "Long uniquement : pas de vente à découvert, "
         "pas de levier, cash jamais négatif. Actions entières uniquement.",
         f"- Au plus {lim['max_orders_per_day']} ordres par jour ; au plus {lim['max_position_pct']} % "
         "de la valeur du portefeuille sur un même titre (vérifié après achat).",

@@ -127,7 +127,10 @@ def export_dashboard(cfg: dict, root: Path, ledgers: dict[str, Ledger], journal:
     books = {}
     for b, led in ledgers.items():
         st = led.state()
-        books[b] = {"label": LABELS[b], "series": [{"date": d, "total": _f(t)} for d, t in led.daily_values()],
+        books[b] = {"label": LABELS[b],
+                    "series": [{"date": p["date"], "total": _f(p["total"]), "flow": _f(p["flow"]),
+                                "twr": _f(round(p["twr_pct"], 4))} for p in led.performance_series()],
+                    "deposit_events": [{"date": d, "amount": _f(a)} for d, a in led.deposit_events()],
                     "cash": _f(st.cash), "fees": _f(st.fees_paid), "dividends": _f(st.dividends),
                     "realized": _f(st.realized_pnl), "deposits": _f(st.deposits), "n_fills": len(led.fills()),
                     "positions": sorted(st.positions)}
@@ -145,7 +148,7 @@ def export_dashboard(cfg: dict, root: Path, ledgers: dict[str, Ledger], journal:
 
     h = horizon(agents, as_of, cfg) if agents.start_date() else None
     write_json(out / "summary.json", {
-        "as_of": as_of, "horizon": h, "capital": cfg["capital_initial"],
+        "as_of": as_of, "horizon": h, "capital": _f(agents.state().deposits) or cfg["capital_initial"],
         "total_sessions": len(mc.sessions_between(h["start"], h["end"])) if h else None,
         "fee_grid": cfg["fees"]["active"], "compare_grid": cfg["simulation"]["compare_grid"],
         "books": books, "positions": positions, "pending": journal.load_pending(),

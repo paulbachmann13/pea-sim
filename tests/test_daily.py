@@ -82,7 +82,7 @@ def sim(tmp_path, cfg):
         return daily.run(at(d, h), cfg, tmp_path, llm=llm, refresh=refresh, fetch=news,
                          fetch_hist=lambda c, n, a: [], **kw)
 
-    return {"go": go, "root": tmp_path, "llm": llm, "cfg": cfg}
+    return {"go": go, "root": tmp_path, "llm": llm, "cfg": cfg, "store": store}
 
 
 def test_full_simulation(sim):

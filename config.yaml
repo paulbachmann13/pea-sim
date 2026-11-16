@@ -189,3 +189,4 @@ knowledge:
 # --- Benchmark ---------------------------------------------------------------
 benchmark:
   ticker: WPEA.PA
+  min_cash_to_invest: 50             # le benchmark et l'aléatoire réinvestissent tout versement ≥ ce montant (€)

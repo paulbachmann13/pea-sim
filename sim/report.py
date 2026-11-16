@@ -35,6 +35,8 @@ def compute_stats(ledgers: dict[str, Ledger], store, journal: Journal, as_of: st
     for b, led in ledgers.items():
         st = led.state()
         s = summary(st, store.marks(list(st.positions), as_of))
+        if led.twr_last_pct() is not None:
+            s["return_pct"] = led.twr_last_pct()                  # indépendante des versements
         books[b] = {"label": LABELS[b], "total": str(cents(s["total"])), "return_pct": f"{s['return_pct']:.2f}",
                     "fees": str(s["fees_paid"]), "dividends": str(s["dividends"]), "n_fills": len(led.fills()),
                     "final_positions": {t: p.qty for t, p in st.positions.items()}}

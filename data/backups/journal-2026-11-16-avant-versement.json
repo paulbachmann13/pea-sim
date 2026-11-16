@@ -1,0 +1,1879 @@
+{
+  "date": "2026-11-16",
+  "mode": "trading",
+  "run_at": "2026-11-16T18:00:06.672090+01:00",
+  "exec_date": "2026-11-17",
+  "horizon": {
+    "start": "2026-11-12",
+    "end": "2026-12-12",
+    "exec_date": "2026-11-17",
+    "session_no": 3,
+    "sessions_left": 19
+  },
+  "errors": [],
+  "llm_calls": [
+    {
+      "model": "sonnet",
+      "duration_s": 8.6,
+      "input_tokens": 4592,
+      "output_tokens": 831,
+      "cost_usd_equiv": 0.026674000000000003,
+      "role": "review"
+    },
+    {
+      "model": "sonnet",
+      "duration_s": 15.5,
+      "input_tokens": 8134,
+      "output_tokens": 2113,
+      "cost_usd_equiv": 0.053662,
+      "role": "dossier"
+    },
+    {
+      "model": "sonnet",
+      "duration_s": 18.8,
+      "input_tokens": 7922,
+      "output_tokens": 2492,
+      "cost_usd_equiv": 0.056604,
+      "role": "market"
+    },
+    {
+      "model": "sonnet",
+      "duration_s": 23.2,
+      "input_tokens": 26950,
+      "output_tokens": 3394,
+      "cost_usd_equiv": 0.141736,
+      "role": "news"
+    },
+    {
+      "model": "opus",
+      "duration_s": 27.6,
+      "input_tokens": 32797,
+      "output_tokens": 2714,
+      "cost_usd_equiv": 0.316648,
+      "role": "chef"
+    }
+  ],
+  "executions": [],
+  "watch": {
+    "ESE.PA": "ESE.PA",
+    "WPEA.PA": "WPEA.PA",
+    "ADOC.PA": "ADOCIA",
+    "UCB.BR": "UCB",
+    "AF.PA": "AIR FRANCE -KLM",
+    "NANO.PA": "NANOBIOTIX",
+    "TUB.BR": "TUBIZE-FIN",
+    "PHARM.AS": "PHARMING GROUP",
+    "DOV.MI": "DOVALUE",
+    "VU.PA": "Vusion",
+    "GNFT.PA": "GENFIT",
+    "NWL.MI": "NEWPRINCES"
+  },
+  "portfolio": {
+    "cash": "260.04",
+    "positions_value": "729.88",
+    "total": "989.92",
+    "deposits": "1000.00",
+    "return_pct": "-1.00800",
+    "realized_pnl": "0",
+    "unrealized_pnl": "-10.08",
+    "fees_paid": "3.68",
+    "dividends": "0"
+  },
+  "benchmark": {
+    "cash": "6.49",
+    "positions_value": "983.39",
+    "total": "989.88",
+    "deposits": "1000.00",
+    "return_pct": "-1.01200",
+    "realized_pnl": "0",
+    "unrealized_pnl": "-10.12",
+    "fees_paid": "2.50",
+    "dividends": "0"
+  },
+  "screener": {
+    "breadth": {
+      "titres": 321,
+      "pct_en_hausse": 30.8,
+      "mediane_1j": -0.55,
+      "mediane_20j": 4.36
+    },
+    "rows": [
+      {
+        "ticker": "WPEA.PA",
+        "kind": "etf",
+        "stale": false,
+        "close": 7.126,
+        "ret_1d": -0.35,
+        "ret_5d": 1.19,
+        "ret_20d": -0.49,
+        "ret_60d": 3.04,
+        "vol_20d": 14.6,
+        "dist_ma20": -0.02,
+        "dist_ma50": 0.41,
+        "vol_ratio": 0.73,
+        "rsi14": 44.5,
+        "adv_meur": 6.41,
+        "lists": [
+          "detenu",
+          "etf"
+        ],
+        "qmax": 1
+      },
+      {
+        "ticker": "ESE.PA",
+        "kind": "etf",
+        "stale": false,
+        "close": 34.5075,
+        "ret_1d": -0.34,
+        "ret_5d": 1.35,
+        "ret_20d": -1.17,
+        "ret_60d": 3.81,
+        "vol_20d": 16.5,
+        "dist_ma20": -0.3,
+        "dist_ma50": 0.09,
+        "vol_ratio": 0.38,
+        "rsi14": 42.3,
+        "adv_meur": 7.29,
+        "lists": [
+          "detenu",
+          "etf"
+        ],
+        "qmax": 1
+      },
+      {
+        "ticker": "ADOC.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 4.22,
+        "ret_1d": -9.71,
+        "ret_5d": 38.82,
+        "ret_20d": 85.74,
+        "ret_60d": 3.94,
+        "vol_20d": 136.0,
+        "dist_ma20": 34.17,
+        "dist_ma50": 41.52,
+        "vol_ratio": 1.61,
+        "rsi14": 71.4,
+        "adv_meur": 2.42,
+        "lists": [
+          "momentum20j",
+          "baisse1j"
+        ],
+        "qmax": 61
+      },
+      {
+        "ticker": "UCB.BR",
+        "kind": "equity",
+        "stale": false,
+        "close": 295.1,
+        "ret_1d": -0.47,
+        "ret_5d": -1.24,
+        "ret_20d": 43.81,
+        "ret_60d": 34.14,
+        "vol_20d": 82.5,
+        "dist_ma20": 6.84,
+        "dist_ma50": 25.98,
+        "vol_ratio": 0.61,
+        "rsi14": 74.4,
+        "adv_meur": 87.04,
+        "lists": [
+          "momentum20j"
+        ],
+        "qmax": 0
+      },
+      {
+        "ticker": "AF.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 14.575,
+        "ret_1d": 1.57,
+        "ret_5d": 4.63,
+        "ret_20d": 41.03,
+        "ret_60d": 25.38,
+        "vol_20d": 55.8,
+        "dist_ma20": 22.3,
+        "dist_ma50": 26.39,
+        "vol_ratio": 0.81,
+        "rsi14": 90.5,
+        "adv_meur": 19.41,
+        "lists": [
+          "momentum20j"
+        ],
+        "qmax": 17
+      },
+      {
+        "ticker": "NANO.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 26.32,
+        "ret_1d": -5.66,
+        "ret_5d": -7.65,
+        "ret_20d": 39.63,
+        "ret_60d": -22.91,
+        "vol_20d": 98.9,
+        "dist_ma20": -3.62,
+        "dist_ma50": -1.02,
+        "vol_ratio": 0.32,
+        "rsi14": 33.7,
+        "adv_meur": 6.14,
+        "lists": [
+          "momentum20j"
+        ],
+        "qmax": 9
+      },
+      {
+        "ticker": "TUB.BR",
+        "kind": "equity",
+        "stale": false,
+        "close": 240.8,
+        "ret_1d": -0.74,
+        "ret_5d": -2.11,
+        "ret_20d": 38.39,
+        "ret_60d": 27.81,
+        "vol_20d": 64.1,
+        "dist_ma20": 6.2,
+        "dist_ma50": 23.04,
+        "vol_ratio": 0.42,
+        "rsi14": 75.5,
+        "adv_meur": 5.96,
+        "lists": [
+          "momentum20j"
+        ],
+        "qmax": 1
+      },
+      {
+        "ticker": "PHARM.AS",
+        "kind": "equity",
+        "stale": false,
+        "close": 1.144,
+        "ret_1d": 0.26,
+        "ret_5d": -0.39,
+        "ret_20d": 38.23,
+        "ret_60d": 15.93,
+        "vol_20d": 51.0,
+        "dist_ma20": 6.06,
+        "dist_ma50": 17.89,
+        "vol_ratio": 0.39,
+        "rsi14": 63.9,
+        "adv_meur": 13.84,
+        "lists": [
+          "momentum20j"
+        ],
+        "qmax": 226
+      },
+      {
+        "ticker": "DOV.MI",
+        "kind": "equity",
+        "stale": false,
+        "close": 1.949,
+        "ret_1d": 2.8,
+        "ret_5d": 6.04,
+        "ret_20d": 35.07,
+        "ret_60d": 6.68,
+        "vol_20d": 49.3,
+        "dist_ma20": 11.2,
+        "dist_ma50": 13.67,
+        "vol_ratio": 0.9,
+        "rsi14": 74.8,
+        "adv_meur": 1.74,
+        "lists": [
+          "momentum20j"
+        ],
+        "qmax": 132
+      },
+      {
+        "ticker": "VU.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 158.1,
+        "ret_1d": 5.4,
+        "ret_5d": 9.11,
+        "ret_20d": 28.33,
+        "ret_60d": 20.5,
+        "vol_20d": 45.3,
+        "dist_ma20": 15.63,
+        "dist_ma50": 22.99,
+        "vol_ratio": 1.93,
+        "rsi14": 76.3,
+        "adv_meur": 8.23,
+        "lists": [
+          "momentum20j",
+          "hausse1j"
+        ],
+        "qmax": 1
+      },
+      {
+        "ticker": "GNFT.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 10.56,
+        "ret_1d": -1.31,
+        "ret_5d": -4.17,
+        "ret_20d": 27.08,
+        "ret_60d": -24.03,
+        "vol_20d": 99.8,
+        "dist_ma20": 1.43,
+        "dist_ma50": 3.45,
+        "vol_ratio": 0.45,
+        "rsi14": 49.8,
+        "adv_meur": 3.35,
+        "lists": [
+          "momentum20j"
+        ],
+        "qmax": 24
+      },
+      {
+        "ticker": "NWL.MI",
+        "kind": "equity",
+        "stale": false,
+        "close": 25.3,
+        "ret_1d": 3.6,
+        "ret_5d": -3.8,
+        "ret_20d": 24.63,
+        "ret_60d": 60.53,
+        "vol_20d": 52.4,
+        "dist_ma20": 10.7,
+        "dist_ma50": 25.81,
+        "vol_ratio": 0.95,
+        "rsi14": 69.0,
+        "adv_meur": 2.75,
+        "lists": [
+          "momentum20j",
+          "hausse1j"
+        ],
+        "qmax": 10
+      },
+      {
+        "ticker": "SAN.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 88.32,
+        "ret_1d": 0.82,
+        "ret_5d": 2.99,
+        "ret_20d": 24.38,
+        "ret_60d": 12.83,
+        "vol_20d": 24.3,
+        "dist_ma20": 9.47,
+        "dist_ma50": 16.43,
+        "vol_ratio": 0.54,
+        "rsi14": 92.5,
+        "adv_meur": 226.64,
+        "lists": [
+          "momentum20j"
+        ],
+        "qmax": 2
+      },
+      {
+        "ticker": "IGD.MI",
+        "kind": "equity",
+        "stale": false,
+        "close": 4.51,
+        "ret_1d": 6.12,
+        "ret_5d": 14.18,
+        "ret_20d": 23.9,
+        "ret_60d": 13.46,
+        "vol_20d": 37.4,
+        "dist_ma20": 17.31,
+        "dist_ma50": 19.83,
+        "vol_ratio": 16.02,
+        "rsi14": 81.1,
+        "adv_meur": 1.29,
+        "lists": [
+          "momentum20j",
+          "hausse1j",
+          "volume"
+        ],
+        "qmax": 57
+      },
+      {
+        "ticker": "LKFT.AS",
+        "kind": "equity",
+        "stale": false,
+        "close": 31.22,
+        "ret_1d": 3.45,
+        "ret_5d": 4.55,
+        "ret_20d": 17.99,
+        "ret_60d": 26.09,
+        "vol_20d": 29.7,
+        "dist_ma20": 7.44,
+        "dist_ma50": 15.73,
+        "vol_ratio": 1.39,
+        "rsi14": 69.7,
+        "adv_meur": 2.51,
+        "lists": [
+          "hausse1j"
+        ],
+        "qmax": 8
+      },
+      {
+        "ticker": "IVA.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 3.15,
+        "ret_1d": -7.08,
+        "ret_5d": -5.41,
+        "ret_20d": 16.45,
+        "ret_60d": -20.35,
+        "vol_20d": 79.5,
+        "dist_ma20": -4.62,
+        "dist_ma50": -0.89,
+        "vol_ratio": 0.94,
+        "rsi14": 46.1,
+        "adv_meur": 1.91,
+        "lists": [
+          "baisse1j"
+        ],
+        "qmax": 82
+      },
+      {
+        "ticker": "C40.PA",
+        "kind": "etf",
+        "stale": false,
+        "close": 147.4,
+        "ret_1d": -0.26,
+        "ret_5d": 1.33,
+        "ret_20d": 6.9,
+        "ret_60d": -1.03,
+        "vol_20d": 14.6,
+        "dist_ma20": 3.87,
+        "dist_ma50": 4.68,
+        "vol_ratio": 0.3,
+        "rsi14": 82.1,
+        "adv_meur": 0.84,
+        "lists": [
+          "etf"
+        ],
+        "qmax": 1
+      },
+      {
+        "ticker": "EGL.LS",
+        "kind": "equity",
+        "stale": false,
+        "close": 4.946,
+        "ret_1d": 6.46,
+        "ret_5d": 7.24,
+        "ret_20d": 5.82,
+        "ret_60d": 9.81,
+        "vol_20d": 33.4,
+        "dist_ma20": 7.6,
+        "dist_ma50": 3.01,
+        "vol_ratio": 3.59,
+        "rsi14": 68.9,
+        "adv_meur": 5.24,
+        "lists": [
+          "hausse1j",
+          "volume"
+        ],
+        "qmax": 52
+      },
+      {
+        "ticker": "CTPNV.AS",
+        "kind": "equity",
+        "stale": false,
+        "close": 12.96,
+        "ret_1d": 0.78,
+        "ret_5d": -2.11,
+        "ret_20d": 3.68,
+        "ret_60d": -9.62,
+        "vol_20d": 20.2,
+        "dist_ma20": 0.94,
+        "dist_ma50": 0.43,
+        "vol_ratio": 3.41,
+        "rsi14": 57.0,
+        "adv_meur": 3.36,
+        "lists": [
+          "volume"
+        ],
+        "qmax": 19
+      },
+      {
+        "ticker": "CARM.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 14.88,
+        "ret_1d": -1.98,
+        "ret_5d": -2.11,
+        "ret_20d": 3.48,
+        "ret_60d": -8.03,
+        "vol_20d": 16.8,
+        "dist_ma20": -0.07,
+        "dist_ma50": 0.56,
+        "vol_ratio": 5.6,
+        "rsi14": 56.0,
+        "adv_meur": 1.55,
+        "lists": [
+          "volume"
+        ],
+        "qmax": 17
+      },
+      {
+        "ticker": "CW8.PA",
+        "kind": "etf",
+        "stale": false,
+        "close": 706.39,
+        "ret_1d": -0.34,
+        "ret_5d": 1.15,
+        "ret_20d": -0.56,
+        "ret_60d": 2.95,
+        "vol_20d": 14.9,
+        "dist_ma20": -0.07,
+        "dist_ma50": 0.34,
+        "vol_ratio": 0.6,
+        "rsi14": 43.9,
+        "adv_meur": 6.6,
+        "lists": [
+          "etf"
+        ],
+        "qmax": 0
+      },
+      {
+        "ticker": "LSS.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 20.8,
+        "ret_1d": 4.1,
+        "ret_5d": 12.55,
+        "ret_20d": -2.12,
+        "ret_60d": -7.56,
+        "vol_20d": 83.6,
+        "dist_ma20": 3.81,
+        "dist_ma50": 0.95,
+        "vol_ratio": 0.51,
+        "rsi14": 39.3,
+        "adv_meur": 1.63,
+        "lists": [
+          "hausse1j"
+        ],
+        "qmax": 12
+      },
+      {
+        "ticker": "PAEEM.PA",
+        "kind": "etf",
+        "stale": false,
+        "close": 33.575,
+        "ret_1d": -1.48,
+        "ret_5d": -0.56,
+        "ret_20d": -5.05,
+        "ret_60d": -4.33,
+        "vol_20d": 30.5,
+        "dist_ma20": -1.98,
+        "dist_ma50": -5.72,
+        "vol_ratio": 1.17,
+        "rsi14": 42.1,
+        "adv_meur": 2.99,
+        "lists": [
+          "etf"
+        ],
+        "qmax": 7
+      },
+      {
+        "ticker": "PUST.PA",
+        "kind": "etf",
+        "stale": false,
+        "close": 100.28,
+        "ret_1d": -0.71,
+        "ret_5d": 0.99,
+        "ret_20d": -5.79,
+        "ret_60d": 0.33,
+        "vol_20d": 28.3,
+        "dist_ma20": -2.35,
+        "dist_ma50": -4.44,
+        "vol_ratio": 0.62,
+        "rsi14": 33.9,
+        "adv_meur": 5.98,
+        "lists": [
+          "etf"
+        ],
+        "qmax": 2
+      },
+      {
+        "ticker": "ALBPS.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 0.0347,
+        "ret_1d": -6.97,
+        "ret_5d": -22.72,
+        "ret_20d": -12.15,
+        "ret_60d": -56.19,
+        "vol_20d": 222.3,
+        "dist_ma20": -3.0,
+        "dist_ma50": -21.24,
+        "vol_ratio": 0.48,
+        "rsi14": 50.8,
+        "adv_meur": 1.22,
+        "lists": [
+          "baisse1j"
+        ],
+        "qmax": 7456
+      },
+      {
+        "ticker": "PRT.MI",
+        "kind": "equity",
+        "stale": false,
+        "close": 5.635,
+        "ret_1d": -6.78,
+        "ret_5d": -18.57,
+        "ret_20d": -29.83,
+        "ret_60d": -19.67,
+        "vol_20d": 52.4,
+        "dist_ma20": -22.7,
+        "dist_ma50": -26.98,
+        "vol_ratio": 3.3,
+        "rsi14": 10.2,
+        "adv_meur": 1.5,
+        "lists": [
+          "baisse1j"
+        ],
+        "qmax": 45
+      },
+      {
+        "ticker": "JUVE.MI",
+        "kind": "equity",
+        "stale": false,
+        "close": 1.15,
+        "ret_1d": -15.75,
+        "ret_5d": -26.23,
+        "ret_20d": -30.22,
+        "ret_60d": -44.44,
+        "vol_20d": 66.9,
+        "dist_ma20": -25.63,
+        "dist_ma50": -33.17,
+        "vol_ratio": 5.29,
+        "rsi14": 14.9,
+        "adv_meur": 1.19,
+        "lists": [
+          "baisse1j",
+          "volume"
+        ],
+        "qmax": 225
+      },
+      {
+        "ticker": "ERA.PA",
+        "kind": "equity",
+        "stale": false,
+        "close": 18.77,
+        "ret_1d": -42.98,
+        "ret_5d": -49.46,
+        "ret_20d": -46.86,
+        "ret_60d": -58.93,
+        "vol_20d": 164.9,
+        "dist_ma20": -47.07,
+        "dist_ma50": -53.28,
+        "vol_ratio": 11.61,
+        "rsi14": 24.7,
+        "adv_meur": 1.77,
+        "lists": [
+          "baisse1j",
+          "volume"
+        ],
+        "qmax": 13
+      }
+    ]
+  },
+  "news": [
+    {
+      "id": "bca9cf72",
+      "source": "gnews_marche",
+      "ticker": "",
+      "title": "Le Cac 40 finit en légère baisse, STMicroelectronics, Schneider Electric et Legrand sous pression - Investir Les Echos",
+      "link": "https://news.google.com/rss/articles/CBMi-gFBVV95cUxOdHJtNGRiYWpEY2NXeDQxM3BEOUFNNlJKT1Bwb3RJWDFwcDNXN0dpYlZnYXEyc1JfdEk0Y2pJamRhdzlmeGZFLVBfMFR5aE9IUmI3Z0dfLTh6YjFGVXBHMDJDM1BlWVNsVENaSDZUV3ZIRjduWXZEME5GakhkNWNRd3dZcm90WmhoRW1CSGVxWTF1LWdpclQ0My1wYXFiU2JzY0hndXREeVg0WlFVbFJsT3BDWFRLbG0wT3pRRktfV0l0T1pWMGFRVjN5RFQ4NFlnSmZWVjhNOC1WbUhBbVVPQktFOWRZU2xqSHRrWWZQNWVfcUxTMlFYWlBn?oc=5",
+      "published": "2026-11-16T16:51:32+00:00",
+      "summary": "Le Cac 40 finit en légère baisse, STMicroelectronics, Schneider Electric et Legrand sous pression Investir Les Echos"
+    },
+    {
+      "id": "5bfde3c4",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "PETROLE: Le cours du baril en recul malgré les incertitudes au Moyen-Orient",
+      "link": "https://www.abcbourse.com/marches/petrole-le-cours-du-baril-en-recul-malgre-les-incertitudes-au-moyen-orient_706155",
+      "published": "2026-11-16T16:49:35+00:00",
+      "summary": ""
+    },
+    {
+      "id": "28f165ac",
+      "source": "investing",
+      "ticker": "",
+      "title": "Pourquoi l’action T1 Energy s’effondre-t-elle aujourd’hui ?",
+      "link": "https://fr.investing.com/news/stock-market-news/pourquoi-laction-t1-energy-seffondretelle-aujourdhui--93CH-3698675",
+      "published": "2026-11-16T16:47:42+00:00",
+      "summary": ""
+    },
+    {
+      "id": "c0a07b14",
+      "source": "investing",
+      "ticker": "",
+      "title": "Jefferies identifie les meilleures valeurs internet à détenir jusqu’en 2027",
+      "link": "https://fr.investing.com/news/stock-market-news/jefferies-identifie-les-meilleures-valeurs-internet-a-detenir-jusquen-2027-3698673",
+      "published": "2026-11-16T16:45:05+00:00",
+      "summary": ""
+    },
+    {
+      "id": "0d1f16ea",
+      "source": "gnews_marche",
+      "ticker": "",
+      "title": "CAC 40: La Bourse de Paris finit en repli, Nvidia inquiète toujours - ABC Bourse",
+      "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxQTmVpWjgycmtuUVVyVDVZUm5iNjA3WlpZUnBMdEg4eS1sSTFVVHNzY1pNWGx3M01zN1Y5NGFtN1J0V2gyRmNlSncwUzVsb1A4UnZXOHFEU2JRRmhoeENBVzduYm1uaHVoWXlNTnZka1NzREdNRmlBSWtzbkJDeWNST1BQMzJaMW9ZSkZTQ2lTdDVVcjh4UVJJMzdKTXNSelBBZzVna2JMMzl2Zw?oc=5",
+      "published": "2026-11-16T16:44:09+00:00",
+      "summary": "CAC 40: La Bourse de Paris finit en repli, Nvidia inquiète toujours ABC Bourse"
+    },
+    {
+      "id": "25413889",
+      "source": "gnews",
+      "ticker": "AF.PA",
+      "title": "Air France-KLM prend 1,57% - Boursier.com",
+      "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOMDRlelpQOFpUWGpJRGJPZTZpMUt3ZzJnSDdRR0MwcjFFTkhWaEJ0UXdHQnN3RkROR3JBZzY1WFdTUG9ZdlM4QWdGWG5MM3N4R0VBZ1M4NGQ5cTVmSXRpZU5ITVJXY0MzeXA0ZS11ODhVU2FyemZBc01nZnl3R1hsUzdYWHlXcEhOODdZWm1vMA?oc=5",
+      "published": "2026-11-16T16:41:00+00:00",
+      "summary": "Air France-KLM prend 1,57% Boursier.com"
+    },
+    {
+      "id": "53a07a2a",
+      "source": "investing",
+      "ticker": "",
+      "title": "Teva Pharm règle un litige américain sur la fixation des prix de médicaments génériques",
+      "link": "https://fr.investing.com/news/stock-market-news/teva-pharm-regle-un-litige-americain-sur-la-fixation-des-prix-de-medicaments-generiques-93CH-3698664",
+      "published": "2026-11-16T16:36:53+00:00",
+      "summary": ""
+    },
+    {
+      "id": "fc4ccb0c",
+      "source": "investing",
+      "ticker": "",
+      "title": "Des résultats solides peuvent-ils propulser les actions vers de nouveaux sommets d’ici 2027 ?",
+      "link": "https://fr.investing.com/news/stock-market-news/des-resultats-solides-peuventils-propulser-les-actions-vers-de-nouveaux-sommets-dici-2027--3698657",
+      "published": "2026-11-16T16:32:10+00:00",
+      "summary": ""
+    },
+    {
+      "id": "bf28f34c",
+      "source": "gnews",
+      "ticker": "NANO.PA",
+      "title": "L'action Nanobiotix cède 5,5 %, parmi les plus fortes baisses du SBF 120 - Idéal Investisseur",
+      "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxORkFBWHNNdWs5ajFLdVc4dXcxWjN6bzZ0cWhzcVdiQW9NX0NEY09wUklySlBoLWQwbEh3Z0wwbmtqckE0SDI0cHhLaGROWTZvQ2NySGs1WEdMTms0eDcxMDBRU0Z1eHNNZkNTd1U3czFqRVNEdS05ZDgzUGl4M1pIdm1CWEZGLVYyT1lJblVQR2htSlZhalNRMHZwaFIyVnZtWURIUzYzaVJ2NG9IWFJUay1FaWJOZ0pQY1BhbUQ0WQ?oc=5",
+      "published": "2026-11-16T16:25:00+00:00",
+      "summary": "L'action Nanobiotix cède 5,5 %, parmi les plus fortes baisses du SBF 120 Idéal Investisseur"
+    },
+    {
+      "id": "6fa594fc",
+      "source": "investing",
+      "ticker": "",
+      "title": "L’action Aclaris chute après l’échec d’un essai sur la dermatite atopique",
+      "link": "https://fr.investing.com/news/stock-market-news/laction-aclaris-chute-apres-lechec-dun-essai-sur-la-dermatite-atopique-3698638",
+      "published": "2026-11-16T16:22:52+00:00",
+      "summary": ""
+    },
+    {
+      "id": "fd10d5e7",
+      "source": "investing",
+      "ticker": "",
+      "title": "Advantage Energy bondit de 23% après une offre de rachat de Canadian Natural à 2,53 milliards $CA",
+      "link": "https://fr.investing.com/news/stock-market-news/advantage-energy-bondit-de-23-apres-une-offre-de-rachat-de-canadian-natural-a-253-milliards-ca-3698635",
+      "published": "2026-11-16T16:18:47+00:00",
+      "summary": ""
+    },
+    {
+      "id": "c316b7ab",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "La BCE met en garde contre les risques de volatilité des marchés si la vague de l'IA ralentit. - Vietnam.vn",
+      "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxPZHFCVTQ4SjZycXo0aDdSYmdkbmlwN2NEZDFmeHFfVTVVNlR1NV94UWxMa2pFX2xkU2VPdGE2N2w3SUhCdzdSUV9IRV9rbFYxZWhnbjR3OW0wU0w4aldzNjYxcjM3bklKQlhlM0RwbGV1MFc0a25HbGZhR3pnZ1VWMXZhRUZlY2NnUnVtbWNWODRsUmo1dUM4?oc=5",
+      "published": "2026-11-16T16:13:52+00:00",
+      "summary": "La BCE met en garde contre les risques de volatilité des marchés si la vague de l'IA ralentit. Vietnam.vn"
+    },
+    {
+      "id": "a82cf47d",
+      "source": "investing",
+      "ticker": "",
+      "title": "William Blair rehausse Bill Holdings grâce aux marges et à la monétisation",
+      "link": "https://fr.investing.com/news/stock-market-news/william-blair-rehausse-bill-holdings-grace-aux-marges-et-a-la-monetisation-3698631",
+      "published": "2026-11-16T16:10:03+00:00",
+      "summary": ""
+    },
+    {
+      "id": "37ec317d",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "USA: Wall Street ouvre en baisse, prudente à la veille des résultats de Nvidia",
+      "link": "https://www.abcbourse.com/marches/usa-wall-street-ouvre-en-baisse-prudente-a-la-veille-des-resultats-de-nvidia_706154",
+      "published": "2026-11-16T16:08:28+00:00",
+      "summary": ""
+    },
+    {
+      "id": "f9e65c47",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "S&P 500 - Les actions à suivre lundi: Nvidia, Intel, CoreWeave, Sandisk, Dell, American Airlines, SpaceX, Boeing, Lockheed",
+      "link": "https://www.abcbourse.com/marches/sp-500--les-actions-a-suivre-lundi-nvidia-intel-coreweave-sandisk-dell-a_706153",
+      "published": "2026-11-16T16:02:15+00:00",
+      "summary": ""
+    },
+    {
+      "id": "9feaeb31",
+      "source": "investing",
+      "ticker": "",
+      "title": "L’action Insight Enterprises chute après l’annonce d’une dette de 650M$",
+      "link": "https://fr.investing.com/news/stock-market-news/laction-insight-enterprises-chute-apres-lannonce-dune-dette-de-650m-3698618",
+      "published": "2026-11-16T16:00:03+00:00",
+      "summary": ""
+    },
+    {
+      "id": "2990ccd1",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Le dollar frôle 1,10 dollar pour un euro, porté par l'inflation américaine",
+      "link": "https://www.abcbourse.com/marches/le-dollar-frole-1-10-dollar-pour-un-euro-porte-par-l-inflation-americaine_706152",
+      "published": "2026-11-16T15:58:57+00:00",
+      "summary": ""
+    },
+    {
+      "id": "d595103c",
+      "source": "investing",
+      "ticker": "",
+      "title": "Pourquoi le titre Texas Instruments recule-t-il aujourd’hui ?",
+      "link": "https://fr.investing.com/news/stock-market-news/pourquoi-le-titre-texas-instruments-reculetil-aujourdhui--93CH-3698608",
+      "published": "2026-11-16T15:55:32+00:00",
+      "summary": ""
+    },
+    {
+      "id": "fa4fee7a",
+      "source": "investing",
+      "ticker": "",
+      "title": "Apollo investit 2,5 milliards $ dans Focus Financial à 21 milliards $",
+      "link": "https://fr.investing.com/news/stock-market-news/apollo-investit-25-milliards--dans-focus-financial-a-21-milliards--3698613",
+      "published": "2026-11-16T15:55:17+00:00",
+      "summary": ""
+    },
+    {
+      "id": "d1867dbc",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Air France prévoit plus de 1.200 recrutements en CDI dans sa division maintenance",
+      "link": "https://www.abcbourse.com/marches/air-france-prevoit-plus-de-1200-recrutements-en-cdi-dans-sa-division-maintenanc_706151",
+      "published": "2026-11-16T15:32:18+00:00",
+      "summary": ""
+    },
+    {
+      "id": "e197629e",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "L'or recule au plus bas depuis octobre 2025, plombé par la hausse du dollar et des taux",
+      "link": "https://www.abcbourse.com/marches/l-or-recule-au-plus-bas-depuis-octobre-2025-plombe-par-la-hausse-du-dollar-et-d_706150",
+      "published": "2026-11-16T15:07:36+00:00",
+      "summary": ""
+    },
+    {
+      "id": "242da356",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "S&P 500 - Les actions à suivre lundi: Nvidia, Intel, CoreWeave, Sandisk, Dell, American Airlines",
+      "link": "https://www.abcbourse.com/marches/sp-500--les-actions-a-suivre-lundi-nvidia-intel-coreweave-sandisk-dell-a_706149",
+      "published": "2026-11-16T14:51:47+00:00",
+      "summary": ""
+    },
+    {
+      "id": "44534063",
+      "source": "gnews_marche",
+      "ticker": "",
+      "title": "De nouveaux dégagements sur les techs liées à l'IA mais le Cac 40 tente de résister, Nvidia poursuit son repli à New York - Investir Les Echos",
+      "link": "https://news.google.com/rss/articles/CBMijAJBVV95cUxOckZRU1JNRFUwRDFrXzVEVlhxRXB3UEVoaGZrcWxEZ0hLdHFRQWdmSXp3VkxoQ2hMTWRqdEFFUW5DZDdhSzdwa29oZGs0U1BjdE9VejF6Rm42X0RybmpsOHZpNzdQQWVuY0tubldTXy1uVXQtQjRPMGdaanppUkpFcUN3bXNOdGNfeVZsTDhRQmM0aTZKVjgybVRMZzNYREZBWHo5ejgwWFVZUTRMSU5XZDJGMmpsUVg2a2hkaWcxQkVCelFoTnp3aURPc3dWQ1BydmhHaTU5VERoQmJVRnZKcmp6NmlfU2gzQmI4eklqWHNnY3ZVYzlIbnYxa3NBMm1qMlRFcGFYNjAteXpH?oc=5",
+      "published": "2026-11-16T14:42:38+00:00",
+      "summary": "De nouveaux dégagements sur les techs liées à l'IA mais le Cac 40 tente de résister, Nvidia poursuit son repli à New York Investir Les Echos"
+    },
+    {
+      "id": "b8987847",
+      "source": "gnews",
+      "ticker": "AF.PA",
+      "title": "Air France prévoit plus de 1.200 recrutements en CDI dans sa division maintenance - ABC Bourse",
+      "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPZnpnaGtBNlhCX2Z3WElZTUNsMWhBdzJOX2lDRFFRZndEYXRCZW84SGptMEFUR0RVdHRJeFM5X0UtM2k5SmxBS0NRbG9MTkV1VEVZWnBvZUlTWEhJSlpyelVpZ29Uc0NNOW9kNkhSU1BPQ0tqUHNSMHVVMFlfdkJ0SWh4MFFQNVIxcXNPX2dSdllUdlExaUZza1oxX3Vnd2N3RHhmNGtJN2tEOGxOQi1GN3IyNENSRTlCZEtGZQ?oc=5",
+      "published": "2026-11-16T14:32:18+00:00",
+      "summary": "Air France prévoit plus de 1.200 recrutements en CDI dans sa division maintenance ABC Bourse"
+    },
+    {
+      "id": "35ba2e9d",
+      "source": "gnews",
+      "ticker": "AF.PA",
+      "title": "Air France prévoit plus de 1.200 recrutements en CDI dans sa division maintenance - Investir Les Echos",
+      "link": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxQT1RteFFYMV96STBHamFZNTlpZk5MSEVlTlgweGt5eldpSlpWY21MYjNxZV9KMkE3cUVJWEg4U2VRWE5XLUU2d1kwOFF2N1pKWDRLNVI1eDd2MUR3Qk1FVDZVVVB3c3JEbDFjTDRoTzFSYU44cGVCQjBjYmRtQ1NnUk9KOHRmN1RReWRFR0xHWkUyVFNTSVEtV0thVnROV21PZ3p0Um4wZDh0eDRITkQyT0dGbGxOb1VDbEthUUV2SFZIOEdCbXl0OWZHUVdraENtTEVQVWNWeW9GNDl5ejBvNHFyeGVmMzJS?oc=5",
+      "published": "2026-11-16T14:32:00+00:00",
+      "summary": "Air France prévoit plus de 1.200 recrutements en CDI dans sa division maintenance Investir Les Echos"
+    },
+    {
+      "id": "5ded52a0",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Sam Bankman-Fried aurait pu toucher 40 milliards de dollars grâce à l'IPO d'Anthropic",
+      "link": "https://www.abcbourse.com/marches/sam-bankman-fried-aurait-pu-toucher-40-milliards-de-dollars-grace-a-l-ipo-d-anth_706148",
+      "published": "2026-11-16T14:23:00+00:00",
+      "summary": ""
+    },
+    {
+      "id": "3643de7b",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Comment les hausses de taux de la Fed vont-elles impacter les marchés ? - Investing.com France",
+      "link": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxPT2FtSGhVSGh0MHI3RkNUS1BWaWg2SzZFZld4UkNIRjFsU0RjOVFJWWJJVXFMeWRFMDdkVUd3MFBIZ2UyLVdhUVdnTkljT25ZbHhncWpjV1dQeXcyWl9KdkNjWUZsMzJhTjNMTGZOX3RQS0x3VFpFa2U1d0dyM0pyaTd1SW1IanI4MklDVUk0SDl5c1JkWUpBQTUyMTVPd2xZd0wwLXJKRzV6YnRrQm15LUE4TkJzTGI0MUZsSFEyWEhuTFU?oc=5",
+      "published": "2026-11-16T14:19:00+00:00",
+      "summary": "Comment les hausses de taux de la Fed vont-elles impacter les marchés ? Investing.com France"
+    },
+    {
+      "id": "66e71a80",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Mme Nordstrom, de la Fed de New York, souligne la résilience des marchés des changes - Boursorama",
+      "link": "https://news.google.com/rss/articles/CBMiigJBVV95cUxPYjN4aWtEajlEdmZyQ0w2eWRuZlMyanUzbHFNM2lic3ZJUXRjdW9tdDhtOHduMmt4YVU1Um51LU1HS2ZFYUo2eUxrTndBUkRzWkVsUTBfdXU1dVh2VGttZ2M0U05xRVVOSHFvWjFQeFZ3aG9SUjUwTDV3MThxaXFGMU1OX3V2Z2xmZHZTVl9xdE42bjdlRDBnSGVwUWZ5bW5oZzJTWGVCRWFDazRPUnN4NmhZQzYwSmQ1N0E0UXFVTmg5UlFyM3VoRmpsM0d1d3VmNm5WNTdrVVVHekdrLV9na3pjYkVKMktKaXlkUEp1bWx6WHJ5WURBUE1QZ012UDRNaGtUYzZNc2drQdIBigJBVV95cUxPYjN4aWtEajlEdmZyQ0w2eWRuZlMyanUzbHFNM2lic3ZJUXRjdW9tdDhtOHduMmt4YVU1Um51LU1HS2ZFYUo2eUxrTndBUkRzWkVsUTBfdXU1dVh2VGttZ2M0U05xRVVOSHFvWjFQeFZ3aG9SUjUwTDV3MThxaXFGMU1OX3V2Z2xmZHZTVl9xdE42bjdlRDBnSGVwUWZ5bW5oZzJTWGVCRWFDazRPUnN4NmhZQzYwSmQ1N0E0UXFVTmg5UlFyM3VoRmpsM0d1d3VmNm5WNTdrVVVHekdrLV9na3pjYkVKMktKaXlkUEp1bWx6WHJ5WURBUE1QZ012UDRNaGtUYzZNc2drQQ?oc=5",
+      "published": "2026-11-16T14:10:00+00:00",
+      "summary": "Mme Nordstrom, de la Fed de New York, souligne la résilience des marchés des changes Boursorama"
+    },
+    {
+      "id": "c7a335ee",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Mme Nordstrom, de la Fed de New York, souligne la résilience des marchés des changes - TradingView",
+      "link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE1DNXU1c05ieWtGb1Zpa1ZZVHh4Z1RqdVNYQVhFZkJZMkxYOHlCN3JzOUVOcVZocE40WjAtUllieHdMVm5sMmFqYzRLaHJqQ0ttb19aRlNIOXpXVTNmeUVYaTk0MjVGM09EOTFNME1xZGV3NGlESElv?oc=5",
+      "published": "2026-11-16T14:10:00+00:00",
+      "summary": "Mme Nordstrom, de la Fed de New York, souligne la résilience des marchés des changes TradingView"
+    },
+    {
+      "id": "a897e24f",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "L’indice du dollar américain poursuit sa hausse, les traders misant sur un cycle de relèvement des taux de la Fed plus long - www.tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxQXzNhcXlBeW80WHktdGtITTJwdE9rOGhVekFOX2lDb1RZaE1uZVhBa284XzZqR1FMb2tvMk9US0tnTFc5R1lPM0c0LWhBYVF4R0t0XzI0SnU3alp1dk1KNDRrbENKekctLUlPdE82VVFQZ1JkX2sxUG5VLUhRT2RXMnpoMkw0cEtiVXAyY2dVZ2d2UW12aXVpcG5reUE0YWhVSEkwemdicXVXbkt6dHdqR2g0VWIyM002UDBsY3BSYURqTWpIem1sTzZtSm1tUWN5Zmkybm9B?oc=5",
+      "published": "2026-11-16T14:04:35+00:00",
+      "summary": "L’indice du dollar américain poursuit sa hausse, les traders misant sur un cycle de relèvement des taux de la Fed plus long www.tmgm.com"
+    },
+    {
+      "id": "3479f61e",
+      "source": "gnews",
+      "ticker": "AF.PA",
+      "title": "Air France lance une vaste campagne de recrutement - Zonebourse",
+      "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxQRGZxeWh0d2ZmUWN4azU3cm5XRTE2c2pUZ2tmYll2d2s1TlZMYmFWczlvcGlINWxuMlB1TXZzQmJQLXUtRjZtazEwRjhPbHhYQ3lNRzQ3NmZvazRzWjhIN2hKSEpMZXpHRWUzSkRyZGluLVpibU51U1AzRGkzWURxdjZibzB0VU1kb1pFc09kOEhjc0d1LWFYUGRfdmZHbXpTZE55b1pXem00ZXpVMFk2OQ?oc=5",
+      "published": "2026-11-16T14:02:16+00:00",
+      "summary": "Air France lance une vaste campagne de recrutement Zonebourse"
+    },
+    {
+      "id": "c133cabc",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "ROI-Le véritable défi du président de la Fed Warsh commence maintenant : McGeever - Boursorama",
+      "link": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxNR3JUcTJ1Z2cybFBoVFAxbXhsTDl1OWJQU3prZzlnT01aVXRnVFlZSTQta3dJX1hrV2Z3dEdCLXJUR2VwakJkLWJSVkJRempaQ3VDNlNHakEzYVZ4X09xOG0xYnBGQnZyS1dsNVJGQ2liTnotMlcyRTM3Zl9sRC1PeXVlNDBjOC1ydTJsVEZpZnpGSkxzVDBWb3FaR2VEbXEtXzVvWk5wdjlVUmJpNEZrQ2QwMlNCSFV2UDQwNVRFamNfYkZwXzRRVXNhTTREaHFabFNjRE9lUVY4UXNOajVJeF9uTVZsMU05ZjREbHZFckFheUXSAfMBQVVfeXFMTUdyVHEydWdnMmxQaFRQMW14bEw5dTliUFN6a2c5Z09NWlV0Z1RZWUk0LWt3SV9Ya1dmd3RHQi1yVEdlcGpCZC1iUlZCUXpqWkN1QzZTR2pBM2FWeF9PcThtMWJwRkJ2cktXbDVSRkNpYk56LTJXMkUzN2ZfbEQtT3l1ZTQwYzgtcnUybFRGaWZ6RkpMc1QwVm9xWkdlRG1xLV81b1pOcHY5VVJiaTRGa0NkMDJTQkhVdlA0MDVURWpjX2JGcF80UVVzYU00RGhxWmxTY0RPZVFWOFFzTmo1SXhfbk1WbDFNOWY0RGx2RXJBYXlF?oc=5",
+      "published": "2026-11-16T14:00:56+00:00",
+      "summary": "ROI-Le véritable défi du président de la Fed Warsh commence maintenant : McGeever Boursorama"
+    },
+    {
+      "id": "103ab69a",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Fed, dollar et IA: une semaine décisive pour les marchés - Allnews",
+      "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxONktMcndwWlUwczRnOXVSM1VMc3lQVVRQSFE5OXdPNVVuRk5aNGZjR0ZYeDVrRXdTaTV1enVpcFJQblBFV1N1ajU2Smh1cldYVGNhR05hOGVfXzllTG9YcDg2Y1JUZEJzbmdsQW1jWC1oOTlXdlpNczE2dVg1Q0pZMF9Db2NCcW1GaVB4REZ3eDRMb1pQWDlEUVdWZzl2QlhBbDc1RnhSX0poTy05Q1E?oc=5",
+      "published": "2026-11-16T13:17:28+00:00",
+      "summary": "Fed, dollar et IA: une semaine décisive pour les marchés Allnews"
+    },
+    {
+      "id": "69905a51",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "USA: Wall Street attendue sur la réserve, les regards toujours tournés vers Nvidia",
+      "link": "https://www.abcbourse.com/marches/usa-wall-street-attendue-sur-la-reserve-les-regards-toujours-tournes-vers-nvid_706147",
+      "published": "2026-11-16T13:02:41+00:00",
+      "summary": ""
+    },
+    {
+      "id": "214b27a2",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "Le Nasdaq vu en nette baisse au début d'une semaine clé pour l'IA, l'Europe évolue dans le désordre - Boursorama",
+      "link": "https://news.google.com/rss/articles/CBMijAJBVV95cUxPaEVfOHJYei1mdG1VVGxnMDJpMnl1b19Qc0pZT2U2UENibnFxbFBtcjJtaUgydUlQVkFXMVNULXFWUk5aQUdaQUZTY2J0eGZ4a2I5aVdSS2FqaWttQWJyaDhFYWtxZFpUaU0zY2ExZjhQQmp6Qi1CNjJYVWJDZTdhQjJMV3FlbDg3VTVPcTNjM0FSSW9OU3M4WkRDeml1X1RNdUJJOXAzZllVNFZ4NFYyeVFOUjVPcHo5eXFqdkZtN1BLVmc5SGJDXzZEUHNPay1QRGFkMEhUalNuakVfSzhOOUVjeDlPSkNDOUsxTzBmUU5hTm5OZ19jOThEUHFCalYtcXhnX04ySzl4WkFE0gGMAkFVX3lxTE9oRV84clh6LWZ0bVVUbGcwMmkyeXVvX1BzSllPZTZQQ2JucXFsUG1yMm1pSDJ1SVBWQVcxU1QtcVZSTlpBR1pBRlNjYnR4ZnhrYjlpV1JLYWppa21BYnJoOEVha3FkWlRpTTNjYTFmOFBCanpCLUI2MlhVYkNlN2FCMkxXcWVsODdVNU9xM2MzQVJJb05TczhaREN6aXVfVE11Qkk5cDNmWVU0Vng0VjJ5UU5SNU9wejl5cWp2Rm03UEtWZzlIYkNfNkRQc09rLVBEYWQwSFRqU25qRV9LOE45RWN4OU9KQ0M5SzFPMGZRTmFObk5nX2M5OERQcUJqVi1xeGdfTjJLOXhaQUQ?oc=5",
+      "published": "2026-11-16T12:29:37+00:00",
+      "summary": "Le Nasdaq vu en nette baisse au début d'une semaine clé pour l'IA, l'Europe évolue dans le désordre Boursorama"
+    },
+    {
+      "id": "06a249ff",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Carmila recule en Bourse après l'annonce d'un projet d'OPE sur la foncière italienne IGD",
+      "link": "https://www.abcbourse.com/marches/carmila-recule-en-bourse-apres-l-annonce-d-un-projet-d-ope-sur-la-fonciere-itali_706146",
+      "published": "2026-11-16T12:05:56+00:00",
+      "summary": ""
+    },
+    {
+      "id": "59a2f672",
+      "source": "gnews_marche",
+      "ticker": "",
+      "title": "CAC40 : Paris vise une sixième hausse, Exosens et Vusion progressent - Le Revenu",
+      "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxQZmh3b0NTZllPbFhoaE10bmxVMDhTcVJ5bFd0N3pkbnhDUmd1SHVBUU9ibFZFZG11WnFvbDA2bTZXU2RrcHNwWWJjT2Rxa01yMnB6Qk11VWJEc2xrQ2lNRGtQNmdPb2tyVDJZWDdvdlpaWVh1dUxqQVNBV3o0MDBkbVQxdEZlUEM0YWdPYlhJUkpmWkM5TExZbFpKUW5mU2xtTTFBMGR2a3BUZw?oc=5",
+      "published": "2026-11-16T12:00:00+00:00",
+      "summary": "CAC40 : Paris vise une sixième hausse, Exosens et Vusion progressent Le Revenu"
+    },
+    {
+      "id": "79032a07",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "La ruée vers l’IA pourrait coûter cher aux investisseurs, avertit la BCE - allnews.ch",
+      "link": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxQMWx2RHNuYlNRYnFOZ0lSNzF3S3JHampmaDdRS3ItdlhZTGcwSTlmWkpjSFNSZHpWQzFyVEtXNWN0VEd3eDhZb2FsdVBVd0w4QmNEeUx4N2xGTjlHZnNJeFY2dFY4LVRfalRFS1RFNk16T0hPMEdMZWRGOE5rVlE5UEFHUVJTY1ZwUzZuRmpDNWJ2bzdXb2ZBZzk3ZVlDekFoa3RDWEctR0dYQy1tNUR0aUlYblJyNUJQNDlmUjkzbUV4Tm8?oc=5",
+      "published": "2026-11-16T11:49:22+00:00",
+      "summary": "La ruée vers l’IA pourrait coûter cher aux investisseurs, avertit la BCE allnews.ch"
+    },
+    {
+      "id": "05247eb0",
+      "source": "gnews_marche",
+      "ticker": "",
+      "title": "Cac 40 : À l'aube d'une semaine qui sera marquée par Anthropic et Nvidia, le CAC 40 peine à avancer - BFM Bourse",
+      "link": "https://news.google.com/rss/articles/CBMi-wFBVV95cUxQRmNyOExzVUlaMFNCSkNzc24zNWNrQkstOVpDUC1lY21hb0daSWh6elVmdE5Sc0xoajZOVmVJaVUtUXN4OU5GSGQ3QXY5ZHBXWFpjWkxVN2dEZzdDenlJSHo3M2RxM1FEdGltNmhfc0VISEswbDRvYWtoWTVVYlNKMUxMWVhYSFRqeHBob01JaEZ6NlV6YjBpUEliZ1h0bng3Wk9wampHN3pGT0ZJMXNUejBKM1hMR1pMSTJaVTZrLUlkRjFRUTdRNldtRnpQTllaalFYRW14dnFndjhTOEVnSGstbUNpcTJTQktDOGtoQUhic2NiQ0h0akxtUQ?oc=5",
+      "published": "2026-11-16T11:48:04+00:00",
+      "summary": "Cac 40 : À l'aube d'une semaine qui sera marquée par Anthropic et Nvidia, le CAC 40 peine à avancer BFM Bourse"
+    },
+    {
+      "id": "4213b3c0",
+      "source": "gnews",
+      "ticker": "AF.PA",
+      "title": "ID LOGISTICS Cours Action IDL, Cotation Bourse Euronext Paris - Boursorama",
+      "link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTFBZNkZSOS10YjB1NW5keS1tcUJFU0dHUnBTMlJNSnI0TGlJOUZPNXhuWXpfZjlxZUh6UzB0aDhrU2Rfd0xjVVRTQ0J0RWVLamU1VUE?oc=5",
+      "published": "2026-11-16T11:36:35+00:00",
+      "summary": "ID LOGISTICS Cours Action IDL, Cotation Bourse Euronext Paris Boursorama"
+    },
+    {
+      "id": "dd589db8",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Inde: les actions progressent de 0,6%",
+      "link": "https://www.abcbourse.com/marches/inde-les-actions-progressent-de-0-6_706145",
+      "published": "2026-11-16T11:36:00+00:00",
+      "summary": ""
+    },
+    {
+      "id": "24e49e8d",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "L'écart de taux se creuse entre la France et l'Allemagne",
+      "link": "https://www.abcbourse.com/marches/l-ecart-de-taux-se-creuse-entre-la-france-et-l-allemagne_706144",
+      "published": "2026-11-16T11:36:00+00:00",
+      "summary": ""
+    },
+    {
+      "id": "d9bfe56d",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Le dollar canadien recule face au dollar américain sur fond de paris sur une hausse des taux de la Fed et de baisse des cours du pétrole - www.tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMi5AFBVV95cUxPMW4zc29nYXYyZlpLM08wVDY2c3JqZGRaczVsZU1KbGxScFJJdEtfSjZkZWxRUzRLRllMNE5Nek9BWXh5YVNia2RPVUlrSm5UeXRzSmNFbUZObmRPV3d4WkNtYUpkSzhNZGt6Z3VXUnltTHM4R19uaGxoUkx4VVlhVDRwMjQ3Y0hrOFYzRzhSLU4tekpIMUlsQldoLWh1VlNUVHJlQURETG45aWFTTTRlZDFvM3ZDVVM4OUxBQmo0QXMzYTVtSU5KcDBNNkRkRnVlMVI4cmYtUTBqUzlLLVJpZTh5d0g?oc=5",
+      "published": "2026-11-16T11:24:31+00:00",
+      "summary": "Le dollar canadien recule face au dollar américain sur fond de paris sur une hausse des taux de la Fed et de baisse des cours du pétrole www.tmgm.com"
+    },
+    {
+      "id": "c1bd98b8",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Gold steadies after hitting lowest since October 2025, hawkish Fed caps gains - tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMi2gFBVV95cUxNX1MxNk9lRnota2NFek9SNG1BaEZVY3BkeWJBUk5WbmpkWUZ1UC0wVjJVVlNrdTVjN0l4OERXOFlqczFIM1F1ajZnZGl0STJaclVYRERSYjhWLU1lYWZoMDc0Mk1va3dlamVOWUJxMEdMOWJnbXF3b2xGMW5YME1IYm1kb1hrZkVSNGdmZTM1MzJzZEVWOVVoWHZnbGtmdWhFNVQwdHBUWWYyYVgxelFJcEZvVXZSdHc1UzBxS3lQTXVkdVNibVpXcHo2UHRpcHJFRlgxeUpIVkNGdw?oc=5",
+      "published": "2026-11-16T11:23:26+00:00",
+      "summary": "Gold steadies after hitting lowest since October 2025, hawkish Fed caps gains tmgm.com"
+    },
+    {
+      "id": "701f0689",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Zone euro: la production industrielle a augmenté de 0,2% en septembre, moins que prévu",
+      "link": "https://www.abcbourse.com/marches/zone-euro-la-production-industrielle-a-augmente-de-0-2-en-septembre-moins-que_706143",
+      "published": "2026-11-16T11:23:00+00:00",
+      "summary": ""
+    },
+    {
+      "id": "0bae7d95",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "L’euro s’approche de la zone des 1,1000, le ton restrictif de la Fed soutenant le dollar américain - www.tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxQcFppYkxoaWVaZTdZN2FPWVFwNnBjMmFhb094WE15YmJNN1BnT29wYld3TlhWUTVpUVFDdTlhY1VuaUZRVE8zVHVTS1l4cnBua2JoWU9NcEVtQ25wSFBfY21sX0c0b1pYX05JcnJBTlQ2UTd3NUNvV0xTZ3NqaWlQUVhaNEx5eHU3eV9KR3l5TkVtcnkzMU9xZWFCQ2J4QUw2cU4yZkQwUFgwRnN5TUlfLWJqSm9PckxhaFVmUDBOeTlnTWc5dUtfdQ?oc=5",
+      "published": "2026-11-16T11:18:20+00:00",
+      "summary": "L’euro s’approche de la zone des 1,1000, le ton restrictif de la Fed soutenant le dollar américain www.tmgm.com"
+    },
+    {
+      "id": "7e1ec4bb",
+      "source": "gnews_marche",
+      "ticker": "",
+      "title": "Le Cac 40 sur la réserve pour débuter la semaine, Nvidia annoncé en nouveau repli à la veille de ses trimestriels - Investir Les Echos",
+      "link": "https://news.google.com/rss/articles/CBMikAJBVV95cUxNbUhMaENMSGpPdHQ2akRTc1hhVWZUWDZwOURyRDdQZURuTUZjLWE2UmRlak1STXladmZWeVQyaXM0VXBWdDdFNWhlZWYwOE9vQlVGN3NzaWVvTjhfZncydVZBcFpFWVJfMzFqSlllbElYakRQcFdXOGVsZUFsZVZBbG1ya3A3YkZObnVVT1BuYWViZldQeVQ0S1Q3eG5ycFlXTHRWWm1oRXJSUXVlUi1lSnY1TEFQM2ZOLWFDXzNDRU14UEtXVmtwVWhrTTloaUl2OUFPY1U1bDhrTkpoTVBTTEJuNzM2ZlNFMUtuN1VXQ1hUVHRIdnRkY1lYYlRuYzBfMHNHSzBFVVpfWmxtMDBEZA?oc=5",
+      "published": "2026-11-16T11:16:58+00:00",
+      "summary": "Le Cac 40 sur la réserve pour débuter la semaine, Nvidia annoncé en nouveau repli à la veille de ses trimestriels Investir Les Echos"
+    },
+    {
+      "id": "ca7be038",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Vusion bondit, Oddo BHF relève sa cible à 215 euros",
+      "link": "https://www.abcbourse.com/marches/vusion-bondit-oddo-bhf-releve-sa-cible-a-215-euros_706142",
+      "published": "2026-11-16T11:16:55+00:00",
+      "summary": ""
+    },
+    {
+      "id": "529f611d",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Le bitcoin traverse une mauvaise passe, plombé par les taux et la crise chez Nvidia",
+      "link": "https://www.abcbourse.com/marches/le-bitcoin-traverse-une-mauvaise-passe-plombe-par-les-taux-et-la-crise-chez-nvi_706141",
+      "published": "2026-11-16T11:07:25+00:00",
+      "summary": ""
+    },
+    {
+      "id": "667a9349",
+      "source": "gnews",
+      "ticker": "ADOC.PA",
+      "title": "L'action Adocia cède 6,5 % après avoir franchi sa résistance des 4,67 € - Idéal Investisseur",
+      "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxPaEZNRGk3OXpHZzl0bnFqMTc3WkxGTk0zazY0T1laSnEyeFpFTWlrOE9ocUIzVjgzNmpES3pYanlvWTV4dmk0WlQ1UG0wUXlHVzZzVXc4Z2VLVi1sVXFxNTN0NmZwSDY3U0hOSmFuUE1hSFU0eU1Ya0tCeDJTMTBNUkZQWGlEbzVxa3B0ZEtmcEhyZUVocDZTNWJIbHVVZmxCZndzc2hXbTAtd0J4YUJLY0N2V0lqdEVPU1JB?oc=5",
+      "published": "2026-11-16T11:06:00+00:00",
+      "summary": "L'action Adocia cède 6,5 % après avoir franchi sa résistance des 4,67 € Idéal Investisseur"
+    },
+    {
+      "id": "cec26172",
+      "source": "gnews",
+      "ticker": "VU.PA",
+      "title": "L'action Vusion en tête du SBF 120 et perce son plus haut de 150 séances - Idéal Investisseur",
+      "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOUmFUZ2R1cFdPTnoySVBrSkZubmdmeTNXUk5TNUVpRlZCdjU3UDVETW9CSDlhejVHZllWSHJxVnV1T3Yya29qSS1BbmYzWmJwY0F5eTFZMnZEUTJ3bzFpaVYzalV2U1dUQlY3TTRmVGQyQWtLTjVqckFXSUl5dnNxYVp6SVNid3pzLVpoRXlLZ0dJeEUzSHBMQ2ZILXpnTzhtam9EcjIxX1NPUjBWclBBUW10WldTU29mb0Z1dkIxNGNBYXo3?oc=5",
+      "published": "2026-11-16T11:06:00+00:00",
+      "summary": "L'action Vusion en tête du SBF 120 et perce son plus haut de 150 séances Idéal Investisseur"
+    },
+    {
+      "id": "1bd844dc",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "La surperformance des actions européennes pourrait être de courte durée, prévient BofA - Boursorama",
+      "link": "https://news.google.com/rss/articles/CBMi-wFBVV95cUxPdVJxaFFnTnp5bjhSZ0k1WGJUWGluek1LSWl2NHVDenBYdVFYXzdSc1dqc3Z3aFlDemp2cmJuWHIzLVptLVpzRHd6VlJ0dnkwT2taeV96dndKVC1ZTGlIMjZNcW1BdTlkOS1lWEt3b1RUdmNhR09oeFBGWHh2RzlROEQ2SnM5SExHLVBKOE5JaE1xZkN2MzRaUzc5YXRFYmhOMG9mOHhlaFE2ZVFkdllRM2V2U3pCZm5lRVRYN3Z0NDB2UVZIS01aYjRvYVFhSWFjdlpIWXQxOUJkTGdmdTJCaXp5bDF2UDFxSW9wWXBBRWVhbGpwV3NGaGdPWdIB-wFBVV95cUxPdVJxaFFnTnp5bjhSZ0k1WGJUWGluek1LSWl2NHVDenBYdVFYXzdSc1dqc3Z3aFlDemp2cmJuWHIzLVptLVpzRHd6VlJ0dnkwT2taeV96dndKVC1ZTGlIMjZNcW1BdTlkOS1lWEt3b1RUdmNhR09oeFBGWHh2RzlROEQ2SnM5SExHLVBKOE5JaE1xZkN2MzRaUzc5YXRFYmhOMG9mOHhlaFE2ZVFkdllRM2V2U3pCZm5lRVRYN3Z0NDB2UVZIS01aYjRvYVFhSWFjdlpIWXQxOUJkTGdmdTJCaXp5bDF2UDFxSW9wWXBBRWVhbGpwV3NGaGdPWQ?oc=5",
+      "published": "2026-11-16T11:02:00+00:00",
+      "summary": "La surperformance des actions européennes pourrait être de courte durée, prévient BofA Boursorama"
+    },
+    {
+      "id": "d2de8adb",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "Les Bourses européennes dans l'expectative de Nvidia et Anthropic - Zonebourse",
+      "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxPUUtfdWJPT3hscVg4V2tmYkN4WjE2cGNFUW1VV0hPWWVDRV9VeXdWMEc0R283T2Jva243VW9tVWs5b2Z6VVVxUjJKYjVEY0VRWGMtZWg0c0h1U0N1VldhcGxNMGFPNDRDX1plMDNtQlRPcG0zalM0dlFpUFBib0tIOXhQTzlvMnJ0dnk2TVBBcklfdEVwaXNBMmFfSzhwN0hrUFlFVW0xNTRFVThYSmRHYllmenhxc1hYelRiWmh1cHZZY18t?oc=5",
+      "published": "2026-11-16T11:01:27+00:00",
+      "summary": "Les Bourses européennes dans l'expectative de Nvidia et Anthropic Zonebourse"
+    },
+    {
+      "id": "27fd0b58",
+      "source": "gnews",
+      "ticker": "VU.PA",
+      "title": "Vusion : une étiquette à mettre en avant, selon Oddo BHF - Investir Les Echos",
+      "link": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxNU0Z4R1YzU2FFeV9STjRJS2NJOGpZZExDaGNhUHFSZnRDb3Z2QmZaTkJxZWVwODlzakl6dVNYVUcxaUNNbFJ2R2xpdzV1ZW1BYTRYYi1mazVYbTRLSGYxQk9PV1Z1RWdia2ZmUGlrYVRVMTZXLVQ0WmVaazNWRlA2a19oY0xicVVuSTV4VjJRSlhzcjF2dklLLTVfbDYyQnFNMDhIajNQc3VqZXR4bXRLb0VYREJvWk5MRkN0SktZamdTYlBrZW5zSExCR3lDeng3X1F3dzJR?oc=5",
+      "published": "2026-11-16T11:00:54+00:00",
+      "summary": "Vusion : une étiquette à mettre en avant, selon Oddo BHF Investir Les Echos"
+    },
+    {
+      "id": "ff8371fd",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Pill (Banque d’Angleterre) : de nouvelles hausses de taux sont nécessaires pour lutter contre l’inflation - www.tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxNcTVva1lpTEp1MmVvblZTbm9nV05McFExLUZXTEk0bnpXTzljT2UweTR4bHFNT2ZMTVhuYXNfYmlpeFdUbGotNzJtT3FHMHVHNi12Vm1OdEZpSXU0ZnlUSlRCaU14YlRvTVRib1RBT2RtYlRaZHJ1VzQ3bTUtN19mcm9CN0Zadkc1SUlKWE95STJWVUl2cTVnNFZ0T3owM0d2elJnT3VMQnI0eFVKU2cxakoyY0d2QlMtV0xlNUZn?oc=5",
+      "published": "2026-11-16T11:00:00+00:00",
+      "summary": "Pill (Banque d’Angleterre) : de nouvelles hausses de taux sont nécessaires pour lutter contre l’inflation www.tmgm.com"
+    },
+    {
+      "id": "4457cbca",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Schmid (Fed) : l’inflation reste trop élevée, la banque centrale a encore du travail à faire - www.tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxOd3ZrWlJKdnhzZmw0MFRRbjhFUF80azBKdFJNQmpieHNCbGQ3dnJYTDdTRFJEenFxM3M0ZlVzWnlNSVJhTTJpWEgtNnBoYlNQRHYyekZ2SkJnaEE3X1JPQ2NjRzRHdmNXdFM2ZnNtUTZ6RllDNG5KaWV2QkV3dlViN2k5OEF0ZU01TU5SbWNNdXAtbTVIM21lVXl1eWtfT0dLV1hEc21fOUdLWmFOOEhhSWM1aWwzY2xsRThhM25UZlF2bGhmSU96V3BFbFl3eElnOVE?oc=5",
+      "published": "2026-11-16T10:58:02+00:00",
+      "summary": "Schmid (Fed) : l’inflation reste trop élevée, la banque centrale a encore du travail à faire www.tmgm.com"
+    },
+    {
+      "id": "3420a512",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "L'Europe progresse dans le calme, la tech reste surveillée",
+      "link": "https://www.abcbourse.com/marches/l-europe-progresse-dans-le-calme-la-tech-reste-surveillee_706140",
+      "published": "2026-11-16T10:54:09+00:00",
+      "summary": ""
+    },
+    {
+      "id": "9cdb4980",
+      "source": "gnews",
+      "ticker": "VU.PA",
+      "title": "Vusion bondit, Oddo BHF relève sa cible à 215 euros - ABC Bourse",
+      "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxNNEhyZEZjc3NvYmRTVnVGMUJKaDA3QnFnRjZ1bFRhVm5OdV85ZC1KQnJuZVNaZ25vdDJFUEU5SndUZWduME1ZM1JwT1Jyb0MyVFE1b2VsaUdmMHBTeE5SMS0tTHE1SXRYLWxsM3FyYUFJTzkxLUpPQWN5Q3BUWWRJWUYyRXhRdlpvaGozWHlKOFgxbFQzcUE?oc=5",
+      "published": "2026-11-16T10:16:55+00:00",
+      "summary": "Vusion bondit, Oddo BHF relève sa cible à 215 euros ABC Bourse"
+    },
+    {
+      "id": "9ec5ba1c",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Le dollar australien recule sous 0,6800 face au ton restrictif de la Fed, les données chinoises au centre de l’attention - www.tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxNLWJrRE8tbnhxaVl0QnVEZkROeTVZUjNlQjlpVDJCODRVUE1iQ1dfRkZCV0FHNm9kODN6MkZoNm90eENPRE9IQUh0a3lRWXh5VHkwN0NPcHVvMGdSNWh0RTZmYWdmYnBIVGt5UDg4S0F6dXoxR0drT2hmclF6RVd3SUZyaDJOb3UzTWFYN2haeUc5MmpQd2cwRHRfXzhEMEd1ODI2LWYyeENsMnRsUDJhdkdOcG5QaTVMVVQ1RXhyaXkzZXVNU0p2NnI4NU5naC11OExoUUxhSGM?oc=5",
+      "published": "2026-11-16T10:10:56+00:00",
+      "summary": "Le dollar australien recule sous 0,6800 face au ton restrictif de la Fed, les données chinoises au centre de l’attention www.tmgm.com"
+    },
+    {
+      "id": "e4e9ca73",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "Les actions européennes soutenues par la défense et la consommation, les valeurs technologiques à la traîne - Zonebourse Suisse",
+      "link": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxNYXZfN2VwSEJ3UmtoLTc1VFhRWlQxcmV3UDJjdy1PeE9aOVgwMGZjb1V1WWQzSWRrYWdDa3N3M3U0UXZKWGF3MTRLN0o5cHJwdlhqUEFwQUs0Q2JFTHdnVXhvVHRMZVpEbzloYWtySEFYV09scVhXWm5sb2NCWUhSRU5odUJ0MUt2S3JleG16RE1jb1VEb1MyV0JJQXhSNkoxWmNMN0M5NHdhUHUxY080Q2JMaHhPV1VhVmNhNEVSbkw5STdLdWV0TWc5aG1WSnlzOUt4NEEydElHeDlCN2NnYXBNXzJENkdZWE14UDE4Z3A?oc=5",
+      "published": "2026-11-16T10:04:24+00:00",
+      "summary": "Les actions européennes soutenues par la défense et la consommation, les valeurs technologiques à la traîne Zonebourse Suisse"
+    },
+    {
+      "id": "36ebdfbf",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Fed : Collins juge approprié un relèvement régulier et progressif des taux face à des risques à la hausse comme à la baisse - www.tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMi5AFBVV95cUxQSVBlaVd3SWJ4SmVYZk5ubGRLdzYyVkRJXzBxamFLR3RYYjE2alpnYUlCejNnN2JXelczbUVza2kzSWczeG5rRVdoOVhoNy05STFpZmVvWjhiOGhwQzV6ZGp4bVoxOGgta0pURGQ4dmhxaVJfRGg5dTgwcDJscGpGcXF6Mk1mZ2NUWkhYMExvM0s5ekRWdXpvdGFHTlA2T3FnWmdaUloyZElXZHJiR19VeHMxSGtiMXhJdGlTRHViVVBzencxVmx3VHJfSjNwNVdLQXo4WGpndTFVZ3JtaHVwMlJsNDE?oc=5",
+      "published": "2026-11-16T10:04:00+00:00",
+      "summary": "Fed : Collins juge approprié un relèvement régulier et progressif des taux face à des risques à la hausse comme à la baisse www.tmgm.com"
+    },
+    {
+      "id": "ea290e7e",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "La Fed change de braquet : l’inflation américaine relance la hausse des taux - Club Patrimoine",
+      "link": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE0zclgzNDlTTWdTT1VTbVBkXzJ4dDMycjd0bEJ2T0NVblVtSW9HQ0FmM2VsM3NNSkZQTzkyN01jWF84VVBOLXRrOTh3SV9XVHpSdE9tSllROWFnMnlEaGhPLWhWZS1NQQ?oc=5",
+      "published": "2026-11-16T10:01:15+00:00",
+      "summary": "La Fed change de braquet : l’inflation américaine relance la hausse des taux Club Patrimoine"
+    },
+    {
+      "id": "0e6a0d91",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Carmila: casse du support des 15 euros, cap sur 13,98 malgré le dossier IGD",
+      "link": "https://www.abcbourse.com/marches/carmila-casse-du-support-des-15-euros-cap-sur-13-98-malgre-le-dossier-igd_706139",
+      "published": "2026-11-16T10:00:25+00:00",
+      "summary": ""
+    },
+    {
+      "id": "386d5acf",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "Les valeurs du CAC 40 débarquent sur la blockchain avec xStocks - Boursorama",
+      "link": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxOLVRGOUVjcF91bkNnVmFYdUlmLUdEMTFVYnpTSkRWb2dTZmh4TEVFQmFtd0JXQTF6SmhfbDV0VEYzVjgxd1c1bjhPMXVlZUp1Tl9xNHpudFN0ZGNpT29nVS1hZFhMSXdtS0gxTzEyQ1R0RUp2LUZSUkYteWpaeTFZMXlfMHpBa0QxMkktbk02eWMyZEFuZ3JnYzhKSkVVYUNwSzhxTERpeEFLT25RTUJtQzhZeDd0RDltMUstZFhManpzeXlIaUx5NEZ1eGZoellQeExsZHNyQWVWaFhRSXfSAd4BQVVfeXFMTi1URjlFY3BfdW5DZ1ZhWHVJZi1HRDExVWJ6U0pEVm9nU2ZoeExFRUJhbXdCV0ExekpoX2w1dFRGM1Y4MXdXNW44TzF1ZWVKdU5fcTR6bnRTdGRjaU9vZ1UtYWRYTEl3bUtIMU8xMkNUdEVKdi1GUlJGLXlqWnkxWTF5XzB6QWtEMTJJLW5NNnljMmRBbmdyZ2M4SkpFVWFDcEs4cUxEaXhBS09uUU1CbUM4WXg3dEQ5bTFLLWRYTGp6c3l5SGlMeTRGdXhmaHpZUHhMbGRzckFlVmhYUUl3?oc=5",
+      "published": "2026-11-16T09:55:00+00:00",
+      "summary": "Les valeurs du CAC 40 débarquent sur la blockchain avec xStocks Boursorama"
+    },
+    {
+      "id": "ad3bddab",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Vusion grimpe de 8 % en Bourse, Oddo BHF relève son objectif à 215 euros",
+      "link": "https://www.abcbourse.com/marches/vusion-grimpe-de-8-en-bourse-oddo-bhf-releve-son-objectif-a-215-euros_706138",
+      "published": "2026-11-16T09:49:30+00:00",
+      "summary": ""
+    },
+    {
+      "id": "4c217b8e",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "La roupie indienne reste stable, entre d’importants afflux de capitaux étrangers et des anticipations de fermeté de la Fed - www.tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxQN3JNRXFSSGhXT1dWVi0xMDFwQnFwYm5NNFhsdFNFWWdjYlhOeTVXWnp1U1R3NXJDd0NmNHpEMlZSc1BiNzUzMVdla0NEVi1OeHR6Y2g3MlBtWHJsSXlIQnpDVzBMcW95b2toTXh6endPb2pya3NMVnJQU1lqbUduZXVXVUJoQkg1Z3JQenBTcHAxTXhoQzFPU3lxSks2Z2lHX3R3WVYxTkVmZnVtZ0tTTnUzOU9NYV9Md1JXOUNLb1VObWdSRUdZY01xQTF3bThzaUpDNzBRZE9CdHk2?oc=5",
+      "published": "2026-11-16T09:45:54+00:00",
+      "summary": "La roupie indienne reste stable, entre d’importants afflux de capitaux étrangers et des anticipations de fermeté de la Fed www.tmgm.com"
+    },
+    {
+      "id": "4bd3cd75",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Vujcic (BCE) : l’évolution récente des prix de l’énergie pourrait faire grimper l’inflation - www.tmgm.com",
+      "link": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxPZWNFTlhBQmpPOHEwVHBFUWR4OU1seXhDYlNRM1FUcVRzamU0V0pURnhNZnpwLVI3Q21pRm55ckwyb2Z3VXFGRVJsNHdxMHQ4aGJ6cHBMTV95YmdVaXpoSmNreThaYnRKRG9VbUptdGpjbWRUbDJENkt1VVlGRHFZSGtFOUNYYVdXa3N1SEJmc0pNSFY4SDhfaVJkT1RyX2NidFhEdFVURlVOeEVqTWhmcDF6WFhFV0ktT21iWHh1aUtraGdlTTdDWWtTUS00WTk0TEE?oc=5",
+      "published": "2026-11-16T09:43:18+00:00",
+      "summary": "Vujcic (BCE) : l’évolution récente des prix de l’énergie pourrait faire grimper l’inflation www.tmgm.com"
+    },
+    {
+      "id": "c32df9f2",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "L'Europe sur une note indécise, la tech toujours sous pression",
+      "link": "https://www.abcbourse.com/marches/l-europe-sur-une-note-indecise-la-tech-toujours-sous-pression_706137",
+      "published": "2026-11-16T09:41:08+00:00",
+      "summary": ""
+    },
+    {
+      "id": "3f3c8308",
+      "source": "gnews_marche",
+      "ticker": "",
+      "title": "CAC 40 : la Bourse de Paris en légère hausse avant une semaine déterminante pour l'IA - MoneyVox",
+      "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxQSU9Sek9lZms1eUdvaTluRHBJS0xYbUJaMThmQlJIZmlQUTl2NzRKMUVxOGlNaHRNU1h1TU5Lc1V1N2FEeUtXSnVjMGlMZHkyOW42MXhkQnVLLTFpS1g0YVFjMjg5dU1Ja2xiQ2lSXzNRb0d0eVFzWHkzbE52NFZadHAtbV96ck5ZVmlCNmtmNW9uZlp6VlQ2MlJESk44UGx0YndMUGlQaWNxZjg5cXZrSUgyWDdPSll1YzVkajF1bW82aGktU0pqTmhB?oc=5",
+      "published": "2026-11-16T09:35:33+00:00",
+      "summary": "CAC 40 : la Bourse de Paris en légère hausse avant une semaine déterminante pour l'IA MoneyVox"
+    },
+    {
+      "id": "6babc8f0",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Exosens grimpe en Bourse après une importante commande de Theon International",
+      "link": "https://www.abcbourse.com/marches/exosens-grimpe-en-bourse-apres-une-importante-commande-de-theon-international_706136",
+      "published": "2026-11-16T09:34:09+00:00",
+      "summary": ""
+    },
+    {
+      "id": "71c40903",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Hong Kong: les actions progressent de 0,5%",
+      "link": "https://www.abcbourse.com/marches/hong-kong-les-actions-progressent-de-0-5_706135",
+      "published": "2026-11-16T09:30:44+00:00",
+      "summary": ""
+    },
+    {
+      "id": "7ae69422",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Eutelsat lance une émission obligataire de 400 millions d'euros à échéance 2032",
+      "link": "https://www.abcbourse.com/marches/eutelsat-lance-une-emission-obligataire-de-400-millions-d-euros-a-echeance-2032_706133",
+      "published": "2026-11-16T09:19:44+00:00",
+      "summary": ""
+    },
+    {
+      "id": "30c62181",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "CAC 40: Le CAC 40 en légère hausse alors que Nvidia fait encore vaciller la tech",
+      "link": "https://www.abcbourse.com/marches/cac-40-le-cac-40-en-legere-hausse-alors-que-nvidia-fait-encore-vaciller-la-tech_706134",
+      "published": "2026-11-16T09:18:23+00:00",
+      "summary": ""
+    },
+    {
+      "id": "ef39e145",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Stark Future lève plus de 150 millions d’euros et se valorise 1,2 milliard",
+      "link": "https://www.abcbourse.com/marches/stark-future-leve-plus-de-150-millions-deuros-et-se-valorise-1-2-milliard_706132",
+      "published": "2026-11-16T09:10:08+00:00",
+      "summary": ""
+    },
+    {
+      "id": "e2b6c579",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "Les valeurs bancaires et technologiques pèsent sur le MIB à l’ouverture - Zonebourse",
+      "link": "https://news.google.com/rss/articles/CBMizgFBVV95cUxPQUJWWUg2MHFaUmJ0ek45cGpOSTVFZGoyUGhNM3AtOVRwYy00cHJaaFN3MGh0U3BHdXdsYWJOOExLTW5CWmNSaDFFLXpaN3hyRFdBVjB2NTBTWnByS1JSM29adTRBU1FhRVpmZlEzZmJNZHhGc2MyRkVEZThOczdzTkc1QkMtX0tQcjQzeTNFcFFoNzZvNkg1eUhrQnhNQ3k0cGE3VE54WWhpTnA1NThLOXNkRXFIZ2VwYUZmVk1SYnVwRFVYejRfdmxXbkRFQQ?oc=5",
+      "published": "2026-11-16T09:00:30+00:00",
+      "summary": "Les valeurs bancaires et technologiques pèsent sur le MIB à l’ouverture Zonebourse"
+    },
+    {
+      "id": "de385494",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Eutelsat lance une émission de 400 millions d’euros d’obligations senior à 2032",
+      "link": "https://www.abcbourse.com/marches/eutelsat-lance-une-emission-de-400-millions-deuros-dobligations-senior-a-2032_706131",
+      "published": "2026-11-16T09:00:13+00:00",
+      "summary": ""
+    },
+    {
+      "id": "09691597",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Eduform’Action fixe à 0,21 € le prix d’exercice des BSA 2025 pour la 10e période",
+      "link": "https://www.abcbourse.com/marches/eduformaction-fixe-a-0-21-le-prix-dexercice-des-bsa-2025-pour-la-10e-periode_706130",
+      "published": "2026-11-16T08:50:04+00:00",
+      "summary": ""
+    },
+    {
+      "id": "2dbe8968",
+      "source": "gnews",
+      "ticker": "VU.PA",
+      "title": "Vusion grimpe de 8 % en Bourse, Oddo BHF relève son objectif à 215 euros - ABC Bourse",
+      "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxQY3g2ZUFXSFhLYWZiQ011UkgyaW44M1ZpQ05hNzNtOGJQbHFVUk1NRFZ1ZWVzNmN2R2pGSHFadENJS1NaV3NjcEFRSGtMNWM3N3RxeVVPYURNSUpMaktZdVJpakZxa1JnV0piTWRVbksyM29SWXNTd2VXclFvb3pkTzgwaVVvVUt4V3paaS1RTVVidWRiaXdtNUdMbzkxZWdmNU03UmNwWm5sOFo2a0pJ?oc=5",
+      "published": "2026-11-16T08:49:30+00:00",
+      "summary": "Vusion grimpe de 8 % en Bourse, Oddo BHF relève son objectif à 215 euros ABC Bourse"
+    },
+    {
+      "id": "37f51775",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "AstraZeneca et Fnac Darty : les actualités boursières à suivre - Le Revenu",
+      "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPMERac1Vsa2VTU25UaFpuQlRFNTdlQmp0d3VENkFTTzgtLW96Q0ZRVUVZX2xib3JVa2wzYThvV3ljaGQzLTNpSEhvSHFqZDhoWlZONUxDX3dmS01FWENCWWxYdnBQODRTbG9WQ3ZLRkxPS1R2WHBNaDJlMEtFWjNKSkdmYUJXUUJ0a2FqTGRJSS1QaG5GRmpaREs5REhYTmlSa0J3WTgwd3d0QQ?oc=5",
+      "published": "2026-11-16T08:46:00+00:00",
+      "summary": "AstraZeneca et Fnac Darty : les actualités boursières à suivre Le Revenu"
+    },
+    {
+      "id": "89f21467",
+      "source": "gnews_marche",
+      "ticker": "",
+      "title": "CAC40 : Paris approche les 8.400 points, Exosens progresse - Le Revenu",
+      "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxOR0ZUTS1tZlVCTzg4aHZjUHJNNGNla2ZiM1cwRlFLZEhqZVlYdXh0MDdoTkM3VTJubTJaRlVJMFVsdGs5aVI4bjhQSHFkdDFzLXo4Y3RfVkpmSmFxV2lTZjVUbGI2TkN3SVhBSkRXUXhZNlZUODhDZ25qSUoyYm0wRDBiYXcyVGtlaHdONkM3X2tKSVB0TExrR01EeGY2U18yOGJ2OEdOZ05aZw?oc=5",
+      "published": "2026-11-16T08:45:00+00:00",
+      "summary": "CAC40 : Paris approche les 8.400 points, Exosens progresse Le Revenu"
+    },
+    {
+      "id": "3ee8c0e0",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "CAC 40: La Bourse de Paris attendue en petite hausse à l'aube d'une semaine décisive pour la tech",
+      "link": "https://www.abcbourse.com/marches/cac-40-la-bourse-de-paris-attendue-en-petite-hausse-a-l-aube-d-une-semaine-deci_706129",
+      "published": "2026-11-16T08:44:03+00:00",
+      "summary": ""
+    },
+    {
+      "id": "36a277be",
+      "source": "gnews_macro",
+      "ticker": "",
+      "title": "Gonet: l'actualité des marchés au 16 novembre - allnews.ch",
+      "link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNdFBnZDlBTHRJRlpoRlg1NGVXZVdOSjNLaUp6a0ROT2FBREhqd185YXdyNG1FM3l0NlhRQ1p0WW9tZW1rRno2UFpjYXlQZjF0RVNraVhBZVZpdHJkY0hfOGhnMXJmSzg2azVrVVJJbXdyNjh1LWNKM2dvQ3Vmc19uWW14MXZpNVhPQ1JpRWpQbzBjakM4NzNtcGVCZFl0WEpt?oc=5",
+      "published": "2026-11-16T08:42:35+00:00",
+      "summary": "Gonet: l'actualité des marchés au 16 novembre allnews.ch"
+    },
+    {
+      "id": "ec3b4756",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "L'Europe sur une note indécise, la tech toujours sous pression - ABC Bourse",
+      "link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxNdE94WnYxZF9jVzJyN0JTRV82VjRTVnRSa3pXMEhPZG45NzFFdlpuaFBsOUszc1pHbEdoQ1NTNDI5X2dhaEtKRHJ0WUZRbTZSTnBRQmpWcC1pWlNEVmlTb05neXBfQnY2YjZBaHVDZWNyVHc4aFEzQjRDMmxDZFdqZEpXRTAzb2plZHZzQzdXakNRUDZrYnVxWmRuTUMtSjNqWlQxMA?oc=5",
+      "published": "2026-11-16T08:41:08+00:00",
+      "summary": "L'Europe sur une note indécise, la tech toujours sous pression ABC Bourse"
+    },
+    {
+      "id": "6b88c202",
+      "source": "abcbourse",
+      "ticker": "",
+      "title": "Quadient dépasse 4,5 millions de factures électroniques traitées via Serensia",
+      "link": "https://www.abcbourse.com/marches/quadient-depasse-4-5-millions-de-factures-electroniques-traitees-via-serensia_706128",
+      "published": "2026-11-16T08:40:04+00:00",
+      "summary": ""
+    },
+    {
+      "id": "0d1fba08",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "IA et Bourses européennes : de l'euphorie à la phobie, le choc Nvidia - Le Revenu",
+      "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxOWVlITXNUUmt6VkxacWRmSjlUYnpxZUJpbmFoWDdqZVVyX3VWZFVFQ0Y2cjZHUXd4SldkaUQtMVJVbzVfVWptR2hYcHlTYnhTczFyUGpHcXlfOTdOUjFuQk1fNHh0TkJuTlhVc1JoeTFVSloyNGhxX29TTUQ2NW8wTnVkcEtZVWdZai1HUUdNZUtuMHpjLXlESkVubUtFWWRmNVFQMzkzelo?oc=5",
+      "published": "2026-11-16T08:32:00+00:00",
+      "summary": "IA et Bourses européennes : de l'euphorie à la phobie, le choc Nvidia Le Revenu"
+    },
+    {
+      "id": "7bd6752d",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "Les actions européennes évoluent près de leurs records ; les valeurs technologiques à la traîne - Zonebourse Suisse",
+      "link": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxPWmgzSW5EWldoWEpHVkR4UU9ZaXhYVHFhWXBsRmVFTmZXdWZ6RTV2WnNseEtEOW5xcVgzLXFWT0JnT19aemw1V1NEaEg0QW1iZVNBa0tETFhOb0FVS05ZNTdvbm5VWVg2bENISWl6TkRJaW96d2VoMnoyTkRJXzRhdGlraFNjRmhyZmNURkpvdHJ4bmRWbm9jdEhNa1VGbHlrbGlTRENQSDFONG1jbVhGdFRPeUNLZFdmTUtRbl9TTmJmRE5FUWprWlE5Uk1fRlpfWE53LUgxR1VGUFhPbmNRMFZBbVV5T05M?oc=5",
+      "published": "2026-11-16T08:27:17+00:00",
+      "summary": "Les actions européennes évoluent près de leurs records ; les valeurs technologiques à la traîne Zonebourse Suisse"
+    },
+    {
+      "id": "61005c5b",
+      "source": "gnews_europe",
+      "ticker": "",
+      "title": "L'Europe ouvre hésitante, Nvidia pèse toujours sur les échanges - Investir Les Echos",
+      "link": "https://news.google.com/rss/articles/CBMizwFBVV95cUxNc3pwNDRBQTc3TzA4R0s1NFRPcmFXRUpZa3pfRjJYQkNiTzNSUDMxc09kZHl6WXBFZVVHemZHYWRXNTZPOEZiMlBTSi1nUUlURDlNWnpvT2ZoQXBkSE9wQ3V0UDItMTk3WGhKSzFtdGlXVkJVSjM3WUlROGtwcmZVUEp2Rkw4RzJJNUFJY0tNWUdpaTRUei1ZS2NMd29kNTQwdVJJV1V1NWQ3el9QZ2czTTRhckd6T1JpbXpyMWlCdzZPcDRqakxrcW5aYkcxNHM?oc=5",
+      "published": "2026-11-16T08:27:00+00:00",
+      "summary": "L'Europe ouvre hésitante, Nvidia pèse toujours sur les échanges Investir Les Echos"
+    },
+    {
+      "id": "393b5b9f",
+      "source": "gnews",
+      "ticker": "VU.PA",
+      "title": "Solvay, Saint-Gobain, BNP Paribas, Société Générale, Vusion : toutes les recommandations des analystes - Investir Les Echos",
+      "link": "https://news.google.com/rss/articles/CBMihgJBVV95cUxNU2FsenBfYmFjbWk5OWNiQ25pR2RkODBQdFowU3R5RlE5b2d4VlZPR0E2Y211RzhjNDhyLVFLOGFaZG1jSE1fTUtvU180T2xaMklXMGwyM2NhWGdZUHBNUHpCM1o5RDFHTWNld01pWVRsNmxFUjExWm1YY0tOOGFQanZPdVNvb1Z5aUtaWUJtRXVqMi1lVXJWcWtRUHZkYU5iSm1BcXhDblV6OVJNeldNekJKdC1HX1RnMnZQUnJnU2YyLUg5eVJRY2tuYVlDeXM1bmVtaFVyZ0pxc1FQcjBXTkR3RHNqT0V0eTJ6bHpFZGxTRlYzaVhZYVFKdFMteUVNalRCUVdn?oc=5",
+      "published": "2026-11-16T08:04:00+00:00",
+      "summary": "Solvay, Saint-Gobain, BNP Paribas, Société Générale, Vusion : toutes les recommandations des analystes Investir Les Echos"
+    },
+    {
+      "id": "be66f9ff",
+      "source": "gnews",
+      "ticker": "ADOC.PA",
+      "title": "Adocia a présenté des données précliniques sur AdoXL Sema, conçu pour une injection mensuelle - Idéal Investisseur",
+      "link": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxQNmRIZEhaVkFFdUIzQ3ExWXVKWi10WUJSX0dPd1RKYWVNcVRSYi1QRi1KNUdYQmVYZ1VPbEpPOHNLRWZGdk9Bc2FKYm1ZMXNTblUtSEhycWRIMS02M3lsZVpOVE13Ql96T3hGWU43Z0ZaNUt1dVN1SWdIOTV6eHkwc1V3WHNScG95amQ3RHk0NWJDZnloUGQxa2g2MUN3d2lnNGdubjZiT2gtMHN1S1drX1ZTbWdXd3NCTjZVZFdBcExQbmFvZjVpRXJlTmFQUmxSR2xnR09XcExZaHlMdUNzUg?oc=5",
+      "published": "2026-11-16T07:49:00+00:00",
+      "summary": "Adocia a présenté des données précliniques sur AdoXL Sema, conçu pour une injection mensuelle Idéal Investisseur"
+    },
+    {
+      "id": "19ee6754",
+      "source": "yahoo",
+      "ticker": "ADOC.PA",
+      "title": "ADOCIA présente des données précliniques à l’ObesityWeek 2026® confirmant le potentiel d’AdoXLong™ pour des injections mensuelles de peptides",
+      "link": "https://fr.finance.yahoo.com/actualites/adocia-pr%C3%A9sente-donn%C3%A9es-pr%C3%A9cliniques-%C3%A0-063000535.html?.tsrc=rss",
+      "published": "2026-11-16T06:30:00+00:00",
+      "summary": "LYON, France, November 16, 2026--Regulatory News: Adocia (Euronext Paris : FR0011184241 – ADOC, la « Société »), société biopharmaceutique au stade clinique spécialisée dans la recherche et le développement de solutions thérapeutiques innov"
+    }
+  ],
+  "learning": {
+    "playbook_changes": [
+      {
+        "date": "2026-11-16",
+        "by": "revue quotidienne",
+        "op": "cas pour",
+        "rule": "R1",
+        "text": "Si un ETF indiciel détenu baisse de moins de 2 % sans information qui lui soit propre (simple bruit de marché), alors on le conserve et on ne paie pas de frais pour un aller-retour.",
+        "confidence": "probable",
+        "status": "active",
+        "reason": "Nouvelle petite baisse de bruit sur l'ETF détenu, sans raison de payer un aller-retour. Cas cohérent avec la règle, mais d'une seule séance.",
+        "origin": "2026-11-16 WPEA.PA -0,35 % sans info propre, position conservée"
+      }
+    ],
+    "predictions_resolved": [],
+    "predictions_added": [
+      {
+        "date": "2026-11-16",
+        "ticker": "VU.PA",
+        "kind": "surveillance",
+        "thesis": "Oddo BHF a relevé sa cible à 215 € et le titre a pris +5,4 % (jusqu'à +8 % en séance), au plus haut de 150 séances. Il avait déjà fortement monté après le T3, l'avis de Citi et le contrat M&S (+28 % sur 20 jours, RSI 76, 15,6 % au-dessus de sa MM20). La bonne nouvelle est dans le prix, et avec la pression sur la tech, une prise de bénéfices est probable.",
+        "direction": "down",
+        "move_pct": 4,
+        "horizon_sessions": 7,
+        "probability": 0.4,
+        "target_date": "2026-11-25",
+        "ref_price": 158.1,
+        "rules": [],
+        "catalysts": [
+          "ca7be038",
+          "cec26172",
+          "screener"
+        ],
+        "id": "P9",
+        "status": "open"
+      },
+      {
+        "date": "2026-11-16",
+        "ticker": "SAN.PA",
+        "kind": "surveillance",
+        "thesis": "Le titre est en surachat extrême (RSI 92,5, +24 % sur 20 jours) alors que le marché se replie et que les taux montent. Les données ne donnent aucune cause fondamentale à ce mouvement. Je m'attends à un retour vers la moyenne, mais sans catalyseur identifié je garde une faible confiance.",
+        "direction": "down",
+        "move_pct": 3,
+        "horizon_sessions": 10,
+        "probability": 0.4,
+        "target_date": "2026-11-30",
+        "ref_price": 88.32,
+        "rules": [],
+        "catalysts": [
+          "screener"
+        ],
+        "id": "P10",
+        "status": "open"
+      },
+      {
+        "date": "2026-11-16",
+        "ticker": "ERA.PA",
+        "kind": "surveillance",
+        "thesis": "Le titre a chuté de 43 % en une séance avec l'augmentation de capital de 500 M€, dont les droits démarrent le 18/11. Pendant la période de souscription, la pression vendeuse liée aux droits devrait limiter tout rebond. Je ne prévois donc pas de hausse de 5 % à court terme. Le scénario « hausse » sert ici à tester cette idée, avec une probabilité faible.",
+        "direction": "up",
+        "move_pct": 5,
+        "horizon_sessions": 5,
+        "probability": 0.3,
+        "target_date": "2026-11-23",
+        "ref_price": 18.77,
+        "rules": [],
+        "catalysts": [
+          "screener"
+        ],
+        "id": "P11",
+        "status": "open"
+      }
+    ],
+    "notes_updated": [
+      "entreprise:NANO.PA",
+      "entreprise:ADOC.PA",
+      "entreprise:VU.PA",
+      "thème:IA",
+      "thème:Taux et Fed"
+    ],
+    "insights_added": 0,
+    "agenda_added": 2,
+    "dossiers_built": [
+      "VU.PA",
+      "NWL.MI"
+    ]
+  },
+  "daily_review": {
+    "review": "La veille, l'équipe n'a passé aucun ordre et a conservé WPEA et ESE, positions déjà prises. Le benchmark WPEA a perdu 0,35 % entre le 13 et le 16/11, donc une baisse de bruit, sans information propre. Les gros mouvements listés (ERA -43 %, ADOC -9,7 %, IVA -7 %, NANO, DBV) concernent des titres non détenus. Les données fournies n'en donnent pas la cause, donc on ne peut pas dire si l'équipe les avait vus venir. Ne pas être exposé à ces titres était neutre à favorable. Le choix de rester immobile était cohérent avec I2 sur le coût des frais.",
+    "decisions": [
+      {
+        "ticker": "WPEA.PA",
+        "verdict": "neutre",
+        "why": "Baisse de 0,35 % sur une séance, comparable au bruit de marché. Aucune information propre à l'ETF. Conserver évite les frais.",
+        "predictable": "Non : une variation d'une séance est du bruit."
+      },
+      {
+        "ticker": "ESE.PA",
+        "verdict": "trop tôt",
+        "why": "Le cours de l'ETF n'est pas fourni pour cette séance. La thèse du risque tech US (I3) ne peut pas être jugée sur une seule journée.",
+        "predictable": "Non, pas sans données sur son cours."
+      },
+      {
+        "ticker": "ERA.PA",
+        "verdict": "neutre",
+        "why": "Chute de 43 % sur un titre non détenu. La cause n'est pas fournie. Éviter ce titre n'était pas un choix explicite de l'équipe, donc on ne peut pas parler de bonne lecture.",
+        "predictable": "Non : la cause n'est pas dans les données."
+      }
+    ],
+    "playbook_ops": [
+      {
+        "op": "support",
+        "rule_id": "R1",
+        "text": "",
+        "scope": "risque",
+        "origin": "2026-11-16 WPEA.PA -0,35 % sans info propre, position conservée",
+        "reason": "Nouvelle petite baisse de bruit sur l'ETF détenu, sans raison de payer un aller-retour. Cas cohérent avec la règle, mais d'une seule séance."
+      }
+    ],
+    "insights": []
+  },
+  "market_analysis": {
+    "summary": "Marché en repli modéré : seulement 30,8 % des titres en hausse, médiane -0,55 % sur 1 j, mais +4,36 % sur 20 j, donc un marché qui reste porté sur le mois. Les ETF monde et S&P 500 baissent peu (-0,3 %), les ETF émergents (PAEEM -1,5 %) et Nasdaq (PUST -0,7 %) sont plus faibles. Le risque du jour est Nvidia à l'ouverture de Wall Street, qui toucherait ESE plus que WPEA. Les mouvements extrêmes sont des cas isolés : Eramet -43 % (augmentation de capital), Juventus -16 %, et un fort momentum sur AF, UCB, ADOC, qui est surtout déjà dans les prix (RSI > 70).",
+    "opportunities": [
+      {
+        "ticker": "NANO.PA",
+        "thesis": "Cours 26,32 €, déjà sous le seuil de 29 € de l'agenda (-9 %), mais pas encore -15 % : le scénario d'entrée n'est pas atteint. Surveiller le message de la direction aux conférences Jefferies (16/11) et UBS (17/11). Volume faible (0,32x), -5,7 % en 1 j sans cause connue dans les données : à vérifier dans l'actualité.",
+        "risks": "Volatilité de 99 %, titre à -23 % sur 60 j, aucune annonce stratégique prévue. Ligne spéculative à plafonner à 15 % du portefeuille. Aucune entrée avant la confirmation du calendrier clinique.",
+        "horizon_days": 10
+      },
+      {
+        "ticker": "PHARM.AS",
+        "thesis": "Catalyseur le 18/11 (conférence Jefferies) avec un scénario déjà défini : entrée seulement si nouveau CEO ou perspectives relevées pour Joenja, et si le titre n'a pas pris plus de 5 % dans la séance. Liquide (qmax 226). Pas d'achat avant la nouvelle.",
+        "risks": "+38 % sur 20 j, RSI 64 : une bonne partie est déjà dans le prix. Cours à 1,14 €, fractions d'euro très coûteuses en pourcentage de spread. Risque de déception.",
+        "horizon_days": 8
+      },
+      {
+        "ticker": "AF.PA",
+        "thesis": "Candidat uniquement sur repli d'au moins 8 % depuis son plus haut, sans mauvaise nouvelle sur le carburant, la fiscalité ou les amendes (scénario de l'agenda). Aujourd'hui +1,6 %, pas de signal d'achat.",
+        "risks": "RSI 90,5, +41 % sur 20 j, 22 % au-dessus de la MM20 : fortement suracheté. Ne pas poursuivre le mouvement.",
+        "horizon_days": 7
+      },
+      {
+        "ticker": "GNFT.PA",
+        "thesis": "Cours 10,56 €, +27 % sur 20 j mais -24 % sur 60 j. Entrée seulement si le milestone Iqirvo est annoncé et que le titre gagne moins de 5 % ce jour-là (150 € max). Pas d'achat tant que la date est inconnue.",
+        "risks": "Date du milestone non précisée. Volatilité de 100 %. La nouvelle est en partie anticipée (+36 % sur un mois selon l'agenda).",
+        "horizon_days": 15
+      }
+    ],
+    "positions": [
+      {
+        "ticker": "WPEA.PA",
+        "view": "conserver",
+        "why": "-0,35 % en 1 j, -1,3 % latent, sans information propre : la règle R1 (probable) dit de conserver et de ne pas payer un aller-retour. Plus diversifié que ESE face au risque Nvidia. Il reste de la place sous les 40 % (38,9 %), mais renforcer maintenant n'est pas un signal clair : l'agenda cite 7,0 € comme zone d'achat éventuelle."
+      },
+      {
+        "ticker": "ESE.PA",
+        "view": "conserver",
+        "why": "-1,47 % latent, -0,34 % en 1 j, repli de bruit de marché (R1) : on conserve. Exposé au risque Nvidia à l'ouverture de Wall Street et aux résultats du 19/11. Seuil de réduction de l'agenda : sous 33,3 € (-5 % du PRU), soit environ -3,5 % depuis le cours actuel. Conserver tant qu'il n'est pas franchi, pas de frais inutiles."
+      }
+    ],
+    "warnings": [
+      "Nvidia : ouverture de Wall Street ce 16/11 après le week-end (appel de Bessent à refondre la direction, dégradations d'analystes, enquête du DOJ évoquée). Risque d'écart baissier sur ESE à l'ouverture du 17/11 ; l'ordre s'exécute à l'ouverture, donc aucune réaction intra-journée possible.",
+      "Eramet (ERA.PA) : -43 % en 1 j, volume x11,6, augmentation de capital de 500 M€ (droits à partir du 18/11) : dilution et droits volatils, rester à l'écart. Ne pas confondre avec une opportunité de rebond.",
+      "ADOC.PA : +86 % sur 20 j, -9,7 % en 1 j, volatilité 136 %, RSI 71 : spéculatif et sans cause connue dans les données. À vérifier dans l'actualité avant toute idée.",
+      "IGD.MI : volume x16 et +6 % en 1 j, RSI 81 ; EGL.LS : volume x3,6 et +6,5 % : mouvements sans explication connue, signaux à vérifier, pas des thèses.",
+      "Suracheté : AF.PA (RSI 90,5), SAN.PA (RSI 92,5), UCB.BR (74), TUB.BR (75,5), VU.PA (76, +5,4 % en 1 j). UCB.BR n'est pas achetable (qmax 0).",
+      "Titres en chute libre à ne pas rattraper : JUVE.MI (-16 %, RSI 15), PRT.MI (RSI 10), ALBPS.PA (volatilité 222 %, cours 0,03 €).",
+      "Inventiva (IVA.PA, -7 % en 1 j) : résultat binaire de phase 3 NATiV3 attendu d'ici fin 2026, date inconnue. Pas d'achat avant publication.",
+      "Autres dates : résultats Intuit, Alibaba, Futu le 19/11 (sentiment tech), réunion de la Fed de décembre (date non fournie), possible acquisition de Meyer Werft par MSC (non confirmée, effet sur FCT.MI inconnu).",
+      "Coûts : avec 260 € de cash, des lignes de 150 € supportent 2,50 € de frais, soit 1,7 %, plus 0,1 % de spread à l'achat ; un aller-retour coûte environ 3,5 % au total. Le bénéfice attendu doit largement dépasser ce seuil. Ne pas disperser en petites lignes."
+    ]
+  },
+  "news_analysis": {
+    "summary": "Séance du 16/11 : CAC 40 en légère baisse (fin de série de hausses), la tech/IA reste sous pression avec Nvidia en repli avant ses trimestriels ; Wall Street ouvre en baisse. Les discours de hausse de taux de la Fed (Collins, Schmid), de la BCE (Vujcic) et de la BoE (Pill) se multiplient ; le dollar frôle 1,10 $/€, l'or recule, le pétrole baisse. La BCE avertit du risque de volatilité si la vague IA ralentit ; BofA prévient que la surperformance européenne peut être brève. Production industrielle zone euro +0,2 % (moins que prévu). Pour le portefeuille : ESE (S&P 500) reste le plus exposé au risque tech US ; aucune donnée de clôture US ni de cours ETF fournie. Nanobiotix -5,5 % et Adocia en repli : aucun scénario d'achat déclenché.",
+    "by_company": [
+      {
+        "company": "Nanobiotix",
+        "ticker": "NANO.PA",
+        "impact": "neutre",
+        "freshness": "du jour",
+        "priced_in": "partiellement",
+        "why": "Titre -5,5 % (parmi les plus fortes baisses du SBF 120) le jour de la conférence Jefferies, sans nouvelle fondamentale rapportée. Après la clôture du 13/11 à 27,90 €, la baisse mène vers ~26,4 € (calcul approximatif), au-dessus du seuil de scénario (<29 € déjà passé mais critère -15 % vers 24,6 € non atteint). Pas d'achat ; attendre UBS le 17/11.",
+        "sources": [
+          "bf28f34c"
+        ]
+      },
+      {
+        "company": "Adocia",
+        "ticker": "ADOC.PA",
+        "impact": "négatif",
+        "freshness": "du jour",
+        "priced_in": "partiellement",
+        "why": "Données précliniques AdoXLong présentées à ObesityWeek (déjà connues début novembre) ; titre -9,7 % depuis publication après avoir franchi 4,67 € : prise de bénéfices après rebond spéculatif. Nos notes disent de ne pas poursuivre.",
+        "sources": [
+          "19ee6754",
+          "be66f9ff",
+          "667a9349"
+        ]
+      },
+      {
+        "company": "Vusion",
+        "ticker": "VU.PA",
+        "impact": "positif",
+        "freshness": "du jour",
+        "priced_in": "partiellement",
+        "why": "Oddo BHF relève sa cible à 215 € ; titre en tête du SBF 120, plus haut de 150 séances (+5,4 % depuis publication, jusqu'à +8 % en séance). Déjà fortement monté depuis octobre (T3, Citi, M&S) : poursuite risquée.",
+        "sources": [
+          "ca7be038",
+          "cec26172",
+          "ad3bddab",
+          "27fd0b58"
+        ]
+      },
+      {
+        "company": "Air France-KLM",
+        "ticker": "AF.PA",
+        "impact": "neutre",
+        "freshness": "du jour",
+        "priced_in": "partiellement",
+        "why": "+1,57 % : le titre continue de monter après +30 % la semaine passée, aucun repli de 8 % pour le scénario d'entrée. Recrutement de 1 200 CDI en maintenance : anecdotique. Pétrole en baisse, légèrement favorable.",
+        "sources": [
+          "25413889",
+          "d1867dbc"
+        ]
+      },
+      {
+        "company": "Exosens",
+        "ticker": "EXENS.PA",
+        "impact": "positif",
+        "freshness": "du jour",
+        "priced_in": "inconnu",
+        "why": "Hausse après une importante commande de Theon International ; détails de cours non fournis. Ticker incertain.",
+        "sources": [
+          "6babc8f0"
+        ]
+      },
+      {
+        "company": "STMicroelectronics / Schneider / Legrand",
+        "ticker": "",
+        "impact": "négatif",
+        "freshness": "du jour",
+        "priced_in": "inconnu",
+        "why": "Valeurs tech/électrique sous pression avec le choc IA ; pas de position détenue.",
+        "sources": [
+          "bca9cf72"
+        ]
+      },
+      {
+        "company": "Carmila",
+        "ticker": "CARM.PA",
+        "impact": "négatif",
+        "freshness": "du jour",
+        "priced_in": "partiellement",
+        "why": "Recul après projet d'OPE sur la foncière italienne IGD ; support des 15 € cassé.",
+        "sources": [
+          "06a249ff",
+          "0e6a0d91"
+        ]
+      }
+    ],
+    "held_alerts": [
+      "ESE.PA : Nvidia continue de reculer, Wall Street ouvre en baisse, hausses de taux évoquées : risque principal. Seuil du scénario : <33,3 € (-5 % vs entrée) ; pas de cours de clôture US fourni. R1 : conserver tant que la baisse est du bruit.",
+      "WPEA.PA : moins exposé que ESE ; dollar fort et taux en hausse = vent contraire mais pas d'info propre. Conserver."
+    ],
+    "upcoming_events": [
+      {
+        "date": "2026-11-17",
+        "event": "Suite des conférences UBS (Nanobiotix) et trimestriels Nvidia évoqués par la presse comme imminents (à la veille selon abcbourse)",
+        "tickers": [
+          "NANO.PA",
+          "ESE.PA",
+          "WPEA.PA"
+        ],
+        "impact": "Les résultats Nvidia décideront du sentiment tech : rassurants = soulagement pour ESE ; décevants = pression sur ESE plus que WPEA. Date exacte non confirmée par les sources."
+      },
+      {
+        "date": "",
+        "event": "Anthropic (IPO / actualité) cité comme thème de la semaine",
+        "tickers": [
+          "ESE.PA"
+        ],
+        "impact": "Détails non fournis ; peut influencer le sentiment IA."
+      }
+    ],
+    "notes_updates": [
+      {
+        "key": "entreprise:NANO.PA",
+        "text": "16/11 : -5,5 % (parmi les plus fortes baisses du SBF 120) le jour de la conférence Jefferies, sans nouvelle fondamentale. Dernière clôture connue avant : 27,90 € (13/11). UBS le 17/11. Seuil d'achat (~24,6 €, -15 % sous 29 €) non atteint. Volatilité extrême, rebond récent après forte chute, trésorerie jusqu'en 2029. Rester à l'écart sauf déclenchement du scénario."
+      },
+      {
+        "key": "entreprise:ADOC.PA",
+        "text": "16/11 : -9,7 % depuis la publication du communiqué ObesityWeek (données précliniques AdoXLong, déjà connues) après avoir franchi 4,67 € : prises de bénéfices sur rebond spéculatif. Trésorerie 8,4 M€, horizon T1 2028, risque de dilution, -77 % sur un an. Ne pas poursuivre."
+      },
+      {
+        "key": "entreprise:VU.PA",
+        "text": "16/11 : Oddo BHF relève sa cible à 215 €, titre +5,4 % à +8 % en séance, plus haut de 150 séances. Déjà fort rebond (T3, Citi, M&S, ~1 Md€ de commandes attendu au S2). Risques : contrat Walmart, volatilité, hausse déjà intégrée. Pas de position."
+      },
+      {
+        "key": "thème:IA",
+        "text": "16/11 : nouveaux dégagements sur les techs IA, Nvidia en repli avant ses trimestriels, Wall Street ouvre en baisse, bitcoin sous pression. La BCE avertit du risque de volatilité si la vague IA ralentit. CAC 40 résiste (légère baisse). ESE (S&P 500) le plus exposé. À surveiller : résultats Nvidia, successeur de Huang, enquête DOJ, résultats tech du 19/11."
+      },
+      {
+        "key": "thème:Taux et Fed",
+        "text": "16/11 : Collins (Fed) juge approprié un relèvement régulier des taux ; Schmid : inflation trop élevée ; Vujcic (BCE) : énergie pourrait relancer l'inflation ; Pill (BoE) : nouvelles hausses nécessaires. Dollar proche de 1,10 $/€, or au plus bas depuis oct. 2025, pétrole en recul. Production industrielle zone euro +0,2 % (moins que prévu). Écart de taux France-Allemagne en hausse."
+      }
+    ],
+    "context_notes": "16/11/2026 (lundi). CAC 40 en légère baisse après cinq/six séances de hausse (proche de 8 400 points en début de séance), tech et valeurs liées à l'IA sous pression (STMicro, Schneider, Legrand), défense et consommation plus solides. Nvidia poursuit son repli avant ses trimestriels ; Wall Street ouvre en baisse ; bitcoin sous pression. La BCE met en garde contre la volatilité si l'engouement pour l'IA retombe ; BofA estime que la surperformance européenne peut être courte. Taux : discours de hausse côté Fed (Collins, Schmid, Williams, Goolsbee, Daly), BCE (Nagel, Vujcic), BoE (Pill) ; dollar proche de 1,10 par euro ; or au plus bas depuis octobre 2025 ; pétrole en recul malgré le Moyen-Orient ; écart de taux France-Allemagne qui se creuse. Zone euro : production industrielle +0,2 % en septembre, sous les attentes. Portefeuille : WPEA 38,9 %, ESE 34,9 %, cash 260 € ; règle R1 : on ne paie pas de frais pour du bruit. Jalons : Pharming/Jefferies 18/11, droits Eramet 18/11, résultats Intuit/Alibaba 19/11. Je n'ai pas les clôtures US ni les cours des ETF du jour."
+  },
+  "chef": {
+    "market_view": "Le 16/11, le repli reste modéré. Le CAC 40 recule légèrement après une série de hausses. Les valeurs tech et IA restent sous pression avant les trimestriels de Nvidia, et Wall Street a ouvert en baisse. Les banquiers centraux qui évoquent une hausse des taux se multiplient (Collins et Schmid à la Fed, Vujcic à la BCE, Pill à la BoE). Le dollar approche 1,10 $ pour 1 € et le pétrole recule. Nos ETF bougent peu : WPEA -0,35 %, ESE -0,34 %. Le portefeuille suit exactement le benchmark (-1,01 % chacun). Le vrai test viendra des résultats de Nvidia (attendus de façon imminente, date non confirmée) puis de ceux d'Intuit et d'Alibaba le 19/11. ESE y est plus exposé que WPEA. Aucun scénario d'achat n'est déclenché :\n- Nanobiotix est à 26,32 €, au-dessus du seuil de 24,6 € ;\n- AF.PA continue de monter (+1,6 %, RSI 90) ;\n- Pharming attend la conférence du 18/11 ;\n- aucune annonce de milestone pour Genfit.",
+    "orders": [],
+    "no_trade_reason": "Aucune information nouvelle propre aux ETF détenus. Leur baisse d'environ 1,3 à 1,5 % sous le PRU est du bruit de marché : la règle R1 dit de conserver sans payer d'aller-retour. ESE (34,51 €) reste au-dessus du seuil de coupe de 33,3 €. Aucune condition d'entrée de la watchlist ou des scénarios n'est remplie. Nanobiotix a reculé de 5,7 % mais reste au-dessus de 24,6 €, et la direction n'a encore rien confirmé à l'UBS. AF.PA n'a pas reculé de 8 %. Pharming et Genfit n'ont pas encore publié de nouvelle. Renforcer WPEA est impossible (qmax 1, limite de 40 %) et un ordre coûte au moins 2,50 € de frais, plus que le gain attendu. Je garde donc les 260 € de cash pour un éventuel déclencheur, comme prévu au plan.",
+    "watch_predictions": [
+      {
+        "ticker": "VU.PA",
+        "thesis": "Oddo BHF a relevé sa cible à 215 € et le titre a pris +5,4 % (jusqu'à +8 % en séance), au plus haut de 150 séances. Il avait déjà fortement monté après le T3, l'avis de Citi et le contrat M&S (+28 % sur 20 jours, RSI 76, 15,6 % au-dessus de sa MM20). La bonne nouvelle est dans le prix, et avec la pression sur la tech, une prise de bénéfices est probable.",
+        "catalysts": [
+          "ca7be038",
+          "cec26172",
+          "screener"
+        ],
+        "rules_applied": [],
+        "prediction": {
+          "direction": "down",
+          "move_pct": 4,
+          "horizon_sessions": 7,
+          "probability": 0.4
+        }
+      },
+      {
+        "ticker": "SAN.PA",
+        "thesis": "Le titre est en surachat extrême (RSI 92,5, +24 % sur 20 jours) alors que le marché se replie et que les taux montent. Les données ne donnent aucune cause fondamentale à ce mouvement. Je m'attends à un retour vers la moyenne, mais sans catalyseur identifié je garde une faible confiance.",
+        "catalysts": [
+          "screener"
+        ],
+        "rules_applied": [],
+        "prediction": {
+          "direction": "down",
+          "move_pct": 3,
+          "horizon_sessions": 10,
+          "probability": 0.4
+        }
+      },
+      {
+        "ticker": "ERA.PA",
+        "thesis": "Le titre a chuté de 43 % en une séance avec l'augmentation de capital de 500 M€, dont les droits démarrent le 18/11. Pendant la période de souscription, la pression vendeuse liée aux droits devrait limiter tout rebond. Je ne prévois donc pas de hausse de 5 % à court terme. Le scénario « hausse » sert ici à tester cette idée, avec une probabilité faible.",
+        "catalysts": [
+          "screener"
+        ],
+        "rules_applied": [],
+        "prediction": {
+          "direction": "up",
+          "move_pct": 5,
+          "horizon_sessions": 5,
+          "probability": 0.3
+        }
+      }
+    ],
+    "scenarios": [
+      {
+        "event": "Suite des conférences UBS (Nanobiotix) et trimestriels Nvidia évoqués par la presse comme imminents (à la veille selon abcbourse)",
+        "date": "2026-11-17",
+        "if": "Les résultats de Nvidia déçoivent et ESE clôture sous 33,3 € avec une information négative nouvelle sur la tech (DOJ, prévisions, successeur)",
+        "then": "Je vends tout ou partie d'ESE et je garde WPEA. Si ESE baisse à cause de la tendance générale sans franchir 33,3 €, je conserve (R1)."
+      },
+      {
+        "event": "Nanobiotix à l'UBS Global Biopharma Conference (Londres)",
+        "date": "2026-11-17",
+        "if": "NANO.PA clôture à 24,6 € ou moins sans mauvaise nouvelle de fond, et la direction confirme son calendrier clinique",
+        "then": "Ligne spéculative d'environ 150 € (5 à 6 actions), payée avec le cash. Sinon, je ne fais rien."
+      },
+      {
+        "event": "Conférence Jefferies : direction de Pharming",
+        "date": "2026-11-18",
+        "if": "Nomination d'un CEO ou relèvement des perspectives du Joenja, avec une hausse de moins de 5 % sur la séance",
+        "then": "J'achète PHARM.AS pour 150 à 200 € avec le cash. Sinon, rien."
+      },
+      {
+        "event": "Résultats Intuit, Alibaba, Futu",
+        "date": "2026-11-19",
+        "if": "Les résultats rassurent et WPEA reste vers 7,0 €, mais je n'ai pas de place sous la limite de 40 %",
+        "then": "Je peux acheter CW8.PA (même indice Monde) pour environ 150 à 200 € si un repli marqué se produit (WPEA sous 6,93 €), une seule fois. Sinon, je conserve et ne fais rien."
+      },
+      {
+        "event": "Prises de bénéfices sur Air France-KLM",
+        "date": "",
+        "if": "AF.PA recule d'au moins 8 % depuis son plus haut récent, sans nouvelle négative sur le carburant, la fiscalité ou les amendes",
+        "then": "Ligne de 150 à 200 € en AF.PA. Sinon, rien."
+      }
+    ]
+  },
+  "final_orders": [],
+  "refused": []
+}
