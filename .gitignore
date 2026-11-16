@@ -14,3 +14,4 @@ data/ledger.db
 data/usage.jsonl
 data/backups/
 data/fx.json
+data/remote_settings.json
