@@ -26,7 +26,8 @@ class FakeLLM:
             id(agents.RISK_SCHEMA): "risk", id(agents.POSTMORTEM_SCHEMA): "postmortem",
             id(agents.REPORT_SCHEMA): "report", id(agents.DAILY_REVIEW_SCHEMA): "review",
             id(agents.WEEKLY_REVIEW_SCHEMA): "weekly", id(agents.DOSSIER_SCHEMA): "dossier",
-            id(agents.RESEARCH_SCHEMA): "research", id(agents.PLAN_SCHEMA): "plan"}
+            id(agents.RESEARCH_SCHEMA): "research", id(agents.PLAN_SCHEMA): "plan",
+            id(agents.PROFILE_SCHEMA): "profile"}
 
     def __init__(self, **answers):
         self.answers, self.calls, self.tools = answers, [], {}

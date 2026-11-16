@@ -255,6 +255,23 @@ class Knowledge:
             return (date.fromisoformat(day) - date.fromisoformat(built)).days <= max_age_days
         return True
 
+    # --- Fiches des titres (qu'est-ce que c'est ?) -----------------------------------------
+    def profiles(self) -> dict:
+        return self._load("profiles.json", {})
+
+    def set_profile(self, ticker: str, profile: dict, day: str) -> None:
+        profs = self.profiles()
+        profs[ticker] = {**profile, "built": day}
+        self._save("profiles.json", profs)
+
+    def update_profiles(self, items: list[dict], day: str) -> None:
+        profs = self.profiles()
+        for it in items:
+            if it["ticker"] in profs:
+                profs[it["ticker"]].update(short=it["short"].strip(), long=it["long"].strip(),
+                                           domain=it["domain"].strip() or profs[it["ticker"]]["domain"], written=day)
+        self._save("profiles.json", profs)
+
     # --- Recherche du week-end et plan de la semaine ------------------------------------
     def save_research(self, research: dict, day: str) -> None:
         self._save(f"research/{day}.json", {"date": day, **research})

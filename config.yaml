@@ -118,6 +118,7 @@ agents:
     dossier: sonnet                  # historique 6 mois des entreprises
     review: sonnet                   # revue quotidienne
     weekly: opus                     # revue hebdomadaire
+    profile: sonnet                  # fiches « qu'est-ce que c'est ? » des titres
     research: sonnet                 # recherche web du samedi
     plan: opus                       # plan de la semaine (dimanche)
   timeout_s: 600

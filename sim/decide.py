@@ -17,7 +17,7 @@ import copy
 import json
 from datetime import date, timedelta
 
-from . import agents
+from . import agents, profiles
 from . import market_calendar as mc
 from .broker import plan_orders
 from .config import fee_grid
@@ -186,7 +186,7 @@ def run_daily_review(entry, *, as_of, cfg, store, journal: Journal, kb: Knowledg
 def run_decision(*, as_of: str, run_at, cfg: dict, store, instruments: dict, ledger: Ledger,
                  journal: Journal, news_items: list[NewsItem], kb: Knowledge, watch: dict[str, str] | None = None,
                  bench_summary: dict | None = None, executions: list[dict] | None = None, llm=claude_cli,
-                 fetch_hist=fetch_history) -> dict:
+                 fetch_hist=fetch_history, profile_fetch=None, extra_tickers=()) -> dict:
     grid = fee_grid(cfg)
     state = ledger.state()
     held = sorted(state.positions)
@@ -266,6 +266,15 @@ def run_decision(*, as_of: str, run_at, cfg: dict, store, instruments: dict, led
         final, refused = _validate_and_review(entry, chef, state, instruments, store, marks, cfg, grid,
                                               as_of, txt, market, news, ledger, kb, llm)
     entry["final_orders"], entry["refused"] = final, refused
+
+    # Fiches « qu'est-ce que c'est ? » des titres concernés (positions, ordres, candidats) : purement informatif
+    if profile_fetch is not None:
+        tickers = list(dict.fromkeys([*held, *extra_tickers, *(o["ticker"] for o in final),
+                                      *(o["ticker"].strip().upper() for o in refused), *watch,
+                                      *(r["ticker"] for r in table)]))
+        built = _call(entry, "fiches", lambda: profiles.refresh_profiles(cfg, kb, tickers, as_of, llm=llm,
+                                                                           fetch=profile_fetch))
+        learn["profiles_built"] = built or 0
 
     # 5. Prédictions et scénarios
     if chef:
@@ -423,7 +432,7 @@ def research_topics(cfg: dict, state: PortfolioState, journal: Journal, kb: Know
 
 def run_veille(*, today: str, run_at, cfg: dict, ledger: Ledger, store, journal: Journal,
                news_items: list[NewsItem], kb: Knowledge, watch: dict[str, str] | None = None,
-               kind: str = "light", llm=claude_cli, fetch_hist=fetch_history) -> dict:
+               kind: str = "light", llm=claude_cli, fetch_hist=fetch_history, profile_fetch=None) -> dict:
     """kind : light (jour férié) | research (samedi : dossiers + recherche web) | plan (dimanche : plan de la semaine)."""
     state = ledger.state()
     last = mc.previous_session(today) if not mc.is_trading_day(today) else today
@@ -474,6 +483,11 @@ def run_veille(*, today: str, run_at, cfg: dict, ledger: Ledger, store, journal:
 
     if weekly_due(kb, today, cfg):
         entry["weekly_review"] = run_weekly_review(entry, today=today, cfg=cfg, journal=journal, kb=kb, llm=llm)
+
+    if profile_fetch is not None and kind != "light":     # fiches des titres suivis (samedi et dimanche)
+        built = _call(entry, "fiches", lambda: profiles.refresh_profiles(
+            cfg, kb, [*state.positions, *watch], today, llm=llm, fetch=profile_fetch))
+        learn["profiles_built"] = built or 0
 
     if kind == "plan" and h:                                # plan de la semaine, par le chef (Opus)
         r = kb.research()

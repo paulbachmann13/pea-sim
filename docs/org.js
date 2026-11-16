@@ -30,6 +30,9 @@ const PERSONA = {
   market: { name: "Inès", title: "L'Analyste des marchés", team: "scouts", bg: "#c7d2fe", suit: "#4338ca", skin: SKIN[2],
     back: hairLongBack("#1f1f2e"), front: hairShort("#1f1f2e"),
     acc: `<rect x="39" y="44" width="19" height="15" rx="2" fill="#fff" stroke="#3730a3"/><path d="M42 56l5-6 4 3 5-7" stroke="#16a34a" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` },
+  profile: { name: "Alix", title: "Le Traducteur des titres", team: "scouts", bg: "#fef08a", suit: "#a16207", skin: SKIN[2],
+    front: hairShort("#44403c") + GLASSES,
+    acc: `<rect x="39" y="44" width="19" height="15" rx="1.5" fill="#fff" stroke="#854d0e"/><path d="M42 49h6M42 53h6M51 49h4M51 53h4" stroke="#64748b" stroke-width="1.4"/><path d="M49.5 45v13" stroke="#854d0e"/>` },
   research: { name: "Léo", title: "L'Explorateur du web", team: "scouts", bg: "#bbf7d0", suit: "#15803d", skin: SKIN[3],
     front: `<ellipse cx="32" cy="19" rx="17" ry="3.2" fill="#b45309"/><path d="M23 19c0-8 4-11 9-11s9 3 9 11z" fill="#d97706"/>`,
     acc: `<circle cx="47" cy="48" r="6" fill="#e0f2fe" fill-opacity=".85" stroke="#334155" stroke-width="2"/><path d="M51.5 52.5L58 59" stroke="#334155" stroke-width="2.8" stroke-linecap="round"/>` },
@@ -96,13 +99,13 @@ function renderOrg() {
   return `<div class="card org"><div class="card-head"><h2>Organigramme</h2><span class="muted small">touche un personnage</span></div>
     ${tier("direction", ["chef", "plan"], "boss")}
     <div class="link"><span>▲ les éclaireurs l'informent</span><span>▼ ses ordres sont contrôlés</span></div>
-    <div class="two-cols">${tier("scouts", ["news", "market", "research", "dossier"])}${tier("guards", ["validator", "risk"])}</div>
+    <div class="two-cols">${tier("scouts", ["news", "market", "research", "dossier", "profile"])}${tier("guards", ["validator", "risk"])}</div>
     <div class="link"><span>↻ tout le monde relit le playbook et s'améliore</span></div>
     <div class="two-cols">${tier("memory", ["review", "postmortem", "weekly", "report"])}${tier("backoffice", ["screener", "ledger"])}</div>
     <h3>Un soir de séance, dans l'ordre</h3>
     <ol class="flow small">
       <li><b>Sofia</b> relit la veille et propose des règles.</li>
-      <li><b>Radar</b> calcule les indicateurs ; <b>Camille</b> constitue les dossiers manquants.</li>
+      <li><b>Radar</b> calcule les indicateurs ; <b>Camille</b> constitue les dossiers manquants ; <b>Alix</b> explique en français simple ce qu'est chaque titre.</li>
       <li><b>Inès</b> (les chiffres) et <b>Julien</b> (la presse) font leurs analyses.</li>
       <li><b>Victor</b> décide les ordres, cite ses sources et chiffre ses prédictions.</li>
       <li><b>Le Douanier</b> vérifie les règles (PEA, cash, 40 %, liquidité) ; <b>Rachel</b> peut bloquer un ordre.</li>
@@ -112,6 +115,28 @@ function renderOrg() {
     <b>Victor</b> prépare le plan du dimanche. <b>Nina</b> rédige le rapport final le dernier jour.</p>
     <p class="small muted">Qui commande : <b>Victor</b> est le seul à décider. Les éclaireurs n'ont aucun pouvoir sur les ordres ; les garde-fous peuvent dire non ;
     la mémoire fait évoluer les règles que tout le monde relit. Le badge <span class="chip">opus</span> ou <span class="chip">sonnet</span> est le modèle utilisé (Opus = le plus fort, réservé aux rôles qui comptent le plus : Victor, Hélène et Nina).</p></div>`;
+}
+
+// --- Fiches des titres : « qu'est-ce que c'est ? » ----------------------------------------------------
+const prof = (t) => state.profiles?.[t];
+// Ticker cliquable (ouvre la fiche) ; le tiret du ticker reste lisible pour qui connaît la bourse
+const tkLink = (t) => `<a href="#" class="tk" data-tk="${esc(t)}"><b>${esc(t)}</b></a>`;
+// Ligne explicative sous un titre : ETF ou action, et ce que c'est
+const who = (t) => {
+  const p = prof(t);
+  return p ? `<div class="who">${p.kind === "ETF" && !p.short.startsWith("ETF") ? `<span class="chip">ETF</span> ` : ""}${esc(p.short)}</div>` : "";
+};
+
+function openProfile(t) {
+  const p = prof(t);
+  $("#day-title").textContent = p ? `${t} — ${p.name}` : t;
+  $("#day-body").innerHTML = p ? `<div class="ag-detail">
+      <p><span class="chip">${esc(p.kind === "ETF" ? "ETF (panier d'actions)" : "Action (une entreprise)")}</span>
+      ${p.domain ? `<span class="chip">${esc(p.domain)}</span>` : ""}${p.country ? `<span class="chip">${esc(p.country)}</span>` : ""}</p>
+      <p>${esc(p.long || p.short)}</p>
+      ${p.long ? "" : `<p class="small muted">Description détaillée bientôt disponible.</p>`}</div>`
+    : `<p class="empty">Pas encore de fiche pour ce titre.</p>`;
+  $("#day-dialog").showModal();
 }
 
 function openAgent(key) {
@@ -132,5 +157,7 @@ function openAgent(key) {
 
 document.addEventListener("click", (ev) => {
   const c = ev.target.closest?.("[data-agent]");
-  if (c) { ev.preventDefault(); openAgent(c.dataset.agent); }
+  if (c) { ev.preventDefault(); openAgent(c.dataset.agent); return; }
+  const t = ev.target.closest?.("[data-tk]");
+  if (t) { ev.preventDefault(); openProfile(t.dataset.tk); }
 });

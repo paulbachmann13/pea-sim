@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "2.1.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "2.2.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -76,6 +76,7 @@ async function load() {
     state.agents = await getJSON("agents.json").catch(() => null);
     state.usage = await getJSON("usage.json").catch(() => null);
     state.settings = await fetchSettings();
+    state.profiles = await getJSON("profiles.json").catch(() => null);
     render();
   } catch (e) {
     $("#subtitle").textContent = "Données indisponibles (" + e.message + ")";
@@ -214,16 +215,17 @@ function renderPositions() {
   let html = `<div class="card"><div class="card-head"><h2>Positions de l'équipe</h2><span class="muted small">cash ${eur(a.cash)}</span></div>`;
   html += s.positions.length ? `<div class="table-wrap"><table>
     <tr><th>Titre</th><th class="num">Qté</th><th class="num">PRU</th><th class="num">Cours</th><th class="num">Poids</th><th class="num">Latent</th></tr>
-    ${s.positions.map((p) => `<tr><td><b>${esc(p.ticker)}</b><br><span class="muted small">${esc(p.name)}</span></td>
+    ${s.positions.map((p) => `<tr${prof(p.ticker) ? ' class="has-sub"' : ""}><td>${tkLink(p.ticker)}${prof(p.ticker) ? "" : `<div class="muted small">${esc(p.name)}</div>`}</td>
       <td class="num">${p.qty}</td><td class="num">${eur(p.pru)}</td><td class="num">${eur(p.price)}</td>
-      <td class="num">${pct(p.weight, false)}</td><td class="num ${cls(p.pnl_pct)}">${pct(p.pnl_pct)}</td></tr>`).join("")}
+      <td class="num">${pct(p.weight, false)}</td><td class="num ${cls(p.pnl_pct)}">${pct(p.pnl_pct)}</td></tr>
+      ${prof(p.ticker) ? `<tr class="sub"><td colspan="6">${who(p.ticker)}</td></tr>` : ""}`).join("")}
   </table></div>` : `<p class="empty">Aucune position, 100 % cash.</p>`;
   html += `<p class="muted small">P&L réalisé ${eur(a.realized)} · dividendes ${eur(a.dividends)} · frais ${eur(a.fees)}</p></div>`;
 
   const p = s.pending;
   html += `<div class="card"><div class="card-head"><h2>Ordres pour la prochaine ouverture</h2>${p ? `<span class="muted small">${fmtDate(p.exec_date)}</span>` : ""}</div>`;
-  html += p?.orders?.length ? p.orders.map((o) => `<div class="item"><div class="item-head"><div>${sideChip(o.side)} <b>${o.qty} ${esc(o.ticker)}</b></div>
-      <span class="muted small">≈ ${eur(o.est_price, 4)}</span></div>
+  html += p?.orders?.length ? p.orders.map((o) => `<div class="item"><div class="item-head"><div>${sideChip(o.side)} <b>${o.qty}</b> ${tkLink(o.ticker)}</div>
+      <span class="muted small">≈ ${eur(o.est_price, 4)}</span></div>${who(o.ticker)}
       <details><summary>Thèse et plan de sortie</summary><p>${esc(o.thesis)}</p><p class="muted">Sortie : ${esc(o.exit_plan)}</p>
       ${o.risk_note ? `<p class="muted">Risque : ${esc(o.risk_note)}</p>` : ""}</details></div>`).join("")
     : `<p class="empty">Aucun ordre en attente.</p>`;
@@ -232,7 +234,7 @@ function renderPositions() {
   html += `<div class="card"><h2>Les autres portefeuilles</h2><div class="table-wrap"><table>
     <tr><th>Livre</th><th class="num">Valeur</th><th class="num">Perf.</th><th class="num">Frais</th><th>Titres</th></tr>
     ${ORDER.map((k) => { const b = s.books[k]; return `<tr><td>${esc(b.label)}</td><td class="num">${eur(last(b))}</td>
-      <td class="num ${cls(ret(b))}">${pct(ret(b))}</td><td class="num">${eur(b.fees)}</td><td class="small">${esc(b.positions.join(", ") || "–")}</td></tr>`; }).join("")}
+      <td class="num ${cls(ret(b))}">${pct(ret(b))}</td><td class="num">${eur(b.fees)}</td><td class="small">${b.positions.length ? b.positions.map(tkLink).join(", ") : "–"}</td></tr>`; }).join("")}
   </table></div></div>`;
   $("#tab-positions").innerHTML = html;
 }
@@ -243,14 +245,14 @@ function renderOrders() {
   const { fills, rejections } = state.orders;
   let html = `<div class="card"><h2>Exécutions de l'équipe</h2>`;
   html += fills.length ? fills.slice().reverse().map((f) => `<div class="item"><div class="item-head">
-      <div>${sideChip(f.side)} <b>${f.qty} ${esc(f.ticker)}</b> à ${eur(f.price, 4)}</div><span class="muted small">${fmtDate(f.date)}</span></div>
-      <div class="muted small">montant ${eur(f.amount)} · frais ${eur(f.fees)} · ouverture ${eur(f.ref_price, 4)}</div>
+      <div>${sideChip(f.side)} <b>${f.qty}</b> ${tkLink(f.ticker)} à ${eur(f.price, 4)}</div><span class="muted small">${fmtDate(f.date)}</span></div>
+      ${who(f.ticker)}<div class="muted small">montant ${eur(f.amount)} · frais ${eur(f.fees)} · ouverture ${eur(f.ref_price, 4)}</div>
       ${f.thesis ? `<details><summary>Thèse</summary><p>${esc(f.thesis)}</p><p class="muted">Sortie : ${esc(f.exit_plan)}</p></details>` : ""}
     </div>`).join("") : `<p class="empty">Aucune exécution pour l'instant.</p>`;
   html += `</div><div class="card"><h2>Ordres refusés ou bloqués</h2>`;
   const stage = { decision: "contrôle (décision)", execution: "contrôle (exécution)", risk: "gestionnaire de risque" };
   html += rejections.length ? rejections.slice().reverse().map((r) => `<div class="item"><div class="item-head">
-      <div>${sideChip(r.side)} <b>${r.qty ?? ""} ${esc(r.ticker)}</b></div><span class="muted small">${fmtDate(r.date)}</span></div>
+      <div>${sideChip(r.side)} <b>${r.qty ?? ""}</b> ${tkLink(r.ticker)}</div><span class="muted small">${fmtDate(r.date)}</span></div>${who(r.ticker)}
       <div class="small"><span class="chip warn">${stage[r.stage] || r.stage}</span>${esc(r.reason)}</div></div>`).join("")
     : `<p class="empty">Aucun refus.</p>`;
   $("#tab-orders").innerHTML = html + `</div>`;
@@ -292,7 +294,7 @@ async function openDay(file) {
     if (misc.length) lp.push(`<p class="small muted">${esc(misc.join(" · "))}</p>`);
     if (lp.length) parts.push(`<h3>Apprentissage du jour</h3>${lp.join("")}`);
   }
-  if (e.final_orders?.length) parts.push(`<h3>Ordres retenus</h3>${e.final_orders.map((o) => `<div class="item">${sideChip(o.side)} <b>${o.qty} ${esc(o.ticker)}</b>
+  if (e.final_orders?.length) parts.push(`<h3>Ordres retenus</h3>${e.final_orders.map((o) => `<div class="item">${sideChip(o.side)} <b>${o.qty}</b> ${tkLink(o.ticker)}${who(o.ticker)}
     <p class="small">${esc(o.thesis)}</p>
     ${(o.catalysts || []).map((c) => `<p class="small">📰 <b>${esc(c.title)}</b> <span class="muted">(${esc(c.date)}, ${esc(c.source_id)})</span> → ${esc(c.link)}</p>`).join("")}
     ${o.prediction ? `<p class="small">Prédiction : ${dirTxt(o.prediction)}${o.rules_applied?.length ? ` · règles ${esc(o.rules_applied.join(", "))}` : ""}</p>` : ""}
@@ -435,7 +437,7 @@ function planHtml(p) {
   const ev = p.key_events.map((e) => `<p class="small">📅 <b>${e.date ? esc(fmtDate(e.date)) : "date à préciser"}</b> · ${esc(e.event)}${e.tickers?.length ? ` <span class="muted">(${esc(e.tickers.join(", "))})</span>` : ""}<br><span class="muted">${esc(e.impact)}</span></p>`).join("");
   return `<p class="small">${esc(p.outlook)}</p><p class="small"><b>Lundi</b> : ${esc(p.monday_plan)}</p><p class="small"><b>Cash</b> : ${esc(p.cash_policy)}</p>
     ${ev}${p.scenarios.map((s) => `<p class="small">→ <b>${esc(s.event)}</b> : si ${esc(s.if)}, ${esc(s.then)}</p>`).join("")}
-    ${p.watchlist.map((x) => `<p class="small">👁 <b>${esc(x.ticker)}</b> : ${esc(x.why)} <span class="muted">(entrée si ${esc(x.entry_condition)})</span></p>`).join("")}
+    ${p.watchlist.map((x) => `<p class="small">👁 ${tkLink(x.ticker)}${prof(x.ticker) ? ` <span class="muted">(${esc(prof(x.ticker).name)})</span>` : ""} : ${esc(x.why)} <span class="muted">(entrée si ${esc(x.entry_condition)})</span></p>`).join("")}
     ${p.risks.length ? `<p class="small muted">Risques : ${esc(p.risks.join(" ; "))}</p>` : ""}`;
 }
 
@@ -522,7 +524,7 @@ function renderLearning() {
 
   const preds = k.predictions.slice().reverse();
   const open = preds.filter((p) => p.status === "open"), done = preds.filter((p) => p.status === "resolved").slice(0, 20);
-  const predHtml = (p) => `<div class="item small"><div class="item-head"><span><b>${esc(p.id)} ${esc(p.ticker)}</b> <span class="muted">${esc(p.kind)}</span></span>
+  const predHtml = (p) => `<div class="item small"><div class="item-head"><span><b>${esc(p.id)}</b> ${tkLink(p.ticker)}${prof(p.ticker) ? ` <span class="muted">(${esc(prof(p.ticker).name)})</span>` : ""} <span class="muted">${esc(p.kind)}</span></span>
     <span>${p.status === "resolved" ? `<b class="${p.hit ? "pos" : "neg"}">${p.hit ? "✓ réussie" : "✗ ratée"}</b> ${pct(p.return_pct)}` : `échéance ${fmtDate(p.target_date)}`}</span></div>
     <div>${dirTxt(p)}${p.rules?.length ? ` · règles ${esc(p.rules.join(", "))}` : ""}</div><div class="muted">${esc(p.thesis).slice(0, 220)}</div></div>`;
   cards.push(`<div class="card"><h2>Registre des prédictions</h2>

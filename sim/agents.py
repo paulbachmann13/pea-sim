@@ -137,6 +137,11 @@ PLAN_SCHEMA = _obj({
     "risks": _arr(_str()),
     "cash_policy": _str("part de cash visée et pourquoi"),
 })
+PROFILE_SCHEMA = _obj({
+    "profiles": _arr(_obj({"ticker": _str(), "domain": _str("domaine en 1 à 4 mots, ex. « Biotechnologie »"),
+                           "short": _str("une ligne (100 caractères max) : ce que c'est"),
+                           "long": _str("2 à 3 phrases simples : ce que fait l'entreprise et comment elle gagne de l'argent")})),
+})
 REPORT_SCHEMA = _obj({
     "verdict": _str(), "what_worked": _arr(_str()), "what_failed": _arr(_str()), "fees_impact": _str(),
     "process": _str(), "lessons": _arr(_str()),
@@ -315,6 +320,18 @@ def dossier_writer(cfg, *, as_of, companies, tickers, llm=claude_cli):
                       ("Titres de presse des 6 derniers mois, par entreprise", companies))
     return ask("dossier", prompt, system_prompt("dossier.md", cfg), DOSSIER_SCHEMA, cfg,
                check=check_set("companies", "ticker", tickers), llm=llm)
+
+
+def profile_writer(cfg, *, companies: str, tickers: list[str], llm=claude_cli):
+    def check(obj):
+        check_set("profiles", "ticker", tickers)(obj)
+        for p in obj["profiles"]:
+            if not p["short"].strip() or not p["long"].strip():
+                raise ValueError(f"{p['ticker']} : fiche vide")
+            if len(p["short"]) > 130:
+                raise ValueError(f"{p['ticker']} : description courte trop longue ({len(p['short'])} caractères, max 100)")
+    return ask("profile", sections(("Entreprises à présenter", companies)), system_prompt("profile.md", cfg),
+               PROFILE_SCHEMA, cfg, check=check, llm=llm)
 
 
 def report_writer(cfg, *, stats: str, trades: str, postmortems: str, journal: str, llm=claude_cli):

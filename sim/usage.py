@@ -20,7 +20,7 @@ from zoneinfo import ZoneInfo
 
 PARIS = ZoneInfo("Europe/Paris")
 TIERS = {"chef": 1, "risk": 1, "report": 1, "market": 2, "news": 2, "review": 2, "postmortem": 2, "plan": 2,
-         "dossier": 3, "research": 3, "weekly": 3}
+         "dossier": 3, "research": 3, "weekly": 3, "profile": 3}
 RESET_RE = re.compile(r"resets (\d{1,2}(?::\d{2})?\s?[ap]m(?: \([^)]*\))?)", re.I)
 
 

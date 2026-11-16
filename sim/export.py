@@ -7,6 +7,7 @@ from .decide import horizon
 from .journal import Journal, read_json, write_json
 from .fx import usd_to_eur
 from .knowledge import Knowledge
+from .profiles import etf_profiles
 from .usage import Usage, summarize
 from .ledger import Ledger
 
@@ -37,6 +38,7 @@ LLM_AGENTS = [
     ("dossier", "Dossiers entreprises", ("dossiers", "historique"), "Constitue l'historique 6 mois des titres suivis (une fois par titre)"),
     ("postmortem", "Post-mortems", ("post-mortems",), "Analyse chaque position clôturée (quand il y en a)"),
     ("weekly", "Revue hebdomadaire", ("revue hebdomadaire",), "Fait le ménage du playbook, une fois par semaine (week-end)"),
+    ("profile", "Fiches des titres", ("fiches",), "Explique en français simple ce qu'est chaque titre (entreprise, secteur, ETF)"),
     ("research", "Recherche web", ("recherche web",), "Samedi : lit de vraies pages (calendrier, résultats, thèmes) avec sources"),
     ("plan", "Plan de la semaine", ("plan de la semaine",), "Dimanche : le chef prépare des scénarios « si X alors Y » pour lundi"),
     ("report", "Rapport final", ("rapport final",), "Rédige l'analyse de fin de simulation (dernier jour)"),
@@ -91,6 +93,14 @@ def export_agents(cfg: dict, root: Path, warnings=()) -> None:
     write_json(root / "docs" / "data" / "agents.json",
                {"last_run": {"date": last["date"], "mode": last["mode"], "run_at": last.get("run_at")},
                 "agents": agents, "history": history})
+
+
+def export_profiles(cfg: dict, root: Path, out: Path) -> None:
+    """Fiches « qu'est-ce que c'est ? » : ETF rédigés à la main + actions (nom, domaine, pays, description)."""
+    kb = Knowledge(root / cfg["knowledge"]["dir"])
+    stocks = {t: {k: v for k, v in p.items() if k in ("name", "kind", "domain", "country", "short", "long")}
+              for t, p in kb.profiles().items()}
+    write_json(out / "profiles.json", {**stocks, **etf_profiles()})
 
 
 def export_usage(cfg: dict, root: Path) -> None:
@@ -181,6 +191,7 @@ def export_dashboard(cfg: dict, root: Path, ledgers: dict[str, Ledger], journal:
     write_json(out / "journal" / "index.json", sorted(index, key=lambda x: x["file"], reverse=True))
     write_json(out / "postmortems.json", journal.postmortems())
     export_knowledge(cfg, root, out, as_of)
+    export_profiles(cfg, root, out)
     export_usage(cfg, root)
     report = journal.root / "rapport-final.json"
     if report.exists():

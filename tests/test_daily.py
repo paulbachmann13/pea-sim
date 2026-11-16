@@ -1,5 +1,6 @@
 """Simulation complète de bout en bout avec sources et LLM factices."""
 import json
+import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -34,6 +35,9 @@ PLAN = {"outlook": "semaine porteuse", "monday_plan": "attendre les résultats",
         "key_events": [{"date": "2026-11-25", "event": "Résultats AAA", "tickers": ["AAA.PA"], "impact": "fort"}],
         "scenarios": [{"event": "Résultats AAA", "date": "2026-11-25", "if": "résultats > attentes", "then": "acheter AAA"}],
         "watchlist": [{"ticker": "AAA.PA", "why": "contrat", "entry_condition": "repli de 3 %"}]}
+PROFILE = lambda p: {"profiles": [{"ticker": t, "domain": "Énergie", "short": f"Entreprise {t}", "long": "Elle produit de l'énergie."}
+                                  for t in re.findall(r"^### (\S+)", p, re.M)]}
+FAKE_INFO = lambda t: {"name": f"{t} SA", "sector": "Energy", "industry": "Oil", "country": "France", "summary": "Energy company."}
 REVIEW = {"review": "r", "decisions": [], "playbook_ops": [], "insights": []}
 WEEKLY = {"summary": "s", "recurring_errors": [], "biases": [], "playbook_ops": [], "insights": [],
           "obsolete_insights": [], "notes_updates": []}
@@ -72,7 +76,7 @@ def sim(tmp_path, cfg):
         return chef_with()
 
     llm = FakeLLM(market=MARKET, news=NEWS, chef=chef, risk=risk_all(), postmortem=PM, report=REPORT,
-                  review=REVIEW, weekly=WEEKLY, research=RESEARCH, plan=PLAN)
+                  review=REVIEW, weekly=WEEKLY, research=RESEARCH, plan=PLAN, profile=PROFILE)
     cfg["data"]["market_db"] = "market.db"
     (tmp_path / "data").mkdir()
 
@@ -80,7 +84,7 @@ def sim(tmp_path, cfg):
         news = lambda c, w: ([NewsItem(f"n{d}", "test", "AAA.PA", f"AAA : nouvelle du {d}", "",
                                        f"{d}T10:00:00+00:00", "")], [])
         return daily.run(at(d, h), cfg, tmp_path, llm=llm, refresh=refresh, fetch=news,
-                         fetch_hist=lambda c, n, a: [], **kw)
+                         fetch_hist=lambda c, n, a: [], fetch_profile=FAKE_INFO, **kw)
 
     return {"go": go, "root": tmp_path, "llm": llm, "cfg": cfg, "store": store}
 
@@ -157,6 +161,9 @@ def test_full_simulation(sim):
     orders = json.loads((root / "docs" / "data" / "orders.json").read_text(encoding="utf-8"))
     assert orders["fills"][0]["thesis"] == "thèse AAA.PA"
     assert (root / "docs" / "data" / "report.json").exists()
+    profs = json.loads((root / "docs" / "data" / "profiles.json").read_text(encoding="utf-8"))
+    assert profs["AAA.PA"]["short"] == "Entreprise AAA.PA" and profs["AAA.PA"]["kind"] == "Action"   # fiche d'une action
+    assert profs["WPEA.PA"]["kind"] == "ETF" and "MSCI World" in profs["WPEA.PA"]["long"]            # fiche d'un ETF
     know = json.loads((root / "docs" / "data" / "knowledge.json").read_text(encoding="utf-8"))
     assert know["playbook"][0]["id"] == "R1" and know["calibration"]["n"] >= 2 and know["log"]
     index = json.loads((root / "docs" / "data" / "journal" / "index.json").read_text(encoding="utf-8"))

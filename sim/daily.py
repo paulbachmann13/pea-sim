@@ -41,6 +41,7 @@ from .llm import BudgetSkip, claude_cli
 from .models import BUY, Order
 from .money import D, cents
 from .news import NewsStore, fetch_news, select_items
+from .profiles import fetch_info
 from .publish import publish
 from .refresh import refresh_market_data
 from .remote_settings import apply_remote_settings, fetch_remote_settings
@@ -104,7 +105,7 @@ def final_session(env: Env, today: str) -> str | None:
 
 def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm=claude_cli,
         refresh=refresh_market_data, fetch=fetch_news, fetch_hist=fetch_history,
-        fetch_settings=fetch_remote_settings) -> RunResult:
+        fetch_settings=fetch_remote_settings, fetch_profile=fetch_info) -> RunResult:
     applied = apply_remote_settings(cfg, root, fetch_settings)      # mode / pause choisis depuis la PWA
     if applied:
         log.info(applied)
@@ -117,9 +118,9 @@ def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm
         today = last           # run du dernier jour manqué : on clôture à la dernière séance
     with run_lock(root / "data" / "run.lock"):
         if mc.is_trading_day(today):
-            result = trading_run(env, now, today, force, llm, refresh, fetch, fetch_hist)
+            result = trading_run(env, now, today, force, llm, refresh, fetch, fetch_hist, fetch_profile)
         else:
-            result = veille_run(env, now, today, force, llm, fetch, fetch_hist)
+            result = veille_run(env, now, today, force, llm, fetch, fetch_hist, fetch_profile)
         if result.mode != "skip":
             try:
                 publish(cfg, root, f"run {today} ({result.mode})")
@@ -151,7 +152,8 @@ def record_status(cfg: dict, root: Path, now: datetime, mode: str, title: str, w
 
 # --- Jour de séance ---------------------------------------------------------------
 
-def trading_run(env: Env, now, today, force, llm, refresh, fetch, fetch_hist=fetch_history) -> RunResult:
+def trading_run(env: Env, now, today, force, llm, refresh, fetch, fetch_hist=fetch_history,
+                fetch_profile=None) -> RunResult:
     cfg, j = env.cfg, env.journal
     if j.is_complete(today) and not force:
         return RunResult("skip", "PEA sim", f"Run du {today} déjà effectué.")
@@ -204,7 +206,8 @@ def trading_run(env: Env, now, today, force, llm, refresh, fetch, fetch_hist=fet
         entry = run_decision(as_of=today, run_at=now, cfg=cfg, store=store, instruments=instruments,
                              ledger=env.agents, journal=j, news_items=news_items, kb=env.kb, watch=watch,
                              bench_summary=snaps["benchmark"], executions=executions, llm=llm,
-                             fetch_hist=fetch_hist)
+                             fetch_hist=fetch_hist, profile_fetch=fetch_profile,
+                             extra_tickers=sorted({t for led in env.ledgers.values() for t in led.state().positions}))
         if pms or pm_changes:
             entry["learning"]["postmortems"] = [p["trade_id"] for p in pms]
             entry["learning"]["playbook_changes"] = pm_changes + entry["learning"]["playbook_changes"]
@@ -388,7 +391,7 @@ def veille_kind(today: str) -> str:
     return {5: "research", 6: "plan"}.get(date.fromisoformat(today).weekday(), "light")
 
 
-def veille_run(env: Env, now, today, force, llm, fetch, fetch_hist=fetch_history) -> RunResult:
+def veille_run(env: Env, now, today, force, llm, fetch, fetch_hist=fetch_history, fetch_profile=None) -> RunResult:
     cfg, j = env.cfg, env.journal
     if j.is_complete(today, "veille") and not force:
         return RunResult("skip", "PEA sim", f"Veille du {today} déjà effectuée.")
@@ -407,7 +410,8 @@ def veille_run(env: Env, now, today, force, llm, fetch, fetch_hist=fetch_history
             warnings.append(f"liste de titres du week-end : {e}")
     news_items = _news_window(env, now, fetch, watch, warnings)
     entry = run_veille(today=today, run_at=now, cfg=cfg, ledger=env.agents, store=store, journal=j,
-                       news_items=news_items, kb=env.kb, watch=watch, kind=kind, llm=llm, fetch_hist=fetch_hist)
+                       news_items=news_items, kb=env.kb, watch=watch, kind=kind, llm=llm, fetch_hist=fetch_hist,
+                       profile_fetch=fetch_profile)
     warnings += entry["errors"]
     if env.agents.last_snapshot_date():
         export_dashboard(cfg, env.root, env.ledgers, j, store, env.agents.last_snapshot_date(), universe)
