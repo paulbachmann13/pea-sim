@@ -80,6 +80,9 @@ def test_mid_simulation_deposit(sim):
     rnd = env.ledgers["random"].fills()
     assert {f.date for f in rnd} == {"2026-11-17", "2026-11-18"}         # nouveau lot, tiré au sort, pas avant
     assert sum(f.amount for f in rnd if f.date == "2026-11-18") > D(3000)  # le nouveau lot emploie bien le versement
+    large = env.ledgers["random_large"].fills()                          # 2e aléatoire : lot par versement, grille low-cost
+    assert {f.date for f in large} == {"2026-11-17", "2026-11-18"} and all(f.fees < D("2.5") for f in large)
+    assert len({f.ticker for f in large if f.date == "2026-11-18"}) == min(5, sim["cfg"]["simulation"]["random_large_picks"])
     chef_prompt = [p for r, p in llm.calls if r == "chef"][-1]
     assert "1000.00 € le 2026-11-16; 4000.00 € le 2026-11-17" in chef_prompt and "total déposé 5000.00 €" in chef_prompt
 
@@ -105,3 +108,13 @@ def test_deposit_is_guarded(sim):
     assert env.agents.state().deposits == D(9000)
     with pytest.raises(ValueError, match="positif"):
         add_deposit(env, sim["store"], -5, "2026-11-17")
+
+
+def test_resumed_run_rebuilds_executions_from_the_ledger(sim):
+    go, root = sim["go"], sim["root"]
+    env = daily.open_env(sim["cfg"], root)
+    go("2026-11-16")
+    go("2026-11-17")
+    ex = daily.fills_as_executions(env.agents, "2026-11-17")
+    assert [(e["ticker"], e["side"], e["qty"], e["filled"]) for e in ex] == [("AAA.PA", "BUY", 20, True)]
+    assert daily.fills_as_executions(env.agents, "2026-11-16") == []

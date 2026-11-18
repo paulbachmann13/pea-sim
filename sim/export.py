@@ -12,7 +12,8 @@ from .usage import Usage, summarize
 from .ledger import Ledger
 
 LABELS = {"agents": "Équipe d'agents", "agents_lowcost": "Agents, grille low-cost",
-          "benchmark": "ETF Monde (buy & hold)", "random": "Aléatoire (contrôle)"}
+          "benchmark": "ETF Monde (buy & hold)", "random": "Aléatoire (4 titres)",
+          "random_large": "Aléatoire large (20 titres)"}
 
 
 def _f(x):

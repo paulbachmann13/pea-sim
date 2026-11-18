@@ -77,6 +77,7 @@ simulation:
   compare_grid: lowcost              # livre fantôme : mêmes ordres que les agents, avec cette grille
   random_seed: 2026                  # portefeuille aléatoire de contrôle
   random_picks: 4
+  random_large_picks: 20             # 2e portefeuille aléatoire, plus diversifié (grille low-cost, pas de limite d'ordres)
 
 # --- Alertes (e-mail SMTP et/ou push ntfy) -----------------------------------
 # Envoyées seulement en cas de problème (run planté, agent en erreur, données manquantes…)

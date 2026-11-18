@@ -170,11 +170,18 @@ def test_history_excludes_future(cfg, monkeypatch):
       <item><title>Futur</title><link>c</link><pubDate>Fri, 13 Nov 2026 09:00:00 GMT</pubDate></item>
     </channel></rss>""".encode()
 
+    codes = iter([429, 200] + [200] * 50)                                  # un 429 passager, puis ça passe
+
     class R:
         content = rss
 
+        def __init__(self):
+            self.status_code = next(codes)
+
         def raise_for_status(self):
-            pass
+            if self.status_code >= 400:
+                raise RuntimeError(self.status_code)
     monkeypatch.setattr("sim.dossier.requests.get", lambda *a, **k: R())
+    monkeypatch.setattr("sim.dossier.time.sleep", lambda s: None)
     items = fetch_history(cfg, "AAA", DAY)
     assert [i.title for i in items] == ["Ancien"]                          # strictement avant la décision

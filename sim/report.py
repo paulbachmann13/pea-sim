@@ -14,7 +14,8 @@ from .llm import LLMError, claude_cli
 from .money import cents
 
 LABELS = {"agents": "Équipe d'agents", "agents_lowcost": "Agents, grille low-cost",
-          "benchmark": "ETF Monde (buy & hold)", "random": "Aléatoire (contrôle)"}
+          "benchmark": "ETF Monde (buy & hold)", "random": "Aléatoire (4 titres)",
+          "random_large": "Aléatoire large (20 titres)"}
 
 
 def trades_with_marks(led: Ledger, store, as_of: str) -> list[dict]:

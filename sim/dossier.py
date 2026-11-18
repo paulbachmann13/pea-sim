@@ -5,6 +5,7 @@ strictement avant la date de décision (aucune information future), puis un LLM 
 (résultats, annonces, acquisitions, cessions, produits, contrats, direction…), les tendances du secteur
 et les perspectives. Le dossier est construit une fois par titre, puis tenu à jour par l'analyste actualité.
 """
+import time
 from datetime import date, timedelta
 from urllib.parse import quote
 
@@ -17,6 +18,17 @@ from .llm import claude_cli
 from .news import NewsItem, parse_feed
 
 
+def _get(url: str, tries: int = 4, pause: float = 1.0):
+    """GET espacé, avec attente croissante si Google News répond « trop de requêtes » (429)."""
+    for n in range(tries):
+        time.sleep(pause)
+        r = requests.get(url, headers=HTTP_HEADERS, timeout=20)
+        if r.status_code != 429 or n == tries - 1:
+            r.raise_for_status()
+            return r
+        time.sleep(5 * 2 ** n)
+
+
 def fetch_history(cfg: dict, name: str, as_of: str) -> list[NewsItem]:
     k = cfg["knowledge"]
     end = date.fromisoformat(as_of)
@@ -26,8 +38,7 @@ def fetch_history(cfg: dict, name: str, as_of: str) -> list[NewsItem]:
     for i in range(k["dossier_windows"]):
         a, b = start + step * i, start + step * (i + 1)
         url = cfg["news"]["history_feed"].format(name=quote(name), start=a.isoformat(), end=b.isoformat())
-        r = requests.get(url, headers=HTTP_HEADERS, timeout=20)
-        r.raise_for_status()
+        r = _get(url)
         for it in parse_feed(r.content, "historique"):
             if it.published[:10] < as_of and it.title not in seen:      # strictement avant la décision
                 seen.add(it.title)

@@ -1,14 +1,14 @@
 :root {
   --bg: #f6f7f9; --card: #ffffff; --text: #111827; --muted: #6b7280; --line: #e5e7eb;
   --pos: #047857; --neg: #b91c1c; --accent: #2563eb; --chip: #eef2ff;
-  --s-agents: #2563eb; --s-agents_lowcost: #93c5fd; --s-benchmark: #f59e0b; --s-random: #9ca3af;
+  --s-agents: #2563eb; --s-agents_lowcost: #93c5fd; --s-benchmark: #f59e0b; --s-random: #9ca3af; --s-random_large: #a78bfa;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0b1020; --card: #131a2e; --text: #e5e7eb; --muted: #94a3b8; --line: #243049;
     --pos: #34d399; --neg: #f87171; --accent: #60a5fa; --chip: #1e2a4a;
-    --s-agents: #60a5fa; --s-agents_lowcost: #1d4ed8; --s-benchmark: #fbbf24; --s-random: #64748b;
+    --s-agents: #60a5fa; --s-agents_lowcost: #1d4ed8; --s-benchmark: #fbbf24; --s-random: #64748b; --s-random_large: #c4b5fd;
     color-scheme: dark;
   }
 }

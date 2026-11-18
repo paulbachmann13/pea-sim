@@ -1,12 +1,12 @@
 ﻿"use strict";
 
-const APP_VERSION = "2.2.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "2.3.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
 };
-const ORDER = ["agents", "benchmark", "random", "agents_lowcost"];
-const SHORT = { agents: "Équipe", agents_lowcost: "Équipe low-cost", benchmark: "ETF Monde", random: "Aléatoire" };
+const ORDER = ["agents", "benchmark", "random", "random_large", "agents_lowcost"];
+const SHORT = { agents: "Équipe", agents_lowcost: "Équipe low-cost", benchmark: "ETF Monde", random: "Aléatoire", random_large: "Aléatoire large" };
 const state = {};
 
 // --- Utilitaires -------------------------------------------------------------
@@ -164,7 +164,8 @@ function renderKpis() {
   const cards = [
     ["Séance", h ? `${h.session_no} / ${s.total_sessions}` : "–", h ? `fin le ${fmtDate(h.end)}` : "départ ce soir"],
     ["vs ETF Monde", `<span class="${cls(gap("benchmark"))}">${pct(gap("benchmark"))}</span>`, `ETF ${pct(ret(b.benchmark))}`],
-    ["vs Aléatoire", `<span class="${cls(gap("random"))}">${pct(gap("random"))}</span>`, `Aléatoire ${pct(ret(b.random))}`],
+    ["vs Aléatoire", `<span class="${cls(gap("random"))}">${pct(gap("random"))}</span>`,
+      `4 titres ${pct(ret(b.random))}` + (b.random_large ? ` · 20 titres ${pct(ret(b.random_large))}` : "")],
     ["Frais payés", eur(a.fees), `low-cost : ${eur(b.agents_lowcost.fees)}`],
   ];
   $("#kpis").innerHTML = cards.map(([l, v, s]) =>

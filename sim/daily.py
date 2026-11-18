@@ -16,6 +16,7 @@ Livres comptables (même base, isolés) :
   agents_lowcost  les mêmes ordres, grille de comparaison
   benchmark       ETF Monde acheté au 1er jour et conservé
   random          N titres liquides tirés au sort au 1er jour et conservés
+  random_large    idem avec 20 titres (repère statistique plus fiable)
 """
 import logging
 import os
@@ -51,7 +52,8 @@ from .supabase_sync import sync_docs
 from .universe import build_instruments, load_universe, prefilter
 
 log = logging.getLogger(__name__)
-BOOKS = ["agents", "agents_lowcost", "benchmark", "random"]
+BOOKS = ["agents", "agents_lowcost", "benchmark", "random", "random_large"]
+RANDOM_BOOKS = ("random", "random_large")
 
 
 @dataclass
@@ -174,6 +176,7 @@ def trading_run(env: Env, now, today, force, llm, refresh, fetch, fetch_hist=fet
         warnings.append(f"cours manquants aujourd'hui : {', '.join(missing)}")
 
     executions = process_sessions(env, store, instruments, pending, today, warnings)
+    executions = executions or fills_as_executions(env.agents, today)       # run repris après une panne
     snaps = {b: led.snapshot(today, store.marks(list(led.state().positions), today))
              for b, led in env.ledgers.items()}
 
@@ -242,6 +245,21 @@ def process_sessions(env: Env, store, instruments, pending, today, warnings) -> 
     return executions
 
 
+def fills_as_executions(led: Ledger, d: str) -> list[dict]:
+    """Exécutions du jour relues dans le grand livre (si un run interrompu les avait déjà enregistrées)."""
+    return [{"ticker": f.ticker, "side": f.side, "qty_requested": f.qty, "filled": True, "qty": f.qty,
+             "price": str(f.price), "fees": str(f.fees), "reason": ""} for f in led.fills() if f.date == d]
+
+
+def investable(led: Ledger, d: str) -> Decimal:
+    """Cash à investir à la séance `d` : seulement s'il y a un versement NOUVEAU (daté avant `d`, au plus tôt le jour
+    du dernier achat) ; le petit reste d'un achat précédent n'est pas réinvesti tout seul."""
+    fills = led.fills()
+    last_fill = max((f.date for f in fills), default=None)
+    fresh = any(dd < d and (last_fill is None or dd >= last_fill) for dd, _ in led.deposit_events())
+    return led.state().cash - led.deposits_since(d) if fresh else Decimal("0")
+
+
 def invest_passive_books(env: Env, store, instruments, d: str, warnings: list[str]) -> None:
     """Benchmark (ETF Monde) et portefeuille aléatoire investissent l'argent disponible, y compris les versements
     ultérieurs. Un versement daté de `d` n'est investissable qu'à la séance suivante : c'est la première ouverture
@@ -249,25 +267,18 @@ def invest_passive_books(env: Env, store, instruments, d: str, warnings: list[st
     cfg = env.cfg
     minimum = D(cfg["benchmark"].get("min_cash_to_invest", 50))        # pas d'achats de miettes de cash
 
-    def investable(led: Ledger) -> Decimal:
-        """Cash à investir : seulement s'il y a un versement NOUVEAU (daté avant `d`, au plus tôt le jour du dernier
-        achat) ; le petit reste d'un achat précédent n'est pas réinvesti tout seul."""
-        fills = led.fills()
-        last_fill = max((f.date for f in fills), default=None)
-        fresh = any(dd < d and (last_fill is None or dd >= last_fill) for dd, _ in led.deposit_events())
-        return led.state().cash - led.deposits_since(d) if fresh else Decimal("0")
-
     bench_led, bench = env.ledgers["benchmark"], cfg["benchmark"]["ticker"]
-    avail = investable(bench_led)
+    avail = investable(bench_led, d)
     if avail >= minimum:
         p = store.price(bench, d, "open")
         if p is None:
             warnings.append(f"benchmark {bench} sans cours d'ouverture le {d}, achat reporté")
         else:
             buy_max(bench_led, bench, p, cfg, fee_grid(cfg), d, cash=avail)
-    avail = investable(env.ledgers["random"])
-    if avail >= minimum:
-        buy_random(env, store, instruments, mc.previous_session(d), d, cash=avail)
+    for book in RANDOM_BOOKS:
+        avail = investable(env.ledgers[book], d)
+        if avail >= minimum:
+            buy_random(env, store, instruments, mc.previous_session(d), d, cash=avail, book=book)
 
 
 def credit_dividends(env: Env, store, d: str) -> None:
@@ -306,11 +317,17 @@ def execute_pending(env: Env, store, instruments, pending, d, warnings) -> list[
              "reason": o.verdict.reason} for o in outcomes]
 
 
-def buy_random(env: Env, store, instruments, decision_date: str, d: str, cash=None) -> None:
+def buy_random(env: Env, store, instruments, decision_date: str, d: str, cash=None, book: str = "random") -> None:
     """Tire au sort des actions liquides (connues à la date de décision) et répartit `cash` à parts égales.
-    Chaque lot (premier achat, puis chaque versement) a son propre tirage, reproductible."""
-    cfg, led = env.cfg, env.ledgers["random"]
-    n = cfg["simulation"]["random_picks"]
+    Chaque lot (premier achat, puis chaque versement) a son propre tirage, reproductible.
+    `random_large` : beaucoup plus de titres (repère statistique plus fiable), donc sans limite d'ordres par jour
+    et avec la grille low-cost (1 € par ordre), sinon les frais fixes de 2,50 € écraseraient des lots de 50 €."""
+    cfg, led = env.cfg, env.ledgers[book]
+    large = book == "random_large"
+    n = cfg["simulation"]["random_large_picks" if large else "random_picks"]
+    seed = cfg["simulation"]["random_seed"] + (1000 if large else 0)
+    run_cfg = {**cfg, "limits": {**cfg["limits"], "max_orders_per_day": n}} if large else cfg
+    grid = fee_grid(cfg, cfg["simulation"]["compare_grid"]) if large else fee_grid(cfg)
     batch = len({f.date for f in led.fills()})
     budget = (led.state().cash if cash is None else D(cash)) / n
     threshold = D(cfg["liquidity"]["min_avg_daily_volume_eur"])
@@ -318,11 +335,11 @@ def buy_random(env: Env, store, instruments, decision_date: str, d: str, cash=No
                         if i.kind == "equity" and (i.avg_daily_volume_eur or 0) >= threshold
                         and (c := store.price(t, decision_date)) is not None and c < budget * D("0.9")
                         and store.price(t, d, "open") is not None)
-    picks = random.Random(cfg["simulation"]["random_seed"] + batch).sample(candidates, min(n, len(candidates)))
+    picks = random.Random(seed + batch).sample(candidates, min(n, len(candidates)))
     orders = [Order(t, BUY, int((budget - 3) / store.price(t, decision_date))) for t in picks]
     orders = [o for o in orders if o.qty > 0]
     opens = {o.ticker: store.price(o.ticker, d, "open") for o in orders}
-    execute_orders(led, orders, opens, {}, instruments, cfg, fee_grid(cfg), d)
+    execute_orders(led, orders, opens, _open_marks(store, led, d), instruments, run_cfg, grid, d)
 
 
 def collect_news(env: Env, store, universe, instruments, now, today, fetch, warnings) -> list:
@@ -355,7 +372,8 @@ def daily_message(env: Env, h, snaps, executions, entry, mode) -> tuple[str, str
     title = f"PEA sim J{h['session_no']}/{total_sessions} : {cents(a['total'])} € ({a['return_pct']:+.2f} %)"
     if mode == "final":
         title = "🏁 " + title + " — FIN"
-    labels = {"benchmark": "ETF Monde", "random": "Aléatoire", "agents_lowcost": "Agents low-cost"}
+    labels = {"benchmark": "ETF Monde", "random": "Aléatoire", "random_large": "Aléatoire large",
+              "agents_lowcost": "Agents low-cost"}
     lines = [" | ".join(f"{labels[b]} {cents(snaps[b]['total'])} € ({snaps[b]['return_pct']:+.2f} %)"
                         for b in labels)]
     if executions:
