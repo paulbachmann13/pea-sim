@@ -118,3 +118,19 @@ def test_resumed_run_rebuilds_executions_from_the_ledger(sim):
     ex = daily.fills_as_executions(env.agents, "2026-11-17")
     assert [(e["ticker"], e["side"], e["qty"], e["filled"]) for e in ex] == [("AAA.PA", "BUY", 20, True)]
     assert daily.fills_as_executions(env.agents, "2026-11-16") == []
+
+
+def test_monthly_table_separates_market_from_team_choices(tmp_path, cfg):
+    from sim.report import monthly_table
+    books = {b: Ledger(tmp_path / "l.db", b) for b in ("agents", "benchmark", "random", "random_large")}
+    for led in books.values():
+        led.deposit("2026-11-12", 1000)
+    snaps(books["agents"], [("2026-11-12", 1000), ("2026-12-11", 1100), ("2026-12-14", 1155)])
+    snaps(books["benchmark"], [("2026-11-12", 1000), ("2026-12-11", 1050), ("2026-12-14", 1050)])
+    for b in ("random", "random_large"):
+        snaps(books[b], [("2026-11-12", 1000), ("2026-12-11", 900), ("2026-12-14", 900)])
+    m1, m2 = monthly_table(cfg, books, "2026-12-14")
+    assert (m1["month"], m1["to"], m1["partial"]) == (1, "2026-12-11", False)
+    assert m1["books"]["agents"] == 10 and m1["vs_etf"] == 5 and m1["vs_random"] == 20
+    assert (m2["month"], m2["from"], m2["partial"]) == (2, "2026-12-11", True)
+    assert m2["books"]["agents"] == 5 and m2["books"]["benchmark"] == 0 and m2["vs_etf"] == 5

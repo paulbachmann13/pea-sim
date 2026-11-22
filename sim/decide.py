@@ -34,17 +34,20 @@ from .screener import breadth, format_table, screen, select
 
 # --- Mise en forme des données pour les agents --------------------------------
 
+def milestone_ends(start: str, as_of: str, cfg: dict) -> list[tuple[str, str]]:
+    """Les mois de simulation jusqu'à celui qui contient `as_of` : [(date calendaire du bilan, dernière séance)]."""
+    step, out = cfg["simulation"]["milestone_days"], []
+    while not out or as_of > out[-1][1]:
+        end = (date.fromisoformat(start) + timedelta(days=step * (len(out) + 1))).isoformat()
+        out.append((end, mc.sessions_between(start, end)[-1]))
+    return out
+
+
 def milestone(start: str, as_of: str, cfg: dict) -> tuple[int, str, str]:
     """Bilan en cours : (n° du mois, date calendaire du bilan, dernière séance de cotation de la période).
     La simulation n'a pas de fin ; un bilan est publié tous les `milestone_days` jours."""
-    step = cfg["simulation"]["milestone_days"]
-    k = 1
-    while True:
-        end = (date.fromisoformat(start) + timedelta(days=step * k)).isoformat()
-        last = mc.sessions_between(start, end)[-1]
-        if as_of <= last:
-            return k, end, last
-        k += 1
+    ends = milestone_ends(start, as_of, cfg)
+    return len(ends), *ends[-1]
 
 
 def horizon(ledger: Ledger, as_of: str, cfg: dict) -> dict:

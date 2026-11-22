@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "2.4.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "2.5.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -559,18 +559,56 @@ function renderLessons() {
     : `<p class="empty">Aucune position clôturée pour l'instant.</p>`}</div>`;
 }
 
+// Progression mois par mois : rendement du mois (hors versements) de l'équipe, de l'ETF Monde et du hasard
+function monthlyCard(months) {
+  if (!months?.length) return "";
+  const KEYS = [["agents", "Équipe"], ["benchmark", "ETF Monde"], ["random_large", "Aléatoire large"]];
+  const W = Math.max(280, $("#tab-report").clientWidth - 40), H = 190, T = 22, B = 30, L = 8, R = 8;
+  const vals = months.flatMap((m) => KEYS.map(([k]) => m.books[k] ?? 0)).concat(0);
+  let hi = Math.max(...vals), lo = Math.min(...vals);
+  const pad = Math.max((hi - lo) * 0.15, 0.5); hi += pad; lo -= pad;
+  const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const gw = (W - L - R) / months.length, bw = Math.min(26, (gw - 14) / KEYS.length);
+  const bars = months.map((m, i) => {
+    const x0 = L + i * gw + (gw - bw * KEYS.length) / 2;
+    return KEYS.map(([k], j) => {
+      const v = m.books[k] ?? 0, top = Math.min(y(v), y(0)), h = Math.max(Math.abs(y(v) - y(0)), 1);
+      return `<rect x="${(x0 + j * bw).toFixed(1)}" y="${top.toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${css("--s-" + k)}"/>
+        <text x="${(x0 + j * bw + bw / 2 - 1).toFixed(1)}" y="${(v >= 0 ? top - 4 : top + h + 11).toFixed(1)}" text-anchor="middle" class="bar-val">${v > 0 ? "+" : ""}${v.toFixed(1)}</text>`;
+    }).join("") + `<text x="${(L + i * gw + gw / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">Mois ${m.month}${m.partial ? " (en cours)" : ""}</text>`;
+  }).join("");
+  const axis = `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="${css("--line")}" stroke-width="1.5"/>`;
+  const legend = KEYS.map(([k, n]) => `<span style="--c:${css("--s-" + k)}">${n}</span>`).join("");
+  const last = months.at(-1), prev = months.at(-2);
+  const sgn = (v) => `${v > 0 ? "+" : ""}${v.toFixed(2)}`;
+  let verdict = `<p class="small muted">Premier mois : la comparaison d'un mois à l'autre sera possible dès le mois 2.</p>`;
+  if (prev) {
+    const d = last.vs_etf - prev.vs_etf;
+    verdict = `<p class="small">L'écart de l'équipe avec l'ETF Monde passe de <b class="${cls(prev.vs_etf)}">${sgn(prev.vs_etf)} pt</b> (mois ${prev.month}) à
+      <b class="${cls(last.vs_etf)}">${sgn(last.vs_etf)} pt</b> (mois ${last.month}${last.partial ? ", en cours" : ""}) : <b>${Math.abs(d) < 0.3 ? "stable" : d > 0 ? "l'équipe progresse" : "l'équipe recule"}</b>.
+      Le marché, lui (ETF Monde), a fait ${sgn(prev.books.benchmark)} % puis ${sgn(last.books.benchmark)} % : ${last.books.benchmark < prev.books.benchmark ? "un mois plus difficile" : "un mois plus favorable"}.</p>`;
+  }
+  const rows = months.map((m) => `<tr><td>Mois ${m.month}${m.partial ? " <span class='muted small'>(en cours)</span>" : ""}<div class="muted small">${fmtDate(m.from)} → ${fmtDate(m.to)}</div></td>
+    ${KEYS.map(([k]) => `<td class="num ${cls(m.books[k] ?? 0)}">${pct(m.books[k] ?? 0)}</td>`).join("")}
+    <td class="num ${cls(m.vs_etf)}"><b>${sgn(m.vs_etf)} pt</b></td></tr>`).join("");
+  return `<div class="card"><div class="card-head"><h2>Progression mois par mois</h2><span class="muted small">hors versements</span></div>
+    <div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Rendement de chaque mois">${axis}${bars}</svg></div><div class="legend">${legend}</div>
+    ${verdict}<div class="table-wrap"><table><tr><th>Mois</th>${KEYS.map(([, n]) => `<th class="num">${n}</th>`).join("")}<th class="num">Écart équipe − ETF</th></tr>${rows}</table></div>
+    <p class="small muted">« Écart » = ce qui vient des choix de l'équipe : le rendement du mois moins celui de l'ETF Monde. Si l'ETF Monde baisse mais que l'équipe baisse moins, c'est positif même sans gain.</p></div>`;
+}
+
 function renderReport() {
-  const r = state.report;
-  if (!r) { $("#tab-report").innerHTML = `<div class="card"><p class="empty">Le premier bilan sera publié à la fin du premier mois. La simulation continue ensuite.</p></div>`; return; }
+  const r = state.report, monthly = monthlyCard(state.summary?.monthly);
+  if (!r) { $("#tab-report").innerHTML = `${monthly}<div class="card"><p class="empty">Le premier bilan sera publié à la fin du premier mois. La simulation continue ensuite.</p></div>`; return; }
   const s = r.stats, a = r.analysis;
   const list = (xs) => xs.map((x) => `<li>${esc(x)}</li>`).join("");
   const trades = (ts) => ts.map((t) => `<li>${esc(t.ticker)} (${esc(t.open_date)} → ${esc(t.close_date)}) : <span class="${cls(Number(t.pnl))}">${eur(t.pnl)} (${pct(Number(t.pnl_pct))})</span></li>`).join("");
-  $("#tab-report").innerHTML = `<div class="card"><h2>Bilan du mois ${r.month || ""} <span class="muted small">du ${fmtDate(s.start)} au ${fmtDate(s.as_of)}</span></h2>
+  $("#tab-report").innerHTML = `${monthly}<div class="card"><h2>Bilan du mois ${r.month || ""} <span class="muted small">du ${fmtDate(s.start)} au ${fmtDate(s.as_of)}</span></h2>
     <div class="table-wrap"><table><tr><th>Livre</th><th class="num">Valeur</th><th class="num">Perf.</th><th class="num">Frais</th></tr>
     ${Object.values(s.books).map((b) => `<tr><td>${esc(b.label)}</td><td class="num">${eur(b.total)}</td><td class="num ${cls(Number(b.return_pct))}">${pct(Number(b.return_pct))}</td><td class="num">${eur(b.fees)}</td></tr>`).join("")}</table></div>
     <h3>Meilleurs trades</h3><ul class="small">${trades(s.best_trades) || "<li>–</li>"}</ul>
     <h3>Pires trades</h3><ul class="small">${trades(s.worst_trades) || "<li>–</li>"}</ul>
-    ${a ? `<h3>Verdict</h3><p>${esc(a.verdict)}</p><h3>Ce qui a fonctionné</h3><ul class="small">${list(a.what_worked)}</ul>
+    ${a ? `<h3>Verdict</h3><p>${esc(a.verdict)}</p>${a.progression ? `<h3>Progression d'un mois à l'autre</h3><p class="small">${esc(a.progression)}</p>` : ""}<h3>Ce qui a fonctionné</h3><ul class="small">${list(a.what_worked)}</ul>
     <h3>Ce qui n'a pas fonctionné</h3><ul class="small">${list(a.what_failed)}</ul><h3>Frais</h3><p class="small">${esc(a.fees_impact)}</p>
     <h3>Fonctionnement de l'équipe</h3><p class="small">${esc(a.process)}</p><h3>Leçons</h3><ul class="small">${list(a.lessons)}</ul>`
     : `<p class="neg small">Analyse rédigée indisponible : ${esc(r.analysis_error)}</p>`}</div>`;

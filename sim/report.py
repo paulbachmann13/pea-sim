@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from . import agents
 from . import market_calendar as mc
+from .decide import milestone_ends
 from .journal import Journal, digest, write_json
 from .ledger import Ledger, round_trips, summary
 from .llm import LLMError, claude_cli
@@ -31,7 +32,31 @@ def trades_with_marks(led: Ledger, store, as_of: str) -> list[dict]:
     return trips
 
 
-def compute_stats(ledgers: dict[str, Ledger], store, journal: Journal, as_of: str) -> dict:
+def monthly_table(cfg: dict, ledgers: dict[str, Ledger], as_of: str) -> list[dict]:
+    """Rendement de chaque mois de simulation (pondéré par le temps, hors versements) pour chaque livre, et écart de
+    l'équipe avec l'ETF Monde (= ce qui vient de ses choix) et avec le hasard. Le mois en cours est « partiel »."""
+    start = ledgers["agents"].start_date()
+    if not start:
+        return []
+    series = {b: led.performance_series() for b, led in ledgers.items()}
+
+    def cum(b: str, d: str | None) -> float:                    # performance cumulée (en %) à la clôture de `d`
+        pts = [p["twr_pct"] for p in series[b] if d and p["date"] <= d]
+        return float(pts[-1]) if pts else 0.0
+
+    rows, prev = [], None
+    for k, (_, last) in enumerate(milestone_ends(start, as_of, cfg), 1):
+        to = min(last, as_of)
+        books = {b: round(((1 + cum(b, to) / 100) / (1 + cum(b, prev) / 100) - 1) * 100, 2) for b in series}
+        rnd = [books[b] for b in ("random", "random_large") if b in books]
+        rows.append({"month": k, "from": prev or start, "to": to, "partial": as_of < last, "books": books,
+                     "vs_etf": round(books["agents"] - books["benchmark"], 2),
+                     "vs_random": round(books["agents"] - sum(rnd) / len(rnd), 2) if rnd else None})
+        prev = to
+    return rows
+
+
+def compute_stats(ledgers: dict[str, Ledger], store, journal: Journal, as_of: str, cfg: dict | None = None) -> dict:
     books = {}
     for b, led in ledgers.items():
         st = led.state()
@@ -59,6 +84,7 @@ def compute_stats(ledgers: dict[str, Ledger], store, journal: Journal, as_of: st
         "blocked_by_risk": sum(1 for r in rejections if r["stage"] == "risk"),
         "llm_errors": sum(len(e.get("errors", [])) for e in days),
         "sessions": len(mc.sessions_between(ledgers["agents"].start_date(), as_of)),
+        "monthly": monthly_table(cfg, ledgers, as_of) if cfg else [],
     }
 
 
@@ -68,6 +94,13 @@ def to_markdown(stats: dict, analysis: dict | None, month: int | None = None) ->
              "| Livre | Valeur finale | Performance | Frais | Dividendes | Exécutions |", "|---|---|---|---|---|---|"]
     for b in stats["books"].values():
         lines.append(f"| {b['label']} | {b['total']} € | {b['return_pct']} % | {b['fees']} € | {b['dividends']} € | {b['n_fills']} |")
+    if stats.get("monthly"):
+        lines += ["", "## Mois par mois (rendement du mois, hors versements)", "",
+                  "| Mois | Équipe | ETF Monde | Aléatoire large | Écart équipe − ETF |", "|---|---|---|---|---|"]
+        for m in stats["monthly"]:
+            b = m["books"]
+            lines.append(f"| {m['month']}{' (en cours)' if m['partial'] else ''} | {b['agents']:+.2f} % | "
+                         f"{b['benchmark']:+.2f} % | {b.get('random_large', 0):+.2f} % | {m['vs_etf']:+.2f} points |")
     lines += ["", f"Ordres décidés : {stats['orders_decided']} — refusés par les contrôles : "
               f"{stats['refused_by_validation']} — bloqués par le risque : {stats['blocked_by_risk']} — "
               f"erreurs LLM : {stats['llm_errors']}", ""]
@@ -80,6 +113,7 @@ def to_markdown(stats: dict, analysis: dict | None, month: int | None = None) ->
         lines += ["## Verdict", analysis["verdict"], "", "## Ce qui a fonctionné"]
         lines += [f"- {x}" for x in analysis["what_worked"]]
         lines += ["", "## Ce qui n'a pas fonctionné"] + [f"- {x}" for x in analysis["what_failed"]]
+        lines += ["", "## Progression d'un mois à l'autre", analysis.get("progression", "")]
         lines += ["", "## Frais", analysis["fees_impact"], "", "## Fonctionnement de l'équipe", analysis["process"],
                   "", "## Leçons"] + [f"- {x}" for x in analysis["lessons"]]
     return "\n".join(lines) + "\n"
@@ -88,13 +122,14 @@ def to_markdown(stats: dict, analysis: dict | None, month: int | None = None) ->
 def build_report(cfg: dict, ledgers: dict[str, Ledger], store, journal: Journal, as_of: str,
                  llm=claude_cli, with_llm: bool = True, month: int | None = None) -> dict:
     """Bilan du mois `month` (rapport-mois-N), ou rapport provisoire si `month` est None."""
-    stats = compute_stats(ledgers, store, journal, as_of)
+    stats = compute_stats(ledgers, store, journal, as_of, cfg)
     analysis, error = None, None
     if with_llm:
         try:
             analysis, _ = agents.report_writer(
                 cfg, stats=json.dumps(stats["books"], ensure_ascii=False, indent=1),
                 trades=json.dumps(stats["all_trades"], ensure_ascii=False, indent=1),
+                monthly=json.dumps(stats["monthly"], ensure_ascii=False, indent=1),
                 postmortems=json.dumps(journal.postmortems(), ensure_ascii=False, indent=1),
                 journal="\n\n".join(digest(journal.read_day(d)) for d in journal.trading_days()), llm=llm)
         except LLMError as e:

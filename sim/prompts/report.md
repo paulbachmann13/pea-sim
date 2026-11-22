@@ -6,6 +6,10 @@ les refus, les post-mortems et le résumé du journal jour par jour.
 
 Écris :
 - verdict : 3-5 phrases. L'équipe a-t-elle battu le benchmark et le hasard ? Est-ce significatif sur la période ?
+- progression : d'un mois à l'autre, l'équipe progresse-t-elle ? Appuie-toi sur la table « Progression mois par mois »
+  (rendement du mois, hors versements). Sépare ce qui vient du MARCHÉ (le rendement de l'ETF Monde ce mois-là) de ce qui
+  vient des CHOIX de l'équipe (l'écart avec l'ETF Monde et avec le hasard). Compare le dernier mois aux précédents ;
+  s'il n'y a qu'un mois, dis que la comparaison n'est pas encore possible et ne conclus pas à une tendance ;
 - what_worked : ce qui a fonctionné, avec des exemples précis (dates, titres, chiffres) ;
 - what_failed : ce qui n'a pas fonctionné, avec des exemples précis ;
 - fees_impact : le poids des frais et du spread, et ce que la grille low-cost aurait changé ;

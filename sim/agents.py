@@ -143,8 +143,8 @@ PROFILE_SCHEMA = _obj({
                            "long": _str("2 à 3 phrases simples : ce que fait l'entreprise et comment elle gagne de l'argent")})),
 })
 REPORT_SCHEMA = _obj({
-    "verdict": _str(), "what_worked": _arr(_str()), "what_failed": _arr(_str()), "fees_impact": _str(),
-    "process": _str(), "lessons": _arr(_str()),
+    "verdict": _str(), "progression": _str(), "what_worked": _arr(_str()), "what_failed": _arr(_str()),
+    "fees_impact": _str(), "process": _str(), "lessons": _arr(_str()),
 })
 
 
@@ -334,8 +334,10 @@ def profile_writer(cfg, *, companies: str, tickers: list[str], llm=claude_cli):
                PROFILE_SCHEMA, cfg, check=check, llm=llm)
 
 
-def report_writer(cfg, *, stats: str, trades: str, postmortems: str, journal: str, llm=claude_cli):
-    prompt = sections(("Résultats par livre", stats), ("Trades", trades), ("Post-mortems", postmortems),
+def report_writer(cfg, *, stats: str, trades: str, postmortems: str, journal: str, monthly: str = "[]",
+                  llm=claude_cli):
+    prompt = sections(("Résultats par livre", stats), ("Progression mois par mois", monthly), ("Trades", trades),
+                      ("Post-mortems", postmortems),
                       ("Journal jour par jour", journal))
     return ask("report", prompt, system_prompt("report.md", cfg), REPORT_SCHEMA, cfg, llm=llm)
 

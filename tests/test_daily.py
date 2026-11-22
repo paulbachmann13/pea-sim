@@ -21,7 +21,7 @@ PARIS = ZoneInfo("Europe/Paris")
 DAYS = mc.sessions_between("2026-08-03", "2026-12-31")
 TICKERS = {"AAA.PA": 10, "BBB.PA": 20, "CCC.PA": 15, "DDD.PA": 30, "EEE.PA": 25, "WPEA.PA": 7}
 
-REPORT = {"verdict": "v", "what_worked": ["a"], "what_failed": ["b"], "fees_impact": "f", "process": "p",
+REPORT = {"verdict": "v", "progression": "prog", "what_worked": ["a"], "what_failed": ["b"], "fees_impact": "f", "process": "p",
           "lessons": ["l"]}
 PM = lambda p: {"postmortems": [{"trade_id": "AAA.PA-2026-11-17", "expected": "e", "happened": "h",
                                  "predictable": "p", "lesson": "l",
