@@ -62,8 +62,9 @@ def compute_stats(ledgers: dict[str, Ledger], store, journal: Journal, as_of: st
     }
 
 
-def to_markdown(stats: dict, analysis: dict | None) -> str:
-    lines = [f"# Rapport final — simulation PEA du {stats['start']} au {stats['as_of']}", "",
+def to_markdown(stats: dict, analysis: dict | None, month: int | None = None) -> str:
+    head = f"Bilan du mois {month}" if month else "Rapport provisoire"
+    lines = [f"# {head} — simulation PEA du {stats['start']} au {stats['as_of']}", "",
              "| Livre | Valeur finale | Performance | Frais | Dividendes | Exécutions |", "|---|---|---|---|---|---|"]
     for b in stats["books"].values():
         lines.append(f"| {b['label']} | {b['total']} € | {b['return_pct']} % | {b['fees']} € | {b['dividends']} € | {b['n_fills']} |")
@@ -85,7 +86,8 @@ def to_markdown(stats: dict, analysis: dict | None) -> str:
 
 
 def build_report(cfg: dict, ledgers: dict[str, Ledger], store, journal: Journal, as_of: str,
-                 llm=claude_cli, with_llm: bool = True, final: bool = True) -> dict:
+                 llm=claude_cli, with_llm: bool = True, month: int | None = None) -> dict:
+    """Bilan du mois `month` (rapport-mois-N), ou rapport provisoire si `month` est None."""
     stats = compute_stats(ledgers, store, journal, as_of)
     analysis, error = None, None
     if with_llm:
@@ -97,10 +99,10 @@ def build_report(cfg: dict, ledgers: dict[str, Ledger], store, journal: Journal,
                 journal="\n\n".join(digest(journal.read_day(d)) for d in journal.trading_days()), llm=llm)
         except LLMError as e:
             error = str(e)
-    report = {"stats": stats, "analysis": analysis, "analysis_error": error}
-    name = "rapport-final" if final else "rapport-provisoire"
+    report = {"stats": stats, "analysis": analysis, "analysis_error": error, "month": month}
+    name = f"rapport-mois-{month}" if month else "rapport-provisoire"
     write_json(journal.root / f"{name}.json", report)
-    (journal.root / f"{name}.md").write_text(to_markdown(stats, analysis), encoding="utf-8")
+    (journal.root / f"{name}.md").write_text(to_markdown(stats, analysis, month), encoding="utf-8")
     if error:
         raise LLMError(f"analyse du rapport indisponible : {error}")
     return report
@@ -117,7 +119,7 @@ def main():
     as_of = env.agents.last_snapshot_date()
     if not as_of:
         sys.exit("La simulation n'a pas encore démarré.")
-    build_report(cfg, env.ledgers, store, env.journal, as_of, with_llm="--llm" in sys.argv, final=False)
+    build_report(cfg, env.ledgers, store, env.journal, as_of, with_llm="--llm" in sys.argv, month=None)
     print((env.journal.root / "rapport-provisoire.md").read_text(encoding="utf-8"))
 
 

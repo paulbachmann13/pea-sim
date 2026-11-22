@@ -42,7 +42,7 @@ LLM_AGENTS = [
     ("profile", "Fiches des titres", ("fiches",), "Explique en français simple ce qu'est chaque titre (entreprise, secteur, ETF)"),
     ("research", "Recherche web", ("recherche web",), "Samedi : lit de vraies pages (calendrier, résultats, thèmes) avec sources"),
     ("plan", "Plan de la semaine", ("plan de la semaine",), "Dimanche : le chef prépare des scénarios « si X alors Y » pour lundi"),
-    ("report", "Rapport final", ("rapport final",), "Rédige l'analyse de fin de simulation (dernier jour)"),
+    ("report", "Bilan mensuel", ("bilan",), "Rédige le bilan de chaque mois : performances, causes, leçons"),
 ]
 CODE_AGENTS = [
     ("ledger", "Comptabilité", "Positions, frais, P&L, valorisation, benchmark (code, pas de LLM)"),
@@ -62,7 +62,7 @@ def agent_states(e: dict, warnings=()) -> dict[str, dict]:
         status = "error" if errs else "ok" if mine else "budget" if key in saved else "skipped"
         if status == "skipped" and key == "postmortem" and (e.get("learning") or {}).get("postmortems"):
             status = "ok"                                   # appel LLM non journalisé, mais post-mortem écrit
-        if status == "skipped" and key == "report" and e.get("final"):
+        if status == "skipped" and key == "report" and e.get("milestone"):
             status = "ok"
         out[key] = {"status": status, "calls": len(mine), "seconds": round(sum(c["duration_s"] for c in mine)),
                     "tokens_in": sum(c["input_tokens"] for c in mine), "tokens_out": sum(c["output_tokens"] for c in mine),
@@ -182,7 +182,7 @@ def export_dashboard(cfg: dict, root: Path, ledgers: dict[str, Ledger], journal:
     for p in sorted(journal.root.glob("????-??-??*.json")):
         e = read_json(p)
         shutil.copyfile(p, out / "journal" / p.name)
-        index.append({"file": p.name, "date": e["date"], "mode": e["mode"], "final": e.get("final", False),
+        index.append({"file": p.name, "date": e["date"], "mode": e["mode"], "milestone": e.get("milestone"),
                       "n_orders": len(e.get("final_orders", [])), "n_refused": len(e.get("refused", [])),
                       "n_exec": sum(1 for x in e.get("executions", []) if x.get("filled")),
                       "n_errors": len(e.get("errors", [])),
@@ -194,7 +194,7 @@ def export_dashboard(cfg: dict, root: Path, ledgers: dict[str, Ledger], journal:
     export_knowledge(cfg, root, out, as_of)
     export_profiles(cfg, root, out)
     export_usage(cfg, root)
-    report = journal.root / "rapport-final.json"
-    if report.exists():
-        shutil.copyfile(report, out / "report.json")
+    reports = sorted(journal.root.glob("rapport-mois-*.json"), key=lambda p: int(p.stem.rsplit("-", 1)[1]))
+    if reports:                                                  # le dernier bilan mensuel
+        shutil.copyfile(reports[-1], out / "report.json")
     return out

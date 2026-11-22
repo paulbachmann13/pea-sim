@@ -71,7 +71,7 @@ data:
 
 # --- Simulation --------------------------------------------------------------
 simulation:
-  duration_days: 30                  # jours calendaires à partir du dépôt initial (1er run de séance)
+  milestone_days: 30                 # la simulation continue sans fin ; bilan tous les 30 jours calendaires depuis le dépôt initial
   journal_dir: journal               # relatif au dossier pea_sim
   ledger_db: data/ledger.db          # comptabilité de tous les livres (versionnée = sauvegardée)
   compare_grid: lowcost              # livre fantôme : mêmes ordres que les agents, avec cette grille

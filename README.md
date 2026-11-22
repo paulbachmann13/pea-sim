@@ -26,7 +26,8 @@ Le week-end et les jours fériés : veille, sans ordre.
   surveiller). Chaque run de séance le relit.
 - Jour férié en semaine : veille légère (actualités, notes, agenda).
 
-Le dernier jour : rapport final.
+La simulation ne s'arrête pas : le dernier jour de chaque mois de simulation (30 jours calendaires, réglage
+`milestone_days`), un **bilan mensuel** est rédigé (performances, causes, leçons) et le run reprend le lendemain.
 
 ## Budget et consommation de l'abonnement
 
@@ -96,7 +97,7 @@ Le CLI `claude` (Claude Code) doit être installé et connecté : les agents l'a
 ### Alertes par e-mail
 
 Un mail est envoyé seulement en cas de problème (run planté, agent en erreur, cours manquants,
-publication échouée) et pour le rapport final. Le suivi au quotidien se fait sur le dashboard.
+publication échouée) et pour chaque bilan mensuel. Le suivi au quotidien se fait sur le dashboard.
 
 1. Créer un mot de passe d'application iCloud : appleid.apple.com → Connexion et sécurité
    → Mots de passe pour app.
@@ -129,7 +130,7 @@ publish:
 | `journal/AAAA-MM-JJ.json` | journal du jour : synthèses, thèses, ordres, refus, exécutions, appels LLM |
 | `journal/postmortems.json` | un post-mortem par position soldée |
 | `journal/context_notes.md` | notes de contexte de l'analyste actualité |
-| `journal/rapport-final.md` | rapport de fin de simulation |
+| `journal/rapport-mois-N.md` | bilan du mois N (la simulation continue ensuite) |
 | `data/ledger.db` | comptabilité (SQLite, événements rejouables) |
 | `data/market.db` | cours, dividendes, actualités, anomalies de données (régénérable) |
 | `docs/` | dashboard (PWA statique servie par GitHub Pages ; version dans `app.js` et `sw.js`) |

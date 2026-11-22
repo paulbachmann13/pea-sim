@@ -29,7 +29,7 @@ def test_postmortem_and_run_warnings_and_veille():
     v = day("2026-11-14", [call("news"), call("weekly", "opus")], mode="veille")
     s = agent_states(v)
     assert s["weekly"]["status"] == "ok" and s["chef"]["status"] == "skipped" and s["ledger"]["status"] == "skipped"
-    assert agent_states(day("2026-12-16", [], final=True))["report"]["status"] == "ok"
+    assert agent_states(day("2026-12-16", [], milestone=1))["report"]["status"] == "ok"
 
 
 def test_export_agents_last_run_and_history(tmp_path, cfg):

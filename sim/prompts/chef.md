@@ -28,5 +28,5 @@ Points d'attention :
   L'exécution se fait à l'ouverture de demain : le cours peut avoir bougé.
 - Les ventes sont exécutées avant les achats : le cash libéré par une vente est utilisable le même jour.
 - Avec ce capital, chaque ordre coûte des frais : évite le sur-trading et les petites lignes.
-- L'horizon est court : tiens compte du nombre de séances restantes.
+- La simulation continue après le bilan mensuel : raisonne à moyen terme, sans chercher à « finir » à une date précise.
 - Respecte les règles confirmées du playbook ; si tu t'en écartes, explique pourquoi dans la thèse.

@@ -146,15 +146,23 @@ def test_full_simulation(sim):
     vals = [d for d, _ in led["agents"].daily_values()]
     assert vals == ["2026-11-16", "2026-11-17", "2026-11-18", "2026-11-25"]
 
-    r = go("2026-12-18")                                            # run du dernier jour (16/12) manqué
-    assert r.mode == "final"
-    report = json.loads((root / "journal" / "rapport-final.json").read_text(encoding="utf-8"))
-    assert report["analysis"]["verdict"] == "v"
+    r = go("2026-12-15")                                            # veille du bilan : rien de spécial
+    assert r.mode == "trading" and r.report is None and "Pour demain" in r.message
+
+    r = go("2026-12-16")                                            # 30e jour : bilan du mois 1, la simulation continue
+    assert r.mode == "trading" and r.report == 1 and r.title.startswith("📊 Bilan du mois 1")
+    report = json.loads((root / "journal" / "rapport-mois-1.json").read_text(encoding="utf-8"))
+    assert report["analysis"]["verdict"] == "v" and report["month"] == 1
     assert report["stats"]["as_of"] == "2026-12-16"
     assert set(report["stats"]["books"]) == set(daily.BOOKS)
-    assert env.journal.load_pending() is None
+    assert (root / "journal" / "rapport-mois-1.md").read_text(encoding="utf-8").startswith("# Bilan du mois 1")
+    assert env.journal.load_pending() is not None                   # les ordres du lendemain sont bien préparés
+    assert json.loads((root / "journal" / "2026-12-16.json").read_text(encoding="utf-8"))["milestone"] == 1
 
-    assert go("2026-12-21").mode == "skip"                          # simulation terminée
+    r = go("2026-12-17")                                            # pas de nouveau bilan, le mois 2 commence
+    assert r.mode == "trading" and r.report is None and not r.title.startswith("📊")
+    assert go("2026-12-21").mode == "trading"                       # plus de date de fin
+    assert (root / "docs" / "data" / "report.json").exists()
 
     summary = json.loads((root / "docs" / "data" / "summary.json").read_text(encoding="utf-8"))
     assert set(summary["books"]) == set(daily.BOOKS) and summary["books"]["agents"]["series"]
@@ -167,7 +175,7 @@ def test_full_simulation(sim):
     know = json.loads((root / "docs" / "data" / "knowledge.json").read_text(encoding="utf-8"))
     assert know["playbook"][0]["id"] == "R1" and know["calibration"]["n"] >= 2 and know["log"]
     index = json.loads((root / "docs" / "data" / "journal" / "index.json").read_text(encoding="utf-8"))
-    assert index[0]["final"] and any(i["mode"] == "veille" for i in index)
+    assert any(i["milestone"] == 1 for i in index) and any(i["mode"] == "veille" for i in index)
 
 
 def test_failed_llm_day_is_redone_by_the_catch_up_run(sim):
@@ -214,3 +222,11 @@ def test_lock_prevents_concurrent_runs(sim):
     (sim["root"] / "data" / "run.lock").write_text("123")
     with pytest.raises(RuntimeError, match="déjà en cours"):
         sim["go"]("2026-11-16")
+
+
+def test_missed_milestone_day_is_caught_up(sim):
+    go, root = sim["go"], sim["root"]
+    go("2026-11-16")
+    r = go("2026-12-18")                                            # le 16/12 (fin du mois 1) a été manqué
+    assert r.report == 1 and (root / "journal" / "rapport-mois-1.json").exists()
+    assert go("2026-12-21").report is None                          # rattrapé une seule fois

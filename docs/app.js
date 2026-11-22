@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-const APP_VERSION = "2.3.0";        // à garder identique à VERSION dans sw.js
+const APP_VERSION = "2.4.0";        // à garder identique à VERSION dans sw.js
 const SUPABASE = {
   url: "https://gwsomltfixhoikwkpqmd.supabase.co",
   key: "sb_publishable_ZtC6h8l38XYDa8WXo1-Zmw_tIrTIhmh",   // clé publique, lecture seule
@@ -109,7 +109,7 @@ function renderFooter() {
 function render() {
   const s = state.summary, h = s.horizon;
   $("#subtitle").textContent = h
-    ? `Séance ${h.session_no}/${s.total_sessions} · au ${fmtDate(s.as_of)} · fin le ${fmtDate(h.end)}`
+    ? `Séance ${h.session_no}/${s.total_sessions} · au ${fmtDate(s.as_of)} · bilan le ${fmtDate(h.end)}`
     : "La simulation n'a pas encore démarré";
   renderHero(); renderKpis(); renderChart(); renderDaily(); renderPositions(); renderOrders(); renderJournal(); renderAgents(); renderLearning(); renderLessons(); renderReport();
 }
@@ -162,7 +162,7 @@ function renderKpis() {
   const s = state.summary, b = s.books, a = b.agents, h = s.horizon;
   const gap = (k) => ret(a) - ret(b[k]);
   const cards = [
-    ["Séance", h ? `${h.session_no} / ${s.total_sessions}` : "–", h ? `fin le ${fmtDate(h.end)}` : "départ ce soir"],
+    ["Séance", h ? `${h.session_no} / ${s.total_sessions}` : "–", h ? `bilan du mois ${h.month} le ${fmtDate(h.end)}` : "départ ce soir"],
     ["vs ETF Monde", `<span class="${cls(gap("benchmark"))}">${pct(gap("benchmark"))}</span>`, `ETF ${pct(ret(b.benchmark))}`],
     ["vs Aléatoire", `<span class="${cls(gap("random"))}">${pct(gap("random"))}</span>`,
       `4 titres ${pct(ret(b.random))}` + (b.random_large ? ` · 20 titres ${pct(ret(b.random_large))}` : "")],
@@ -263,7 +263,7 @@ function renderJournal() {
   const items = state.index;
   $("#tab-journal").innerHTML = `<div class="card"><h2>Journal</h2>${items.length ? items.map((e) => `
     <div class="item"><button class="link" data-file="${esc(e.file)}">
-      <div class="item-head"><b>${fmtDate(e.date)}${e.mode === "veille" ? " · veille" : ""}${e.final ? " · fin" : ""}</b>
+      <div class="item-head"><b>${fmtDate(e.date)}${e.mode === "veille" ? " · veille" : ""}${e.milestone ? " · bilan" : ""}</b>
       <span class="small muted">${e.mode === "trading" ? `${e.n_exec} exéc. · ${e.n_orders} ordres` : ""}${e.n_rule_changes ? ` · ${e.n_rule_changes} règle(s)` : ""}${e.n_errors ? ` · <span class="neg">${e.n_errors} erreur(s)</span>` : ""}</span></div>
       <div class="muted small">${esc(e.view)}…</div></button></div>`).join("") : `<p class="empty">Journal vide.</p>`}</div>`;
   document.querySelectorAll("#tab-journal [data-file]").forEach((b) => b.addEventListener("click", () => openDay(b.dataset.file)));
@@ -273,7 +273,7 @@ async function openDay(file) {
   const e = await getJSON("journal/" + file);
   $("#day-title").textContent = `${fmtDate(e.date)}${e.mode === "veille" ? " · veille" : ""}`;
   const parts = [];
-  if (e.portfolio?.total) parts.push(`<p>Portefeuille à la clôture : <b>${eur(e.portfolio.total)}</b> <span class="${cls(Number(e.portfolio.return_pct))}">(${pct(Number(e.portfolio.return_pct))})</span>${e.final ? " — dernier jour de la simulation" : ""}</p>`);
+  if (e.portfolio?.total) parts.push(`<p>Portefeuille à la clôture : <b>${eur(e.portfolio.total)}</b> <span class="${cls(Number(e.portfolio.return_pct))}">(${pct(Number(e.portfolio.return_pct))})</span>${e.milestone ? ` — fin du mois ${e.milestone} : bilan publié` : ""}</p>`);
   if (e.errors?.length) parts.push(`<h3 class="neg">Erreurs</h3>${e.errors.map((x) => `<p class="small">${esc(x)}</p>`).join("")}`);
   if (e.executions?.length) parts.push(`<h3>Exécutions à l'ouverture</h3>${e.executions.map((x) =>
     `<p class="small">${sideChip(x.side)} ${esc(x.ticker)} : ${x.filled ? `${x.qty} à ${eur(x.price, 4)} (frais ${eur(x.fees)})` : `<span class="neg">non exécuté : ${esc(x.reason)}</span>`}${x.filled && x.reason ? ` <span class="muted">(${esc(x.reason)})</span>` : ""}</p>`).join("")}`);
@@ -561,11 +561,11 @@ function renderLessons() {
 
 function renderReport() {
   const r = state.report;
-  if (!r) { $("#tab-report").innerHTML = `<div class="card"><p class="empty">Le rapport final sera publié à la fin de la simulation.</p></div>`; return; }
+  if (!r) { $("#tab-report").innerHTML = `<div class="card"><p class="empty">Le premier bilan sera publié à la fin du premier mois. La simulation continue ensuite.</p></div>`; return; }
   const s = r.stats, a = r.analysis;
   const list = (xs) => xs.map((x) => `<li>${esc(x)}</li>`).join("");
   const trades = (ts) => ts.map((t) => `<li>${esc(t.ticker)} (${esc(t.open_date)} → ${esc(t.close_date)}) : <span class="${cls(Number(t.pnl))}">${eur(t.pnl)} (${pct(Number(t.pnl_pct))})</span></li>`).join("");
-  $("#tab-report").innerHTML = `<div class="card"><h2>Rapport final</h2>
+  $("#tab-report").innerHTML = `<div class="card"><h2>Bilan du mois ${r.month || ""} <span class="muted small">du ${fmtDate(s.start)} au ${fmtDate(s.as_of)}</span></h2>
     <div class="table-wrap"><table><tr><th>Livre</th><th class="num">Valeur</th><th class="num">Perf.</th><th class="num">Frais</th></tr>
     ${Object.values(s.books).map((b) => `<tr><td>${esc(b.label)}</td><td class="num">${eur(b.total)}</td><td class="num ${cls(Number(b.return_pct))}">${pct(Number(b.return_pct))}</td><td class="num">${eur(b.fees)}</td></tr>`).join("")}</table></div>
     <h3>Meilleurs trades</h3><ul class="small">${trades(s.best_trades) || "<li>–</li>"}</ul>

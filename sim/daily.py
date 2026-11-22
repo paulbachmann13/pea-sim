@@ -7,7 +7,7 @@ Jour de séance :
      à l'ouverture (agents, livre fantôme low-cost, et au 1er jour : benchmark + portefeuille aléatoire)
   4. valorisation de tous les livres à la clôture
   5. post-mortems des positions clôturées
-  6. décision du soir (ou, le dernier jour, rapport final)
+  6. décision du soir ; le dernier jour de chaque mois de simulation, bilan mensuel (la simulation ne s'arrête jamais)
   7. export du dashboard + publication
 Week-end / férié : veille (actualités, notes de contexte), aucun ordre.
 
@@ -18,6 +18,7 @@ Livres comptables (même base, isolés) :
   random          N titres liquides tirés au sort au 1er jour et conservés
   random_large    idem avec 20 titres (repère statistique plus fiable)
 """
+import json
 import logging
 import os
 import random
@@ -58,10 +59,11 @@ RANDOM_BOOKS = ("random", "random_large")
 
 @dataclass
 class RunResult:
-    mode: str                     # trading | final | veille | skip
+    mode: str                     # trading | veille | skip
     title: str
     message: str
     warnings: list[str] = field(default_factory=list)
+    report: int | None = None     # n° du bilan mensuel publié par ce run
 
 
 @dataclass
@@ -97,12 +99,9 @@ def run_lock(path: Path, max_age_s: int = 7200):
         path.unlink(missing_ok=True)
 
 
-def final_session(env: Env, today: str) -> str | None:
-    start = env.agents.start_date()
-    if not start:
-        return None
-    end = horizon(env.agents, today, env.cfg)["end"]
-    return mc.sessions_between(start, end)[-1]
+def report_done(env: Env, month: int) -> bool:
+    p = env.journal.root / f"rapport-mois-{month}.json"
+    return p.exists() and bool(json.loads(p.read_text(encoding="utf-8")).get("analysis"))
 
 
 def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm=claude_cli,
@@ -113,11 +112,6 @@ def run(now: datetime, cfg: dict, root: Path = ROOT, *, force: bool = False, llm
         log.info(applied)
     today = now.date().isoformat()
     env = open_env(cfg, root)
-    last = final_session(env, today)
-    if last and today > last:
-        if (env.journal.root / "rapport-final.json").exists():
-            return RunResult("skip", "PEA sim terminée", f"Simulation terminée le {last}.")
-        today = last           # run du dernier jour manqué : on clôture à la dernière séance
     with run_lock(root / "data" / "run.lock"):
         if mc.is_trading_day(today):
             result = trading_run(env, now, today, force, llm, refresh, fetch, fetch_hist, fetch_profile)
@@ -190,37 +184,39 @@ def trading_run(env: Env, now, today, force, llm, refresh, fetch, fetch_hist=fet
         warnings.append(f"post-mortems : {e}")
 
     h = horizon(env.agents, today, cfg)
-    if today >= final_session(env, today):
-        entry = {"date": today, "mode": "trading", "final": True, "run_at": now.isoformat(), "horizon": h,
-                 "executions": executions, "errors": [], "final_orders": [], "refused": [],
-                 "portfolio": {k: str(v) for k, v in snaps["agents"].items()},
-                 "learning": {"playbook_changes": pm_changes, "postmortems": [p["trade_id"] for p in pms],
-                              "predictions_resolved": env.kb.resolve_predictions(store, today,
-                                                                                 cfg["benchmark"]["ticker"])}}
-        j.write_day(entry)
-        j.clear_pending()
+    news_items, watch = collect_news(env, store, universe, instruments, now, today, fetch, warnings)
+    entry = run_decision(as_of=today, run_at=now, cfg=cfg, store=store, instruments=instruments,
+                         ledger=env.agents, journal=j, news_items=news_items, kb=env.kb, watch=watch,
+                         bench_summary=snaps["benchmark"], executions=executions, llm=llm,
+                         fetch_hist=fetch_hist, profile_fetch=fetch_profile,
+                         extra_tickers=sorted({t for led in env.ledgers.values() for t in led.state().positions}))
+    if pms or pm_changes:
+        entry["learning"]["postmortems"] = [p["trade_id"] for p in pms]
+        entry["learning"]["playbook_changes"] = pm_changes + entry["learning"]["playbook_changes"]
+    warnings += entry["errors"]
+
+    # Bilan mensuel : le dernier jour de chaque période de `milestone_days` (rattrapé si le run avait été manqué)
+    due = [k for k in range(1, h["month"]) if not report_done(env, k)]
+    if today == h["milestone"] and not report_done(env, h["month"]):
+        due.append(h["month"])
+    report = None
+    for k in due:
         try:
-            build_report(cfg, env.ledgers, store, j, today, llm=llm)
+            build_report(cfg, env.ledgers, store, j, today, llm=llm, month=k)
+            report = k
+        except BudgetSkip as e:
+            log.info("bilan du mois %s reporté (budget) : %s", k, e.reason)
         except Exception as e:
-            warnings.append(f"rapport final : {e}")
-        mode = "final"
-    else:
-        news_items, watch = collect_news(env, store, universe, instruments, now, today, fetch, warnings)
-        entry = run_decision(as_of=today, run_at=now, cfg=cfg, store=store, instruments=instruments,
-                             ledger=env.agents, journal=j, news_items=news_items, kb=env.kb, watch=watch,
-                             bench_summary=snaps["benchmark"], executions=executions, llm=llm,
-                             fetch_hist=fetch_hist, profile_fetch=fetch_profile,
-                             extra_tickers=sorted({t for led in env.ledgers.values() for t in led.state().positions}))
-        if pms or pm_changes:
-            entry["learning"]["postmortems"] = [p["trade_id"] for p in pms]
-            entry["learning"]["playbook_changes"] = pm_changes + entry["learning"]["playbook_changes"]
-            j.write_day(entry)
-        warnings += entry["errors"]
-        mode = "trading"
+            warnings.append(f"bilan du mois {k} : {e}")
+    if report:
+        entry["milestone"] = report
+    if pms or pm_changes or report:
+        j.write_day(entry)
+    mode = "trading"
 
     export_dashboard(cfg, env.root, env.ledgers, j, store, today, universe)
     sync_dashboard(env, warnings)
-    return RunResult(mode, *daily_message(env, h, snaps, executions, entry, mode), warnings)
+    return RunResult(mode, *daily_message(env, h, snaps, executions, entry, mode), warnings, report)
 
 
 def sync_dashboard(env: Env, warnings: list[str]) -> None:
@@ -370,8 +366,8 @@ def daily_message(env: Env, h, snaps, executions, entry, mode) -> tuple[str, str
     a = snaps["agents"]
     total_sessions = len(mc.sessions_between(h["start"], h["end"]))
     title = f"PEA sim J{h['session_no']}/{total_sessions} : {cents(a['total'])} € ({a['return_pct']:+.2f} %)"
-    if mode == "final":
-        title = "🏁 " + title + " — FIN"
+    if entry.get("milestone"):
+        title = f"📊 Bilan du mois {entry['milestone']} · " + title
     labels = {"benchmark": "ETF Monde", "random": "Aléatoire", "random_large": "Aléatoire large",
               "agents_lowcost": "Agents low-cost"}
     lines = [" | ".join(f"{labels[b]} {cents(snaps[b]['total'])} € ({snaps[b]['return_pct']:+.2f} %)"
@@ -380,12 +376,11 @@ def daily_message(env: Env, h, snaps, executions, entry, mode) -> tuple[str, str
         lines.append("Exécutés : " + ", ".join(
             f"{e['side']} {e['qty']} {e['ticker']} à {e['price']} €" if e["filled"] else f"{e['side']} {e['ticker']} refusé"
             for e in executions))
-    if mode == "trading":
-        orders = entry.get("final_orders", [])
-        lines.append("Pour demain : " + (", ".join(f"{o['side']} {o['qty']} {o['ticker']}" for o in orders)
-                                         or "aucun ordre"))
-    else:
-        lines.append("Rapport final disponible dans le dashboard.")
+    orders = entry.get("final_orders", [])
+    lines.append("Pour demain : " + (", ".join(f"{o['side']} {o['qty']} {o['ticker']}" for o in orders)
+                                     or "aucun ordre"))
+    if entry.get("milestone"):
+        lines.append(f"Le bilan du mois {entry['milestone']} est disponible dans l'onglet Rapport.")
     return title, "\n".join(lines)
 
 

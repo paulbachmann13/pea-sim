@@ -34,19 +34,33 @@ from .screener import breadth, format_table, screen, select
 
 # --- Mise en forme des données pour les agents --------------------------------
 
+def milestone(start: str, as_of: str, cfg: dict) -> tuple[int, str, str]:
+    """Bilan en cours : (n° du mois, date calendaire du bilan, dernière séance de cotation de la période).
+    La simulation n'a pas de fin ; un bilan est publié tous les `milestone_days` jours."""
+    step = cfg["simulation"]["milestone_days"]
+    k = 1
+    while True:
+        end = (date.fromisoformat(start) + timedelta(days=step * k)).isoformat()
+        last = mc.sessions_between(start, end)[-1]
+        if as_of <= last:
+            return k, end, last
+        k += 1
+
+
 def horizon(ledger: Ledger, as_of: str, cfg: dict) -> dict:
     start = ledger.start_date() or as_of
-    end = (date.fromisoformat(start) + timedelta(days=cfg["simulation"]["duration_days"])).isoformat()
+    month, end, last = milestone(start, as_of, cfg)
     nxt = mc.next_session(as_of)
-    return {"start": start, "end": end, "exec_date": nxt,
+    return {"start": start, "end": end, "exec_date": nxt, "month": month, "milestone": last,
             "session_no": len(mc.sessions_between(start, as_of)),
             "sessions_left": len(mc.sessions_between(nxt, end)) if nxt <= end else 0}
 
 
 def horizon_text(h: dict, as_of: str) -> str:
     return (f"Décision du {as_of} (après clôture). Ordres exécutés à l'ouverture du {h['exec_date']}. "
-            f"Simulation du {h['start']} au {h['end']} : séance n° {h['session_no']}, "
-            f"il restera {h['sessions_left']} séance(s) de cotation à partir de la prochaine exécution.")
+            f"Simulation commencée le {h['start']}, SANS date de fin : séance n° {h['session_no']}. "
+            f"Un bilan est publié le {h['end']} (mois {h['month']}, {h['sessions_left']} séance(s) à partir de la prochaine "
+            f"exécution) : c'est un point d'étape, pas une échéance. Ne liquide rien pour le bilan.")
 
 
 def portfolio_text(state: PortfolioState, marks: dict) -> str:

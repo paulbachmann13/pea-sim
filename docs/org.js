@@ -112,7 +112,7 @@ function renderOrg() {
       <li><b>Compta-3000</b> exécute à l'ouverture suivante et tient les comptes ; <b>Dr Marc</b> analyse chaque position fermée.</li>
     </ol>
     <p class="small muted"><b>Le week-end</b> : <b>Léo</b> cherche sur le web (samedi), <b>Camille</b> archive, <b>Hélène</b> fait le bilan de la semaine,
-    <b>Victor</b> prépare le plan du dimanche. <b>Nina</b> rédige le rapport final le dernier jour.</p>
+    <b>Victor</b> prépare le plan du dimanche. <b>Nina</b> rédige le bilan à la fin de chaque mois.</p>
     <p class="small muted">Qui commande : <b>Victor</b> est le seul à décider. Les éclaireurs n'ont aucun pouvoir sur les ordres ; les garde-fous peuvent dire non ;
     la mémoire fait évoluer les règles que tout le monde relit. Le badge <span class="chip">opus</span> ou <span class="chip">sonnet</span> est le modèle utilisé (Opus = le plus fort, réservé aux rôles qui comptent le plus : Victor, Hélène et Nina).</p></div>`;
 }
