@@ -32,7 +32,8 @@ def test_gmail_alert_is_sent_through_claude(monkeypatch, n):
     run_with(monkeypatch, Proc(), calls)
     assert nt.notify(n, "❌ PEA sim : le run a échoué", "boom") is True
     cmd, prompt = calls[0]
-    assert "mcp__claude_ai_Gmail__send_message" in cmd and cmd[cmd.index("--tools") + 1] == ""
+    assert "mcp__claude_ai_Gmail__send_message" in cmd[cmd.index("--allowedTools") + 1]
+    assert cmd[cmd.index("--tools") + 1] == "ToolSearch"            # l'outil Gmail est différé : il faut pouvoir le charger
     assert "Destinataire : moi@icloud.com" in prompt and "Objet : ❌ PEA sim" in prompt and "boom" in prompt
 
 
