@@ -165,9 +165,14 @@ def trading_run(env: Env, now, today, force, llm, refresh, fetch, fetch_hist=fet
     held = {t for led in env.ledgers.values() for t in led.state().positions}
     held |= {o["ticker"] for o in (pending or {}).get("orders", [])} | {bench}
     store, universe, instruments, issues = refresh(cfg, today, held, root=env.root)
-    missing = sorted({i.ticker for i in issues if i.blocking and i.ticker in held})
-    if missing:
-        warnings.append(f"cours manquants aujourd'hui : {', '.join(missing)}")
+    blocked = {i.ticker for i in issues if i.blocking and i.ticker in held}
+    core = {t for b in ("agents", "agents_lowcost", "benchmark") for t in env.ledgers[b].state().positions}
+    core |= {o["ticker"] for o in (pending or {}).get("orders", [])}
+    if blocked & core:                                                  # ce qui touche aux agents ou à l'ETF Monde
+        warnings.append(f"cours manquants aujourd'hui : {', '.join(sorted(blocked & core))}")
+    if blocked - core:                                                  # portefeuilles aléatoires : dernier cours connu
+        log.info("cours manquants (portefeuilles aléatoires, valorisés au dernier cours) : %s",
+                 ", ".join(sorted(blocked - core)))
 
     executions = process_sessions(env, store, instruments, pending, today, warnings)
     executions = executions or fills_as_executions(env.agents, today)       # run repris après une panne
